@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+targets/
+out/
+dist/
+build/
+*.egg-info/
+_sa_plugin.py
+_sa_coverage.json

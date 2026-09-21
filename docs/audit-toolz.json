@@ -1,0 +1,1491 @@
+{
+  "counts": {
+    "killed": 164,
+    "proven-gap": 4,
+    "unproven": 13
+  },
+  "kill_rate": 0.9060773480662984,
+  "uncovered": [
+    "tlz/_build_tlz.py::TlzLoader.find_module",
+    "tlz/_build_tlz.py::TlzLoader.load_module",
+    "toolz/_signatures.py::num_pos_args",
+    "toolz/_signatures.py::create_signature_registry",
+    "toolz/functoolz.py::instanceproperty",
+    "toolz/sandbox/core.py::EqualityHashKey.__init__",
+    "toolz/sandbox/core.py::EqualityHashKey.__hash__",
+    "toolz/sandbox/core.py::EqualityHashKey.__eq__",
+    "toolz/sandbox/core.py::EqualityHashKey.__ne__",
+    "toolz/sandbox/core.py::EqualityHashKey.__str__",
+    "toolz/sandbox/core.py::EqualityHashKey.__repr__",
+    "toolz/sandbox/core.py::unzip",
+    "toolz/sandbox/parallel.py::_reduce",
+    "toolz/sandbox/parallel.py::fold"
+  ],
+  "rows": [
+    {
+      "target": "toolz/__init__.py::__getattr__",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/__init__.py::__getattr__",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::get_exclude_keywords",
+      "kind": "const",
+      "verdict": "proven-gap",
+      "witness": {
+        "args": "(1, '')",
+        "old": "raise: AttributeError: 'str' object has no attribute 'parameters'",
+        "new": "ok: ()"
+      },
+      "strength": 1,
+      "detail": "1 of 23 inputs disagree"
+    },
+    {
+      "target": "toolz/_signatures.py::get_exclude_keywords",
+      "kind": "compare",
+      "verdict": "proven-gap",
+      "witness": {
+        "args": "('', '')",
+        "old": "raise: AttributeError: 'str' object has no attribute 'parameters'",
+        "new": "ok: ()"
+      },
+      "strength": 1,
+      "detail": "23 of 23 inputs disagree"
+    },
+    {
+      "target": "toolz/_signatures.py::get_exclude_keywords",
+      "kind": "negate_if",
+      "verdict": "proven-gap",
+      "witness": {
+        "args": "('', '')",
+        "old": "raise: AttributeError: 'str' object has no attribute 'parameters'",
+        "new": "ok: ()"
+      },
+      "strength": 1,
+      "detail": "23 of 23 inputs disagree"
+    },
+    {
+      "target": "toolz/_signatures.py::get_exclude_keywords",
+      "kind": "compare",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 23 argument sets raised on both sides"
+    },
+    {
+      "target": "toolz/_signatures.py::get_exclude_keywords",
+      "kind": "negate_if",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 23 argument sets raised on both sides"
+    },
+    {
+      "target": "toolz/_signatures.py::expand_sig",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::expand_sig",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::expand_sig",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::expand_sig",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::expand_sig",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::check_valid",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::check_valid",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::check_valid",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::_is_valid_args",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::check_partial",
+      "kind": "compare",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 34 argument sets raised on both sides"
+    },
+    {
+      "target": "toolz/_signatures.py::check_partial",
+      "kind": "binop",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 34 argument sets raised on both sides"
+    },
+    {
+      "target": "toolz/_signatures.py::check_partial",
+      "kind": "binop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::check_partial",
+      "kind": "binop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::check_partial",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::_is_partial_args",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::check_arity",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::check_arity",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::check_arity",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::_is_arity",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::_is_arity",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::_is_arity",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::_has_varargs",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::_has_varargs",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::_has_varargs",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::check_keywords",
+      "kind": "negate_if",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 12 argument sets raised on both sides"
+    },
+    {
+      "target": "toolz/_signatures.py::_has_keywords",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::_has_keywords",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::_has_keywords",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::_num_required_args",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::_num_required_args",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::_num_required_args",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/_signatures.py::_num_required_args",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/dicttoolz.py::_get_factory",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/dicttoolz.py::_get_factory",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/dicttoolz.py::merge",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/dicttoolz.py::merge",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/dicttoolz.py::merge",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/dicttoolz.py::merge",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/dicttoolz.py::merge",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/dicttoolz.py::merge_with",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/dicttoolz.py::merge_with",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/dicttoolz.py::merge_with",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/dicttoolz.py::merge_with",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/dicttoolz.py::merge_with",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/dicttoolz.py::valfilter",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/dicttoolz.py::keyfilter",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/dicttoolz.py::itemfilter",
+      "kind": "negate_if",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 34 argument sets raised on both sides"
+    },
+    {
+      "target": "toolz/dicttoolz.py::dissoc",
+      "kind": "binop",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 12 argument sets raised on both sides"
+    },
+    {
+      "target": "toolz/dicttoolz.py::dissoc",
+      "kind": "compare",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 12 argument sets raised on both sides"
+    },
+    {
+      "target": "toolz/dicttoolz.py::dissoc",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/dicttoolz.py::dissoc",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/dicttoolz.py::update_in",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/dicttoolz.py::update_in",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/dicttoolz.py::get_in",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::apply",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::apply",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::apply",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::thread_first",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::thread_first",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::thread_first",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::thread_first",
+      "kind": "binop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::thread_first",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::thread_last",
+      "kind": "negate_if",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; agree: 12 of 12 inputs exercised it, all agree"
+    },
+    {
+      "target": "toolz/functoolz.py::thread_last",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::thread_last",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::thread_last",
+      "kind": "binop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::thread_last",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::_restore_curry",
+      "kind": "const",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 40 argument sets raised on both sides"
+    },
+    {
+      "target": "toolz/functoolz.py::_restore_curry",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::_restore_curry",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::_restore_curry",
+      "kind": "boolop",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 40 argument sets raised on both sides"
+    },
+    {
+      "target": "toolz/functoolz.py::memoize",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::memoize",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::memoize",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::memoize",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::memoize",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::compose",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::compose",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::compose",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::compose",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::compose",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::_check_sigspec",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::_check_sigspec",
+      "kind": "boolop",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; agree: 32 of 34 inputs exercised it, all agree"
+    },
+    {
+      "target": "toolz/functoolz.py::_check_sigspec",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::_check_sigspec",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::_check_sigspec",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::num_required_args",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::num_required_args",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::num_required_args",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::has_varargs",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::has_varargs",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::has_keywords",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::has_keywords",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::is_valid_args",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::is_partial_args",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::is_arity",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::is_arity",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::is_arity",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::is_arity",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/functoolz.py::is_arity",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::accumulate",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::accumulate",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::groupby",
+      "kind": "negate_if",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 23 argument sets raised on both sides"
+    },
+    {
+      "target": "toolz/itertoolz.py::merge_sorted",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::merge_sorted",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::merge_sorted",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::merge_sorted",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::merge_sorted",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::_merge_sorted_binary",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::_merge_sorted_binary",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::_merge_sorted_binary",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::_merge_sorted_binary",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::_merge_sorted_binary",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::_merge_sorted_binary_key",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::_merge_sorted_binary_key",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::_merge_sorted_binary_key",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::_merge_sorted_binary_key",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::_merge_sorted_binary_key",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::unique",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::unique",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::unique",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::isdistinct",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::isdistinct",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::isdistinct",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::take_nth",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::nth",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::last",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::last",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::get",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::get",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::get",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::get",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::get",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::frequencies",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::reduceby",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::reduceby",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::reduceby",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::reduceby",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::reduceby",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::sliding_window",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::sliding_window",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::partition",
+      "kind": "binop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::partition",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::partition_all",
+      "kind": "binop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::partition_all",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::partition_all",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::partition_all",
+      "kind": "binop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::partition_all",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::count",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::count",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::pluck",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::pluck",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::pluck",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::getter",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::getter",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::getter",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::getter",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::getter",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::join",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::join",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::join",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::join",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::join",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::diff",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::diff",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::diff",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::diff",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::diff",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::topk",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::topk",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::random_sample",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/itertoolz.py::random_sample",
+      "kind": "compare",
+      "verdict": "proven-gap",
+      "witness": {
+        "args": "('__no__default__', '__no__default__', 2016)",
+        "old": "ok: []...then TypeError: '<' not supported between instances of 'float' and 'str'",
+        "new": "ok: []...then TypeError: '<=' not supported between instances of 'float' and 'str'"
+      },
+      "strength": 0,
+      "detail": "6 of 34 inputs disagree"
+    },
+    {
+      "target": "toolz/recipes.py::countby",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "toolz/recipes.py::partitionby",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    }
+  ],
+  "seconds": 95.96368336677551
+}

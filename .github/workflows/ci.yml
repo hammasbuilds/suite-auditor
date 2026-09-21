@@ -1,0 +1,31 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-dependency-glob: "**/pyproject.toml"
+      - run: uv sync --all-groups
+
+      - name: Lint
+        run: |
+          uv run ruff check src tests
+          uv run ruff format --check src tests
+
+      # No model, no GPU, no network: everything under test is the code that decides
+      # whether a survivor is a gap.
+      - name: Test
+        run: uv run pytest -q
+
+      - name: Audit its own suite
+        # Dogfooding. Never fails the build on a finding - the point is that the numbers
+        # are visible, and this tool's own coverage gaps are as interesting as anyone's.
+        run: uv run suite-auditor coverage . || true

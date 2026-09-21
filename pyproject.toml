@@ -1,0 +1,37 @@
+[project]
+name = "suite-auditor"
+version = "0.1.0"
+description = "Provable gaps in a real test suite: mutate, run only the covering tests, and find the input that proves each survivor wrong"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+keywords = ["mutation-testing", "test-quality", "differential-testing", "coverage", "pytest", "test-adequacy"]
+# No runtime dependencies. Coverage is ~40 lines of sys.settrace rather than coverage.py,
+# because a tool whose output is a claim about somebody else's tests should be a smaller
+# thing to trust than the tests it audits.
+dependencies = []
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.16,<0.17"]
+
+[project.scripts]
+suite-auditor = "suite_auditor.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/suite_auditor"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

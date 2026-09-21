@@ -1,0 +1,855 @@
+{
+  "counts": {
+    "killed": 68,
+    "unproven": 29,
+    "proven-gap": 3
+  },
+  "kill_rate": 0.68,
+  "proven_gaps": 3,
+  "strong_gaps": 0,
+  "uncovered": [
+    "src/repo_surgeon/cli.py::_dirty",
+    "src/repo_surgeon/cli.py::cmd_scout",
+    "src/repo_surgeon/cli.py::cmd_run",
+    "src/repo_surgeon/cli.py::main",
+    "src/repo_surgeon/ledger.py::Ledger.rows",
+    "src/repo_surgeon/model.py::_key",
+    "src/repo_surgeon/model.py::generate",
+    "src/repo_surgeon/model.py::generate_many",
+    "src/repo_surgeon/model.py::extract_code",
+    "src/repo_surgeon/model.py::available",
+    "src/repo_surgeon/pipeline.py::RunResult.landed",
+    "src/repo_surgeon/pipeline.py::RunResult.refused",
+    "src/repo_surgeon/pipeline.py::RunResult.by_rung",
+    "src/repo_surgeon/pipeline.py::_argsets_for",
+    "src/repo_surgeon/pipeline.py::run",
+    "src/repo_surgeon/propose.py::build_prompt",
+    "src/repo_surgeon/propose.py::propose",
+    "src/repo_surgeon/report.py::summary",
+    "src/repo_surgeon/report.py::write_markdown",
+    "src/repo_surgeon/report.py::write_json",
+    "src/repo_surgeon/rules/__init__.py::register",
+    "src/repo_surgeon/scout.py::scout",
+    "src/repo_surgeon/types.py::Site.__str__",
+    "src/repo_surgeon/types.py::Hunk.rules",
+    "src/repo_surgeon/types.py::Hunk.key",
+    "src/repo_surgeon/verify/__init__.py::verify_hunk",
+    "src/repo_surgeon/verify/mutation.py::_Mutator.visit_BoolOp",
+    "src/repo_surgeon/verify/suite.py::run_suite"
+  ],
+  "seconds": 65.5,
+  "results": [
+    {
+      "target": "src/repo_surgeon/pipeline.py::split_imports",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::split_imports",
+      "kind": "binop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::split_imports",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::_bound_names_of",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::_bound_names_of",
+      "kind": "boolop",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; agree: 7 of 12 inputs exercised it, all agree"
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::_bound_names_of",
+      "kind": "negate_if",
+      "verdict": "proven-gap",
+      "witness": {
+        "args": "('proposed,reason',)",
+        "old": "ok: set()",
+        "new": "raise: AttributeError: 'Expr' object has no attribute 'names'"
+      },
+      "strength": 1,
+      "detail": "6 of 12 inputs disagree"
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::_import_anchor",
+      "kind": "const",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 12 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::_import_anchor",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::_import_anchor",
+      "kind": "boolop",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 12 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::_import_anchor",
+      "kind": "boolop",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 12 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::_import_anchor",
+      "kind": "negate_if",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 12 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::apply_hunks",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::apply_hunks",
+      "kind": "boolop",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; agree: 1 of 23 inputs exercised it, all agree"
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::apply_hunks",
+      "kind": "negate_if",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; agree: 1 of 23 inputs exercised it, all agree"
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::apply_hunks",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::apply_hunks",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/rules/__init__.py::get",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/rules/__init__.py::get",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/rules/ospath.py::_match",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/rules/ospath.py::_match",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/rules/ospath.py::_match",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/rules/ospath.py::_match",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/rules/ospath.py::_match",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/rules/percent_format.py::_match",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/rules/percent_format.py::_match",
+      "kind": "const",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; agree: 12 of 12 inputs exercised it, all agree"
+    },
+    {
+      "target": "src/repo_surgeon/rules/percent_format.py::_match",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/rules/percent_format.py::_match",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/rules/percent_format.py::_match",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::python_files",
+      "kind": "boolop",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 23 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::python_files",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::python_files",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::python_files",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::python_files",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::_bound_names",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::_bound_names",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::_bound_names",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::_bound_names",
+      "kind": "negate_if",
+      "verdict": "proven-gap",
+      "witness": {
+        "args": "('proposed,reason',)",
+        "old": "ok: set()",
+        "new": "raise: AttributeError: 'str' object has no attribute 'targets'"
+      },
+      "strength": 1,
+      "detail": "12 of 12 inputs disagree"
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::_bound_names",
+      "kind": "negate_if",
+      "verdict": "proven-gap",
+      "witness": {
+        "args": "('proposed,reason',)",
+        "old": "ok: set()",
+        "new": "raise: AttributeError: 'str' object has no attribute 'names'"
+      },
+      "strength": 1,
+      "detail": "12 of 12 inputs disagree"
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::free_names",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::free_names",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::module_header",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::module_header",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::module_header",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::module_header",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::module_header",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::_enclosing",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::_enclosing",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::_enclosing",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::_enclosing",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::_enclosing",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::package_context",
+      "kind": "compare",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 12 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::package_context",
+      "kind": "negate_if",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 12 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::scout_file",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::scout_file",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::scout_file",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::scout_file",
+      "kind": "binop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::scout_file",
+      "kind": "const",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/values.py::harvest",
+      "kind": "const",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 23 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/values.py::harvest",
+      "kind": "compare",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 23 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/values.py::harvest",
+      "kind": "boolop",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 23 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/values.py::harvest",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/values.py::harvest",
+      "kind": "boolop",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 23 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/values.py::for_parameter",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/values.py::for_parameter",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/values.py::for_parameter",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/values.py::for_parameter",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/values.py::for_parameter",
+      "kind": "boolop",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 34 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/values.py::argument_sets",
+      "kind": "const",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 34 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/values.py::argument_sets",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/values.py::argument_sets",
+      "kind": "const",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 34 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/values.py::argument_sets",
+      "kind": "binop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/values.py::argument_sets",
+      "kind": "binop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/differential.py::run_differential",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/differential.py::run_differential",
+      "kind": "binop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/differential.py::run_differential",
+      "kind": "binop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/differential.py::run_differential",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/differential.py::run_differential",
+      "kind": "const",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 40 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::mutants",
+      "kind": "const",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 23 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::mutants",
+      "kind": "const",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 23 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::mutants",
+      "kind": "binop",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 23 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::mutants",
+      "kind": "compare",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 23 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::mutants",
+      "kind": "negate_if",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 23 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::kill_rate",
+      "kind": "boolop",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 40 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::kill_rate",
+      "kind": "const",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 40 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::kill_rate",
+      "kind": "const",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 40 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::kill_rate",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::kill_rate",
+      "kind": "const",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 40 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/verify/statics.py::_first_function",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/statics.py::_first_function",
+      "kind": "boolop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/statics.py::_first_function",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/statics.py::signature_kept",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/statics.py::signature_kept",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/statics.py::signature_kept",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/statics.py::signature_kept",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/statics.py::signature_kept",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/statics.py::decorators_kept",
+      "kind": "boolop",
+      "verdict": "unproven",
+      "witness": null,
+      "strength": 3,
+      "detail": "survived; inconclusive: all 34 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/verify/statics.py::decorators_kept",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/statics.py::decorators_kept",
+      "kind": "compare",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/statics.py::decorators_kept",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/suite.py::newly_failing",
+      "kind": "binop",
+      "verdict": "killed",
+      "witness": null,
+      "strength": 3,
+      "detail": ""
+    }
+  ]
+}
