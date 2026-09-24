@@ -269,3 +269,105 @@ def test_a_method_mutant_is_written_back_at_the_right_indentation(tmp_path):
 
     Path(tmp_path / "m.py").write_text(before, encoding="utf-8", newline="")
     assert f.read_text(encoding="utf-8") == src + "\n"
+
+
+# --- the target's own suite has to be healthy for any of this to mean anything ---
+#
+# build_map runs the TARGET repository's tests and records what they executed.
+# The result of that subprocess used to be thrown away, so a target whose tests
+# could not be imported produced an empty map and the report announced that no
+# test reaches any function in the package. Total failure and total absence of
+# coverage are indistinguishable from the map alone, and they call for opposite
+# responses.
+
+
+class TestSuiteHealth:
+    def test_a_clean_run_is_clean(self):
+        from suite_auditor.coverage import _read_health
+
+        h = _read_health("192 passed in 1.0s", "", 0)
+        assert h.clean
+        assert h.passed == 192
+        assert h.caveat() == ""
+
+    def test_a_failing_test_makes_the_unreached_count_untrustworthy(self):
+        """A failed test executes nothing after the point it failed, so every
+        function it would have reached is counted as unreached."""
+        from suite_auditor.coverage import _read_health
+
+        h = _read_health("1 failed, 191 passed, 1 skipped in 1.03s", "", 1)
+        assert not h.clean
+        assert h.passed == 191 and h.failed == 1
+        assert "failed" in h.caveat()
+
+    def test_an_erroring_test_is_reported_too(self):
+        from suite_auditor.coverage import _read_health
+
+        h = _read_health("2 errors in 0.4s", "", 1)
+        assert not h.clean
+        assert h.errors == 2
+        assert "errored" in h.caveat()
+
+    def test_collecting_nothing_is_its_own_condition(self):
+        """pytest exits 5 when it found no tests. That is a different problem
+        from a suite that ran and failed, and it needs a different message."""
+        from suite_auditor.coverage import _read_health
+
+        h = _read_health("no tests ran in 0.01s", "", 5)
+        assert not h.clean
+        assert h.collected_nothing
+        assert "collected no tests" in h.caveat()
+
+    def test_a_suite_that_never_ran_says_so(self):
+        from suite_auditor.coverage import SuiteHealth
+
+        h = SuiteHealth(ran=False, exit_code=-1)
+        assert not h.clean
+        assert "did not run at all" in h.caveat()
+
+
+class TestBuildMapReportsHealth:
+    def test_a_repo_with_no_tests_returns_an_empty_map_and_says_why(self, tmp_path):
+        """The case that was silently wrong.
+
+        Nothing to collect, so nothing is traced. Without the health record the
+        caller sees an empty map and cannot tell that apart from a suite that
+        ran perfectly and covered nothing.
+        """
+        from suite_auditor.coverage import build_map
+
+        (tmp_path / "mod.py").write_text("def f(x):\n    return x\n", encoding="utf-8")
+        cov, health = build_map(tmp_path, timeout=120)
+        assert cov == {}
+        assert not health.clean
+        assert health.caveat()
+
+    def test_a_repo_whose_tests_pass_traces_them_and_reports_clean(self, tmp_path):
+        from suite_auditor.coverage import build_map
+
+        (tmp_path / "mod.py").write_text("def f(x):\n    return x + 1\n", encoding="utf-8")
+        (tmp_path / "test_mod.py").write_text(
+            "from mod import f\n\n\ndef test_f():\n    assert f(1) == 2\n", encoding="utf-8"
+        )
+        cov, health = build_map(tmp_path, timeout=120)
+        assert health.ran
+        assert health.passed >= 1
+        assert health.clean
+        assert any(k.endswith("::f") for k in cov), cov
+
+    def test_a_repo_whose_tests_fail_is_traced_but_not_clean(self, tmp_path):
+        """Coverage is still collected - a failing test runs code before it
+        fails - but the run is flagged, because what it did NOT reach is now
+        a property of the failure rather than of the suite's design."""
+        from suite_auditor.coverage import build_map
+
+        (tmp_path / "mod.py").write_text(
+            "def f(x):\n    return x + 1\n\n\ndef g(x):\n    return x * 2\n", encoding="utf-8"
+        )
+        (tmp_path / "test_mod.py").write_text(
+            "from mod import f\n\n\ndef test_f():\n    assert f(1) == 99\n", encoding="utf-8"
+        )
+        cov, health = build_map(tmp_path, timeout=120)
+        assert health.ran
+        assert health.failed >= 1
+        assert not health.clean

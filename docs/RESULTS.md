@@ -15,13 +15,22 @@ No language model is involved anywhere in this tool. Every number below comes ou
 | | [`toolz`](https://github.com/pytoolz/toolz) | [`repo-surgeon`](https://github.com/hammasbuilds/repo-surgeon) |
 |---|---:|---:|
 | functions in the package | 157 | 67 |
-| **reached by no test** | 14 | **28 (42%)** |
+| **reached by no test** | 5 | **28 (42%)** |
 | mutants scored | 181 | 100 |
 | killed by the suite | 164 | 68 |
 | **kill rate** | **90.6%** | **68.0%** |
 | proven gaps | 4 | 3 |
 | of those, unarguable | 0 | 0 |
 | unproven survivors | 13 | 29 |
+
+> **The toolz figure was corrected on 2026-09-24: 14 → 5.** Nothing about toolz
+> or this tool changed. The original run traced a toolz suite in which more
+> tests were failing, and a test that fails executes nothing past the point it
+> failed — so every function it would have reached was counted as unreached.
+> The tool now reports the health of the target's own suite alongside the
+> number and refuses to present an unreached list as a measurement when that
+> suite did not run cleanly. The repo-surgeon figure was produced on a clean
+> run and is unchanged.
 
 `toolz` is a mature functional library maintained since 2013. `repo-surgeon` is one of
 mine, shipped a few hours before this run, described in its own README as "47 tests, all on

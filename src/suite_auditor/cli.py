@@ -21,9 +21,11 @@ from suite_auditor.report import summary, write_json, write_markdown
 
 def cmd_coverage(args: argparse.Namespace) -> int:
     repo = Path(args.repo).resolve()
-    cov = build_map(repo, args.test)
+    cov, health = build_map(repo, args.test)
     if not cov:
         print("no coverage could be traced - is the suite runnable from this directory?")
+        if health.caveat():
+            print(f"  {health.caveat()}")
         return 1
 
     targets = find_targets(repo)
@@ -34,6 +36,20 @@ def cmd_coverage(args: argparse.Namespace) -> int:
     print(f"{repo.name}: {len(targets)} functions")
     print(f"  reached by at least one test : {len(covered)}")
     print(f"  reached by none              : {len(uncovered)}")
+
+    # An unreached list is only as good as the run that produced it. A test
+    # that errors executes nothing, so everything it would have covered reads
+    # as uncovered - and the failure points the wrong way, making a healthy
+    # suite look full of gaps.
+    if not health.clean:
+        print()
+        print(f"  ! {health.caveat()} while tracing.")
+        print("    Functions those tests would have reached are counted as unreached,")
+        print("    so the number above is an UPPER BOUND, not a measurement.")
+        print("    Fix the target's suite first, then re-run.")
+    elif health.passed:
+        print(f"  (traced across {health.passed} passing tests)")
+
     if uncovered:
         print("\n  no test reaches these:")
         for t in uncovered[: args.show]:

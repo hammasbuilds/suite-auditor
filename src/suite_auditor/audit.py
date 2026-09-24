@@ -184,9 +184,16 @@ def audit(
 
     if progress:
         print("tracing which tests cover which functions (one suite run)...")
-    cov = build_map(repo, test_target)
+    cov, health = build_map(repo, test_target)
     if progress:
         print(f"  {len(cov)} functions traced")
+        # The mutation audit depends on this map twice over: to decide which
+        # functions are worth mutating, and to pick which tests to re-run per
+        # mutant. A partial trace therefore understates coverage AND runs too
+        # few tests against each mutant, which inflates the survivor count in
+        # the same direction. Worth saying out loud before any number is shown.
+        if not health.clean:
+            print(f"  ! {health.caveat()} - survivors below will be overstated")
 
     targets = find_targets(repo)
     for t in targets:
