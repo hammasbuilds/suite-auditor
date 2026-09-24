@@ -28,7 +28,7 @@ def main() -> int:
     print("suite-auditor: which functions does toolz's own test suite never reach?", flush=True)
     print(flush=True)
     result = subprocess.run(
-        [sys.executable, "-m", 'suite_auditor.cli', "coverage", "targets/toolz"],
+        [sys.executable, "-m", "suite_auditor.cli", "coverage", "targets/toolz"],
         cwd=ROOT,
         env={**os.environ, "PYTHONPATH": str(ROOT / "src"), "PYTHONIOENCODING": "utf-8"},
         check=False,
@@ -37,7 +37,7 @@ def main() -> int:
         return result.returncode
     print(flush=True)
     print("Point it at your own code with:", flush=True)
-    for line in ['suite-auditor coverage <repo>', 'suite-auditor audit <repo>']:
+    for line in ["suite-auditor coverage <repo>", "suite-auditor audit <repo>"]:
         print("    " + line, flush=True)
     return 0
 
