@@ -4,7 +4,7 @@
 <p align="center">
   <a href="#the-through-line">The through-line</a> &middot;
   <a href="#the-result">The result</a> &middot;
-  <a href="docs/RESULTS.md">Full results</a> &middot;
+  <a href="https://github.com/hammasbuilds/suite-auditor/blob/main/docs/RESULTS.md">Full results</a> &middot;
   <a href="#how-it-works">How it works</a> &middot;
   <a href="#run-it">Run it</a> &middot;
   <a href="#what-this-does-not-do">What it does NOT do</a> &middot;
@@ -17,7 +17,7 @@
   <img src="https://img.shields.io/badge/runtime%20deps-0-brightgreen" alt="zero dependencies">
   <img src="https://img.shields.io/badge/model-none%20required-success" alt="no model">
   <img src="https://img.shields.io/badge/tests-24-brightgreen" alt="tests">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="license"></a>
+  <a href="https://github.com/hammasbuilds/suite-auditor/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="license"></a>
 </p>
 
 ---
@@ -85,7 +85,7 @@ through and 29% of problems accepted a provably wrong program. Here a real suite
 Three asserts accept a lot. A suite somebody maintains accepts very little. Worth knowing
 before drawing conclusions about test adequacy from a benchmark.
 
-See [docs/RESULTS.md](docs/RESULTS.md) for both runs in full.
+See [docs/RESULTS.md](https://github.com/hammasbuilds/suite-auditor/blob/main/docs/RESULTS.md) for both runs in full.
 
 ## How it works
 
@@ -183,7 +183,7 @@ src/suite_auditor/
 
 | | |
 |---|---|
-| &#128202; **[Results](docs/RESULTS.md)** | Both audits in full, with the limits |
+| &#128202; **[Results](https://github.com/hammasbuilds/suite-auditor/blob/main/docs/RESULTS.md)** | Both audits in full, with the limits |
 | **[mbpp-false-accepts](https://github.com/hammasbuilds/mbpp-false-accepts)** | The same measurement on a benchmark: three asserts let 17.6% through |
 | **[repo-surgeon](https://github.com/hammasbuilds/repo-surgeon)** | The sibling this audited, and found 42% of untested |
 | **[pr-referee](https://github.com/hammasbuilds/pr-referee)** | The same differential engine, pointed at diffs |
@@ -197,4 +197,4 @@ static analysis &middot; AST &middot; CI
 
 ## License
 
-MIT - see [LICENSE](LICENSE).
+MIT - see [LICENSE](https://github.com/hammasbuilds/suite-auditor/blob/main/LICENSE).
