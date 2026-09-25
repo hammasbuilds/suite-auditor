@@ -61,6 +61,13 @@ def summary(audit: Audit, repo_name: str) -> str:
     # says nothing about how much of the package that is. Printed together, and
     # never apart: a suite covering a tenth of the code and killing everything in
     # it scores 100% above and 10% here, and the first number is the quotable one.
+    if audit.stopped_early:
+        lines.append(
+            f"  ! PARTIAL: the time budget stopped this after {audit.audited_functions} of "
+            f"{audit.covered_total} covered functions. Every rate below is over what was "
+            "scored, not over the package."
+        )
+
     cf, cs = audit.covered_fraction, audit.caught_share
     if cf is not None and cs is not None:
         lines += [

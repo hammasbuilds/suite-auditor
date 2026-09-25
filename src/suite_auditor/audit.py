@@ -178,6 +178,7 @@ def audit(
     per_function: int = 6,
     timeout: float = 300.0,
     progress: bool = True,
+    max_seconds: float = 0.0,
 ) -> Audit:
     t0 = time.time()
     out = Audit()
@@ -227,8 +228,29 @@ def audit(
         print(f"\nmutating {len(covered)} function(s)...")
 
     for i, t in enumerate(covered, 1):
+        # A wall-clock budget, because `timeout` only bounds ONE mutant's test run and
+        # `--limit` only bounds the function count. Neither bounds the audit: the cost
+        # is functions x mutants x however long that function's covering tests take, and
+        # a repository whose tests shell out to git multiplies all three. Auditing
+        # commit-history-forensics - 21 functions, tests that run `git log` - passed
+        # twenty-four minutes with no way to stop it short of killing the process.
+        #
+        # Stopping early is safe here in a way it would not be in most tools: every
+        # figure is a rate over the mutants actually scored, and `audited_functions`
+        # records how many of the covered set was reached, so a truncated run reports a
+        # smaller sample rather than a wrong number.
+        if max_seconds and time.time() - t0 > max_seconds:
+            out.stopped_early = True
+            if progress:
+                print(
+                    f"  ! stopped after {time.time() - t0:.0f}s of a {max_seconds:.0f}s "
+                    f"budget, having audited {i - 1} of {len(covered)} functions. "
+                    "Rates below are over what was scored."
+                )
+            break
         results = audit_target(repo, t, per_function, timeout)
         out.results.extend(results)
+        out.audited_functions = i
         if progress and results:
             gaps = sum(r.verdict is Verdict.PROVEN_GAP for r in results)
             killed = sum(r.verdict is Verdict.KILLED for r in results)

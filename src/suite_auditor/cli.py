@@ -72,6 +72,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
         per_function=args.per_function,
         timeout=args.timeout,
         progress=not args.quiet,
+        max_seconds=args.max_seconds,
     )
 
     print()
@@ -103,6 +104,15 @@ def main(argv: list[str] | None = None) -> int:
     a.add_argument("--limit", type=int, help="stop after N functions")
     a.add_argument("--per-function", type=int, default=6, help="mutants per function")
     a.add_argument("--timeout", type=float, default=300.0)
+    a.add_argument(
+        "--max-seconds",
+        type=float,
+        default=0.0,
+        help="stop after this many seconds and report the partial sample (0 = no budget). "
+        "--timeout bounds one mutant's test run and --limit bounds the function count; "
+        "neither bounds the audit, which is functions x mutants x however long that "
+        "function's covering tests take.",
+    )
     a.add_argument("--out", help="directory for AUDIT.md and audit.json")
     a.add_argument("--quiet", action="store_true")
     a.add_argument("--fail-on-gap", action="store_true", help="exit 1 if any gap is proven")

@@ -94,6 +94,18 @@ class Result:
 class Audit:
     results: list[Result] = field(default_factory=list)
     uncovered: list[str] = field(default_factory=list)
+    stopped_early: bool = False
+    """The wall-clock budget ran out before every covered function was mutated.
+
+    Reported so a rate over a partial sample is not mistaken for a rate over the
+    package. Safe to stop, because every figure here is a rate over what was
+    actually scored - but only if the truncation is visible.
+    """
+
+    audited_functions: int = 0
+    """How many covered functions were actually mutated, which `--limit` and the
+    budget can both cut below `covered_total`."""
+
     no_targets: bool = False
     """No function was found to mutate at all.
 

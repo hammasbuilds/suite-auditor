@@ -449,3 +449,35 @@ def test_an_audit_with_nothing_to_mutate_says_so(tmp_path):
 
     assert "NO FUNCTIONS WERE MUTATED" in out
     assert "nothing below is a statement about" in out
+
+
+def test_a_truncated_audit_says_it_is_partial():
+    """A rate over half the functions is not a rate over the package. Stopping early is
+    safe - every figure is a rate over what was scored - but only while the truncation
+    is visible."""
+    from suite_auditor.report import summary
+    from suite_auditor.types import Audit, Result, Verdict
+
+    partial = Audit(
+        results=[Result("pkg.a", "x + 1", "binop", Verdict.KILLED)],
+        uncovered=["pkg.z"],
+        covered_total=20,
+        audited_functions=1,
+        stopped_early=True,
+    )
+    out = summary(partial, "somelib")
+
+    assert "PARTIAL" in out
+    assert "1 of 20 covered functions" in out
+
+
+def test_a_complete_audit_does_not_claim_to_be_partial():
+    from suite_auditor.report import summary
+    from suite_auditor.types import Audit, Result, Verdict
+
+    whole = Audit(
+        results=[Result("pkg.a", "x + 1", "binop", Verdict.KILLED)],
+        covered_total=1,
+        audited_functions=1,
+    )
+    assert "PARTIAL" not in summary(whole, "somelib")
