@@ -33,6 +33,28 @@ SKIP_DIRS = {
 }
 
 
+# Every operator name, in one place. Two tests hardcoded this list separately and one
+# of them broke the moment an operator was added - which is the harmless version of the
+# problem. The harmful one is a report grouping results by operator and silently
+# dropping a name nothing knows about.
+OPERATORS = frozenset(
+    {
+        "compare",
+        "binop",
+        "boolop",
+        "const",
+        "negate_if",
+        "drop_return",
+        "drop_not",
+        "swallow_except",
+        "drop_assert",
+        "drop_raise",
+        "slice_lower",
+        "slice_upper",
+    }
+)
+
+
 class _Mutator(ast.NodeTransformer):
     """Applies exactly one change, selected by index, and names the operator used."""
 
@@ -43,6 +65,13 @@ class _Mutator(ast.NodeTransformer):
         ast.GtE: ast.Gt,
         ast.Eq: ast.NotEq,
         ast.NotEq: ast.Eq,
+        # Membership and identity. `x in seen` guarding a cache and `x is None`
+        # guarding a default are both decisions, and flipping either changes what the
+        # function does - but neither was reachable before.
+        ast.In: ast.NotIn,
+        ast.NotIn: ast.In,
+        ast.Is: ast.IsNot,
+        ast.IsNot: ast.Is,
     }
     BINOP = {ast.Add: ast.Sub, ast.Sub: ast.Add, ast.Mult: ast.FloorDiv}
     BOOLOP = {ast.And: ast.Or, ast.Or: ast.And}
@@ -86,6 +115,70 @@ class _Mutator(ast.NodeTransformer):
         self.generic_visit(node)
         if self._take("negate_if"):
             node.test = ast.UnaryOp(op=ast.Not(), operand=node.test)
+        return node
+
+    # --- operators added after the survey ---------------------------------------------
+    #
+    # The five above cover comparisons, arithmetic, boolean joins, integer constants and
+    # branch polarity. Every one of these is a mistake a person actually makes and none
+    # of them was reachable before. Recall goes up and precision does not move: a
+    # survivor still has to fail the differential proof before it is called a gap, so a
+    # generated mutant that no input can distinguish stays `unproven` and never reaches
+    # the headline.
+
+    def visit_Return(self, node: ast.Return) -> ast.AST:
+        self.generic_visit(node)
+        # `return x` -> `return None`. The commonest way a refactor loses a value, and
+        # invisible to any test that only checks the function does not raise.
+        if node.value is not None and not (
+            isinstance(node.value, ast.Constant) and node.value.value is None
+        ):
+            if self._take("drop_return"):
+                return ast.Return(value=ast.Constant(value=None))
+        return node
+
+    def visit_UnaryOp(self, node: ast.UnaryOp) -> ast.AST:
+        self.generic_visit(node)
+        # Remove a `not`. negate_if only reaches `if` tests; this reaches every other
+        # place a negation decides something - a while, a comprehension filter, a
+        # returned predicate.
+        if isinstance(node.op, ast.Not) and self._take("drop_not"):
+            return node.operand
+        return node
+
+    def visit_Try(self, node: ast.Try) -> ast.AST:
+        self.generic_visit(node)
+        # Swallow the exception: replace each handler's body with `pass`. A suite that
+        # only checks the happy path cannot tell the difference, and the failure this
+        # hides in production is an error that silently became a success.
+        if node.handlers and self._take("swallow_except"):
+            for handler in node.handlers:
+                handler.body = [ast.Pass()]
+        return node
+
+    def visit_Assert(self, node: ast.Assert) -> ast.AST:
+        self.generic_visit(node)
+        # Delete a guard. An `assert` inside library code is a contract; removing it
+        # should change behaviour on the input that violates it, and if nothing notices,
+        # nothing is testing the contract.
+        if self._take("drop_assert"):
+            return ast.Pass()
+        return node
+
+    def visit_Raise(self, node: ast.Raise) -> ast.AST:
+        self.generic_visit(node)
+        if self._take("drop_raise"):
+            return ast.Pass()
+        return node
+
+    def visit_Slice(self, node: ast.Slice) -> ast.AST:
+        self.generic_visit(node)
+        # Off-by-one at a boundary: `a[1:]` -> `a[2:]`, `a[:n]` -> `a[:n - 1]`. The
+        # single most common real bug in code that walks a sequence.
+        if node.lower is not None and self._take("slice_lower"):
+            node.lower = ast.BinOp(left=node.lower, op=ast.Add(), right=ast.Constant(1))
+        elif node.upper is not None and self._take("slice_upper"):
+            node.upper = ast.BinOp(left=node.upper, op=ast.Sub(), right=ast.Constant(1))
         return node
 
 

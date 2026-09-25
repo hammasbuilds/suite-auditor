@@ -15,7 +15,7 @@ from suite_auditor.audit import patch_file
 from suite_auditor.coverage import tests_for as covering_tests
 from suite_auditor.differential import compare
 from suite_auditor.inputs import argument_sets, harvest_for, witness_strength
-from suite_auditor.mutate import find_targets, mutants
+from suite_auditor.mutate import OPERATORS, find_targets, mutants
 from suite_auditor.types import Audit, Result, Target, Verdict
 
 # --- mutation ---------------------------------------------------------------------------
@@ -33,7 +33,7 @@ def test_mutants_are_distinct_and_exclude_the_original():
 def test_each_mutant_names_its_operator():
     src = "def f(n):\n    if n > 0:\n        return n + 1\n    return 0\n"
     kinds = {k for _, k in mutants(src)}
-    assert kinds <= {"compare", "binop", "boolop", "const", "negate_if"}
+    assert kinds <= OPERATORS, f"unnamed operator: {sorted(kinds - OPERATORS)}"
     assert kinds
 
 
