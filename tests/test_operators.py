@@ -94,3 +94,71 @@ def test_the_operator_set_matches_what_the_mutator_can_produce():
     assert OPERATORS <= produced, (
         f"declared but never produced by any case above: {sorted(OPERATORS - produced)}"
     )
+
+
+# --- how the sample is drawn ---------------------------------------------------------
+
+
+def test_the_sample_is_not_the_first_n_in_walk_order():
+    """A function with many of one shape used to spend its whole budget on that shape.
+
+    Twelve integer constants and one slice: walk order hands back six `const` mutants
+    and never mentions the slice, so the kill rate for that function says nothing about
+    off-by-one errors - the single most common real bug in code that walks a sequence.
+    """
+    source = (
+        "def f(a):\n"
+        "    total = 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 + 11 + 12\n"
+        "    return a[1:] + [total]\n"
+    )
+    kinds = {k for _t, k in mutants(source, cap=6)}
+    assert "slice_lower" in kinds, f"the one slice was crowded out by constants: {kinds}"
+    assert "const" in kinds
+
+
+def test_every_operator_present_in_a_function_can_be_sampled():
+    """Round-robin means no kind of mistake is invisible. An operator that is never
+    sampled is worse than one that does not exist: the kill rate silently excludes it
+    while appearing to cover the function."""
+    source = (
+        "def f(a, b, n):\n"
+        "    assert n > 0\n"
+        "    if not a:\n"
+        "        raise ValueError(a)\n"
+        "    try:\n"
+        "        head = a[1:n] + b\n"
+        "    except TypeError:\n"
+        "        return 0\n"
+        "    return head\n"
+    )
+    available = {k for _t, k in mutants(source, cap=10**6)}
+    sampled = {k for _t, k in mutants(source, cap=len(available))}
+    assert sampled == available, f"never sampled: {sorted(available - sampled)}"
+
+
+def test_the_rarest_operator_survives_a_cap_that_falls_mid_round():
+    """Within a round the rarest kind goes first, so a kind with one site is not
+    crowded out by one with forty when the budget runs out part-way through."""
+    source = (
+        "def f(a):\n"
+        "    x = 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1\n"
+        "    return a[2:] if x else None\n"
+    )
+    kinds = [k for _t, k in mutants(source, cap=2)]
+    assert "slice_lower" in kinds, f"the single slice lost to ten constants: {kinds}"
+
+
+def test_a_cap_larger_than_the_supply_returns_everything():
+    source = "def f(a):\n    return a + 1\n"
+    everything = mutants(source, cap=10**6)
+    assert mutants(source, cap=999) == everything
+
+
+def test_the_sample_is_still_distinct_and_excludes_the_original():
+    import ast
+
+    source = "def f(a, b, n):\n    if a < b:\n        return a[1:n] + 1\n    return None\n"
+    drawn = mutants(source, cap=8)
+    texts = [t for t, _ in drawn]
+    assert len(texts) == len(set(texts))
+    assert ast.unparse(ast.parse(source)) not in texts

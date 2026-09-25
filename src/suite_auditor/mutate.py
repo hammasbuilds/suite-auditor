@@ -182,8 +182,11 @@ class _Mutator(ast.NodeTransformer):
         return node
 
 
-def mutants(source: str, cap: int = 8) -> list[tuple[str, str]]:
-    """[(mutant source, operator)] - distinct, and never equal to the original."""
+MAX_SITES = 600
+
+
+def _every_mutant(source: str) -> list[tuple[str, str]]:
+    """Every distinct single-point mutant of this function, in AST walk order."""
     try:
         base = ast.unparse(ast.parse(source))
     except SyntaxError:
@@ -191,7 +194,7 @@ def mutants(source: str, cap: int = 8) -> list[tuple[str, str]]:
 
     out: list[tuple[str, str]] = []
     seen: set[str] = set()
-    for i in range(cap * 4):
+    for i in range(MAX_SITES):
         m = _Mutator(i)
         try:
             tree = m.visit(ast.parse(source))
@@ -209,8 +212,62 @@ def mutants(source: str, cap: int = 8) -> list[tuple[str, str]]:
         if text != base and text not in seen:
             seen.add(text)
             out.append((text, m.kind))
-        if len(out) >= cap:
+    return out
+
+
+def mutants(source: str, cap: int = 8) -> list[tuple[str, str]]:
+    """Up to `cap` mutants, drawn round-robin across operators.
+
+    The selection used to be "the first `cap` found in AST walk order", and that is a
+    biased sample of the thing being measured. A function with many integer constants
+    spends its whole budget on `const`; one with a long chain of `if`s spends it on
+    `negate_if`. Measured across three repositories at the default cap:
+
+        blast-radius     slice_upper  0 sampled of 11 available
+                         slice_lower  0 of 6
+                         drop_raise   0 of 1
+        cartographer     const        34.0% of the sample, 27.4% of what exists
+                         negate_if    14.0% of the sample, 21.5% of what exists
+
+    Three operators were never sampled at all, so the kill rate said nothing about
+    them - and it mattered, because operators do not have similar kill rates.
+    `mbpp-false-accepts` measured a boundary comparison surviving three-assert suites
+    25.9% of the time, by far the highest of any operator. A sample whose composition
+    drifts with the shape of the code drags the headline number with it.
+
+    Round-robin rather than proportional, deliberately. Proportional sampling would
+    reproduce the natural mix and keep rare operators rare; round-robin guarantees every
+    kind of mistake present in the function is represented. That changes what the kill
+    rate means - "across the kinds of mistake available here, how many would the suite
+    catch" rather than "weighted by how often each kind appears in this code" - and the
+    first question is the one worth answering, because the second is dominated by
+    whatever the file happens to contain most of.
+    """
+    everything = _every_mutant(source)
+    if len(everything) <= cap:
+        return everything
+
+    by_kind: dict[str, list[tuple[str, str]]] = {}
+    for item in everything:
+        by_kind.setdefault(item[1], []).append(item)
+
+    # Rarest operator first within each round, so a kind with one site is not crowded
+    # out by one with forty when the cap falls mid-round.
+    order = sorted(by_kind, key=lambda k: (len(by_kind[k]), k))
+    out: list[tuple[str, str]] = []
+    depth = 0
+    while len(out) < cap:
+        progressed = False
+        for kind in order:
+            bucket = by_kind[kind]
+            if depth < len(bucket):
+                out.append(bucket[depth])
+                progressed = True
+                if len(out) >= cap:
+                    break
+        if not progressed:
             break
+        depth += 1
     return out
 
 
