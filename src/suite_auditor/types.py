@@ -94,6 +94,13 @@ class Result:
 class Audit:
     results: list[Result] = field(default_factory=list)
     uncovered: list[str] = field(default_factory=list)
+    no_targets: bool = False
+    """No function was found to mutate at all.
+
+    Distinct from "every mutant was killed" and from "no gaps found", both of which
+    this would otherwise look like: 0 mutants scored, kill rate None, no gaps.
+    """
+
     covered_total: int = 0
     """Functions with at least one covering test, before `--limit` truncates them.
 

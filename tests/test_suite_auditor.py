@@ -413,3 +413,39 @@ def test_caught_share_is_none_when_there_is_nothing_to_divide_by():
     assert empty.kill_rate is None
     assert empty.covered_fraction is None
     assert empty.caught_share is None
+
+
+def test_a_single_module_library_is_found(tmp_path):
+    """A distribution whose whole library is `src/thing.py`, with no __init__.py.
+
+    The "must be inside a package" rule skipped these entirely, so the audit found
+    0 functions, scored 0 mutants and reported a kill rate of None - which in a
+    table of results is indistinguishable from a library with nothing worth
+    mutating. docstring-drift is exactly this shape: 5 functions in src/drift.py,
+    42 tests, and an audit that said nothing about either.
+    """
+    from suite_auditor.mutate import find_targets
+
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "thing.py").write_text(
+        "def double(x):\n    return x * 2\n", encoding="utf-8"
+    )
+    # Not the library: excluded because its directory is neither a package nor src/.
+    (tmp_path / "examples").mkdir()
+    (tmp_path / "examples" / "demo.py").write_text("def ignore_me():\n    pass\n", encoding="utf-8")
+
+    keys = [t.key for t in find_targets(tmp_path)]
+    assert "src/thing.py::double" in keys
+    assert not any("examples" in k for k in keys), "examples/ is not the library"
+
+
+def test_an_audit_with_nothing_to_mutate_says_so(tmp_path):
+    """Silence here reads as a clean bill of health, and it is the opposite."""
+    from suite_auditor.report import summary
+    from suite_auditor.types import Audit
+
+    empty = Audit(no_targets=True)
+    out = summary(empty, "somelib")
+
+    assert "NO FUNCTIONS WERE MUTATED" in out
+    assert "nothing below is a statement about" in out

@@ -196,6 +196,21 @@ def audit(
             print(f"  ! {health.caveat()} - survivors below will be overstated")
 
     targets = find_targets(repo)
+    if not targets:
+        # Loud, because the alternative is silence that reads as a clean bill of
+        # health. An audit with no targets reports 0 mutants and a kill rate of
+        # None, which in a table of results is indistinguishable from a library
+        # whose functions are all trivial. docstring-drift landed here: its whole
+        # library is `src/drift.py`, and the "must be in a package" rule skipped it.
+        out.no_targets = True
+        if progress:
+            print(
+                "  ! no functions to mutate. Shipped code is looked for in packages "
+                "(a directory with __init__.py) and in single modules directly under "
+                "src/. If the library is somewhere else, nothing below is about it."
+            )
+        return out
+
     for t in targets:
         t.covering_tests = tests_for(cov, t.path, t.name)
 

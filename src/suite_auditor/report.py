@@ -37,6 +37,11 @@ def summary(audit: Audit, repo_name: str) -> str:
     ]
 
     scored = len(audit.scored)
+    if audit.no_targets:
+        lines.append("  NO FUNCTIONS WERE MUTATED - nothing below is a statement about")
+        lines.append("  this suite. Shipped code is looked for in packages (a directory")
+        lines.append("  with __init__.py) and in single modules directly under src/.")
+        return "\n".join(lines)
     if not scored:
         lines.append("  nothing could be scored.")
         return "\n".join(lines)

@@ -203,7 +203,16 @@ def find_targets(repo: Path, include_methods: bool = True) -> list[Target]:
             continue
         # Only shipped package code. `examples/` and `docs/` are not the library, and a
         # gap reported in one of them is noise in the report.
-        if not (p.parent / "__init__.py").is_file():
+        #
+        # Two shapes count as shipped. A file whose directory has __init__.py is part
+        # of a package. A file directly under src/ is a single-module distribution -
+        # `src/drift.py` with no __init__.py anywhere - which the __init__ rule alone
+        # skipped entirely. docstring-drift is exactly that shape, and auditing it
+        # produced 0 mutants and a kill rate of None: indistinguishable in the report
+        # from a library with nothing worth mutating.
+        in_package = (p.parent / "__init__.py").is_file()
+        single_module = p.parent.name == "src" and p.parent.parent == repo
+        if not (in_package or single_module):
             continue
         try:
             src = p.read_text(encoding="utf-8")
