@@ -201,6 +201,9 @@ def audit(
 
     covered = [t for t in targets if t.covering_tests]
     out.uncovered = [t.key for t in targets if not t.covering_tests]
+    # Before --limit, so the denominator describes the package rather than the
+    # size of this run.
+    out.covered_total = len(covered)
     if limit:
         covered = covered[:limit]
 

@@ -371,3 +371,45 @@ class TestBuildMapReportsHealth:
         assert health.ran
         assert health.failed >= 1
         assert not health.clean
+
+
+def test_a_high_kill_rate_over_a_narrow_base_cannot_hide():
+    """The stated weakness, made visible.
+
+    `kill_rate` is a rate over the functions a test reaches, because only those
+    are ever mutated. A suite covering one function out of ten and killing every
+    mutant in it reports 100% - the same number a suite covering all ten and
+    killing everything reports. `caught_share` multiplies by the covered fraction,
+    so the only way to raise it is to test more.
+    """
+    from suite_auditor.types import Audit, Result, Verdict
+
+    narrow = Audit(
+        results=[Result("pkg.a", "x + 1", "arithmetic", Verdict.KILLED)],
+        uncovered=[f"pkg.f{i}" for i in range(9)],
+        covered_total=1,
+    )
+    wide = Audit(
+        results=[
+            Result(f"pkg.f{i}", "x + 1", "arithmetic", Verdict.KILLED) for i in range(10)
+        ],
+        uncovered=[],
+        covered_total=10,
+    )
+
+    assert narrow.kill_rate == 1.0
+    assert wide.kill_rate == 1.0, "kill rate alone cannot tell these apart"
+
+    assert narrow.covered_fraction == 0.1
+    assert wide.covered_fraction == 1.0
+    assert narrow.caught_share == 0.1
+    assert wide.caught_share == 1.0
+
+
+def test_caught_share_is_none_when_there_is_nothing_to_divide_by():
+    from suite_auditor.types import Audit
+
+    empty = Audit()
+    assert empty.kill_rate is None
+    assert empty.covered_fraction is None
+    assert empty.caught_share is None

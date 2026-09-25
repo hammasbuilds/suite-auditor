@@ -52,6 +52,21 @@ def summary(audit: Audit, repo_name: str) -> str:
         f"  uncovered functions: {len(audit.uncovered)}  (no test reaches them at all)",
     ]
 
+    # The kill rate is a rate over the functions a test reaches, so on its own it
+    # says nothing about how much of the package that is. Printed together, and
+    # never apart: a suite covering a tenth of the code and killing everything in
+    # it scores 100% above and 10% here, and the first number is the quotable one.
+    cf, cs = audit.covered_fraction, audit.caught_share
+    if cf is not None and cs is not None:
+        lines += [
+            f"  covered fraction   : {cf:.1%}  "
+            f"({audit.covered_total} of {audit.covered_total + len(audit.uncovered)} functions)",
+            f"  CAUGHT SHARE       : {cs:.1%}  "
+            "(kill rate x covered fraction - the share of the whole package",
+            "                       whose mutants this suite would notice, and the one",
+            "                       figure that testing less cannot raise)",
+        ]
+
     if audit.gaps:
         lines.append("\n  gaps, strongest evidence first:\n")
         for g in audit.gaps[:15]:
@@ -96,6 +111,9 @@ def write_json(audit: Audit, path: Path) -> None:
             {
                 "counts": audit.counts(),
                 "kill_rate": audit.kill_rate,
+                "covered_total": audit.covered_total,
+                "covered_fraction": audit.covered_fraction,
+                "caught_share": audit.caught_share,
                 "proven_gaps": len(audit.gaps),
                 "strong_gaps": len(audit.strong_gaps),
                 "uncovered": audit.uncovered,
@@ -117,6 +135,14 @@ def write_markdown(audit: Audit, path: Path, repo_name: str) -> None:
         "",
         f"**{len(audit.gaps)} proven gaps** out of {len(audit.scored)} mutants scored"
         + (f", kill rate {kr:.1%}." if kr is not None else "."),
+        "",
+        (
+            f"Kill rate is measured over the **{audit.covered_fraction:.1%}** of functions a "
+            f"test reaches at all, so the share of the whole package whose mutants this suite "
+            f"would notice is **{audit.caught_share:.1%}**."
+            if audit.covered_fraction is not None and audit.caught_share is not None
+            else ""
+        ),
         "",
         "A gap is a mutant the suite did not catch **and** for which there is a concrete",
         "input showing it behaves differently from the original. Survivors without such an",

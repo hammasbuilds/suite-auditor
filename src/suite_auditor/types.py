@@ -94,6 +94,17 @@ class Result:
 class Audit:
     results: list[Result] = field(default_factory=list)
     uncovered: list[str] = field(default_factory=list)
+    covered_total: int = 0
+    """Functions with at least one covering test, before `--limit` truncates them.
+
+    Recorded because `kill_rate` is a rate over the functions that were mutated,
+    and only functions with a covering test are ever mutated. Without this the
+    headline number has no visible denominator: a suite covering three functions
+    and killing every mutant in them reports the same 100% as a suite covering all
+    of them. `repo-surgeon` posts a high kill rate over a small covered fraction,
+    which is the case this exists to make visible.
+    """
+
     seconds: float = 0.0
 
     def counts(self) -> dict[str, int]:
@@ -126,6 +137,28 @@ class Audit:
         if not s:
             return None
         return sum(r.verdict is Verdict.KILLED for r in s) / len(s)
+
+    @property
+    def covered_fraction(self) -> float | None:
+        """Share of the package's functions that any test reaches at all."""
+        total = self.covered_total + len(self.uncovered)
+        if not total:
+            return None
+        return self.covered_total / total
+
+    @property
+    def caught_share(self) -> float | None:
+        """Kill rate times covered fraction: the share of the WHOLE package whose
+        mutants this suite would notice.
+
+        The honest headline, because it cannot be raised by testing less. A suite
+        that covers a tenth of the code and kills everything in it scores 0.1 here
+        and 1.0 on `kill_rate`, and the second number is the one that gets quoted.
+        """
+        rate, fraction = self.kill_rate, self.covered_fraction
+        if rate is None or fraction is None:
+            return None
+        return rate * fraction
 
     def by_function(self) -> dict[str, list[Result]]:
         out: dict[str, list[Result]] = {}
