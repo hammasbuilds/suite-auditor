@@ -27,6 +27,7 @@ in its own right, and the cheapest one available.
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import tempfile
@@ -52,6 +53,8 @@ _ROOT = os.path.normcase(_ROOT_REAL) + os.sep
 _ORIG = os.environ.get("SA_ORIGINAL", "")
 _ORIG = (os.path.normcase(os.path.realpath(_ORIG)) + os.sep) if _ORIG else ""
 _TEST_DIRS = {"tests", "test", "testing"}
+_ENV_DIRS = set(filter(None, os.environ.get("SA_ENV_DIRS", "").split(os.pathsep)))
+_SKIP_PARTS = {"site-packages", "dist-packages", ".venv", "venv", ".tox", ".nox", "__pycache__"}
 _MAX_CALLS = 16
 _MAX_TRIES = 400
 _MAX_REPR = 400
@@ -78,6 +81,15 @@ def _is_test(rel):
     return any(p in _TEST_DIRS for p in parts[:-1])
 
 
+def _is_env(rel):
+    # A virtual environment inside the project holds pytest itself and every dependency;
+    # none of it is the project's code.
+    parts = rel.split("/")
+    if parts[0] in _ENV_DIRS:
+        return True
+    return any(p in _SKIP_PARTS for p in parts[:-1])
+
+
 def _classify(path):
     hit = _rel_cache.get(path)
     if hit is not None:
@@ -94,12 +106,12 @@ def _classify(path):
     norm = os.path.normcase(real)
     if norm.startswith(_ROOT):
         rel = norm[len(_ROOT):].replace(os.sep, "/")
-        if not _is_test(rel):
+        if not _is_test(rel) and not _is_env(rel):
             # Keep the file's real spelling, not the normcased one.
             result = ("in", real[len(_ROOT):].replace(os.sep, "/"))
     elif _ORIG and norm.startswith(_ORIG):
         rel = norm[len(_ORIG):].replace(os.sep, "/")
-        if not _is_test(rel):
+        if not _is_test(rel) and not _is_env(rel):
             result = ("stray", rel)
     _rel_cache[path] = result
     return result
@@ -307,6 +319,18 @@ class Trace:
         return iter((self.cov, self.health))
 
 
+def _env_dirs(*roots: Path | None) -> list[str]:
+    """Top-level directories of these roots that are virtual environments."""
+    out: list[str] = []
+    for root in roots:
+        if root is None or not root.is_dir():
+            continue
+        for d in root.iterdir():
+            if d.is_dir() and (d / "pyvenv.cfg").is_file() and d.name not in out:
+                out.append(d.name)
+    return out
+
+
 def build_map(
     repo: Path,
     test_target: str = "",
@@ -340,6 +364,7 @@ def build_map(
             SA_COVERAGE_OUT=str(out_base),
             SA_ROOT=str(repo),
             SA_ORIGINAL=str(original.resolve()) if original else "",
+            SA_ENV_DIRS=os.pathsep.join(_env_dirs(repo, original)),
         )
         cmd = [
             python or sys.executable,

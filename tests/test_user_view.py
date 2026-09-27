@@ -384,6 +384,29 @@ def test_a_test_that_already_fails_covers_nothing(tmp_path):
     assert trace.failing_only["mod.py::g"] == ["test_mod.py::test_g"]
 
 
+def test_a_venv_inside_the_project_is_not_the_project(tmp_path):
+    """Found by installing the wheel and auditing a project with its own .venv: pytest's
+    files live under the repo, so the audit reported them as the original repo "shadowing"
+    the scratch copy, and `coverage` would have traced them as project code."""
+    from suite_auditor.workspace import Scratch
+
+    repo = _project(tmp_path / "repo")
+    site = repo / ".venv" / "Lib" / "site-packages"
+    site.mkdir(parents=True)
+    (repo / ".venv" / "pyvenv.cfg").write_text("home = x\n", encoding="utf-8")
+    (site / "fakedep.py").write_text("def helper(x):\n    return x\n", encoding="utf-8")
+    (repo / "tests" / "test_dep.py").write_text(
+        f"import sys\nsys.path.insert(0, {str(site)!r})\nimport fakedep\n\n\n"
+        "def test_dep():\n    assert fakedep.helper(3) == 3\n",
+        encoding="utf-8",
+    )
+    direct = build_map(repo, python=sys.executable)
+    assert not any(".venv" in k for k in direct.cov), list(direct.cov)
+    with Scratch(repo) as scratch:
+        copied = build_map(scratch.copies[0], python=sys.executable, original=repo)
+    assert copied.stray == [], copied.stray
+
+
 def test_the_trace_ignores_frozen_modules(tmp_path):
     """`<frozen os>` resolves against the working directory - the repo root - and was
     reported as a function of the project."""
