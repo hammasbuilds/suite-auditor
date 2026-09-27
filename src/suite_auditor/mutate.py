@@ -13,24 +13,13 @@ that operator survived three-assert suites 25.9% of the time - by far the highes
 from __future__ import annotations
 
 import ast
+import os
 from pathlib import Path
 
 from suite_auditor.types import Target
+from suite_auditor.workspace import JUNK_DIRS, is_test_path
 
-SKIP_DIRS = {
-    ".git",
-    ".venv",
-    "venv",
-    "__pycache__",
-    ".tox",
-    ".nox",
-    ".mypy_cache",
-    ".pytest_cache",
-    ".eggs",
-    ".ruff_cache",
-    "node_modules",
-    "site-packages",
-}
+SKIP_DIRS = JUNK_DIRS
 
 
 # Every operator name, in one place. Two tests hardcoded this list separately and one
@@ -130,11 +119,9 @@ class _Mutator(ast.NodeTransformer):
         self.generic_visit(node)
         # `return x` -> `return None`. The commonest way a refactor loses a value, and
         # invisible to any test that only checks the function does not raise.
-        if node.value is not None and not (
-            isinstance(node.value, ast.Constant) and node.value.value is None
-        ):
-            if self._take("drop_return"):
-                return ast.Return(value=ast.Constant(value=None))
+        returns_none = isinstance(node.value, ast.Constant) and node.value.value is None
+        if node.value is not None and not returns_none and self._take("drop_return"):
+            return ast.Return(value=ast.Constant(value=None))
         return node
 
     def visit_UnaryOp(self, node: ast.UnaryOp) -> ast.AST:
@@ -342,14 +329,38 @@ def _target(ctx: tuple, node, name: str) -> Target:
     )
 
 
+def _python_files(repo: Path) -> list[Path]:
+    """Every .py file worth considering, without descending into environments or caches.
+
+    os.walk with pruning rather than rglob: a virtual environment inside the project
+    holds tens of thousands of files, and walking it only to discard them was most of
+    the time `coverage` spent before running anything.
+    """
+    found: list[Path] = []
+    for dirpath, dirnames, filenames in os.walk(repo):
+        here = Path(dirpath)
+        keep = []
+        for d in dirnames:
+            if d in SKIP_DIRS or d.endswith(".egg-info"):
+                continue
+            if here == repo and d in ("build", "dist", "examples", "docs", "doc"):
+                continue
+            if (here / d / "pyvenv.cfg").is_file():
+                continue
+            keep.append(d)
+        dirnames[:] = sorted(keep)
+        found += [here / f for f in sorted(filenames) if f.endswith(".py")]
+    return found
+
+
 def find_targets(repo: Path, include_methods: bool = True) -> list[Target]:
     """Every function in the package that could be mutated, methods included."""
     out: list[Target] = []
-    for p in sorted(repo.rglob("*.py")):
+    for p in _python_files(repo):
         rel = p.relative_to(repo)
-        if any(part in SKIP_DIRS for part in rel.parts):
-            continue
-        if "test" in p.name or "tests" in rel.parts:
+        # By pytest's conventions, not by substring: "test" in the name used to skip
+        # latest.py, contest.py and attestation.py as though they were tests.
+        if is_test_path(rel.as_posix()):
             continue
         # Only shipped package code. `examples/` and `docs/` are not the library, and a
         # gap reported in one of them is noise in the report.
@@ -365,9 +376,9 @@ def find_targets(repo: Path, include_methods: bool = True) -> list[Target]:
         if not (in_package or single_module):
             continue
         try:
-            src = p.read_text(encoding="utf-8")
+            src = p.read_text(encoding="utf-8-sig")
             tree = ast.parse(src)
-        except (SyntaxError, UnicodeDecodeError, OSError):
+        except (SyntaxError, UnicodeDecodeError, OSError, ValueError):
             continue
 
         lines = src.splitlines()

@@ -18,12 +18,13 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from suite_auditor.inputs import PROVENANCE_LABEL
 from suite_auditor.types import Audit, Verdict
 
 STRENGTH_LABEL = {
     0: "both versions return a value, and the values differ",
     1: "one version returns, the other raises",
-    2: "both raise, differently",
+    2: "both raise, differently (never counted as a gap)",
     3: "no witness",
 }
 
@@ -43,7 +44,22 @@ def summary(audit: Audit, repo_name: str) -> str:
         lines.append("  with __init__.py) and in single modules directly under src/.")
         return "\n".join(lines)
     if not scored:
-        lines.append("  nothing could be scored.")
+        lines.append("  NOTHING COULD BE SCORED - this is not a result about the suite.")
+        reasons: dict[str, int] = {}
+        for r in audit.results:
+            reasons[r.detail or "unknown"] = reasons.get(r.detail or "unknown", 0) + 1
+        for why, n in sorted(reasons.items(), key=lambda kv: -kv[1])[:5]:
+            lines.append(f"    {n} mutant(s): {why}")
+        if not audit.results and audit.covered_total == 0 and audit.uncovered:
+            lines.append(
+                f"    no passing test reaches any of the {len(audit.uncovered)} functions found"
+            )
+        health = audit.health
+        if health is not None and health.caveat():
+            lines.append(f"    {health.caveat()}")
+            if health.output_tail:
+                lines.append("    last lines of the suite's output:")
+                lines += [f"      {ln}" for ln in health.output_tail.splitlines()]
         return "\n".join(lines)
 
     kr = audit.kill_rate
@@ -56,6 +72,15 @@ def summary(audit: Audit, repo_name: str) -> str:
         "(possibly equivalent mutants; not counted as gaps)",
         f"  uncovered functions: {len(audit.uncovered)}  (no test reaches them at all)",
     ]
+    if audit.failing_only:
+        lines.append(
+            f"  reached only by failing tests: {len(audit.failing_only)}  "
+            "(counted as not covered; fix those tests)"
+        )
+    if counts.get("skipped"):
+        lines.append(
+            f"  skipped            : {counts['skipped']}  (could not be scored; not in any rate)"
+        )
 
     # The kill rate is a rate over the functions a test reaches, so on its own it
     # says nothing about how much of the package that is. Printed together, and
@@ -72,7 +97,8 @@ def summary(audit: Audit, repo_name: str) -> str:
     if cf is not None and cs is not None:
         lines += [
             f"  covered fraction   : {cf:.1%}  "
-            f"({audit.covered_total} of {audit.covered_total + len(audit.uncovered)} functions)",
+            f"({audit.covered_total} of "
+            f"{audit.covered_total + len(audit.uncovered) + len(audit.failing_only)} functions)",
             f"  CAUGHT SHARE       : {cs:.1%}  "
             "(kill rate x covered fraction - the share of the whole package",
             "                       whose mutants this suite would notice, and the one",
@@ -85,7 +111,10 @@ def summary(audit: Audit, repo_name: str) -> str:
             w = g.witness or {}
             lines.append(f"  {g.target}   [{g.kind}]")
             lines.append(f"    why it counts : {STRENGTH_LABEL[g.strength]}")
-            lines.append(f"    input         : {w.get('args', '?')}")
+            fn = g.target.rpartition("::")[2].rpartition(".")[2]
+            lines.append(f"    call          : {fn}{w.get('args', '?')}")
+            if g.provenance in PROVENANCE_LABEL:
+                lines.append(f"    input         : {PROVENANCE_LABEL[g.provenance]}")
             lines.append(f"    before        : {w.get('old', '?')[:100]}")
             lines.append(f"    after         : {w.get('new', '?')[:100]}")
             lines.append("")
@@ -129,6 +158,7 @@ def write_json(audit: Audit, path: Path) -> None:
                 "proven_gaps": len(audit.gaps),
                 "strong_gaps": len(audit.strong_gaps),
                 "uncovered": audit.uncovered,
+                "failing_only": audit.failing_only,
                 "seconds": round(audit.seconds, 1),
                 "results": [r.as_row() for r in audit.results],
             },
@@ -166,19 +196,22 @@ def write_markdown(audit: Audit, path: Path, repo_name: str) -> None:
         out += [
             "## Gaps",
             "",
-            "| function | operator | input | before | after |",
-            "|---|---|---|---|---|",
+            "| function | operator | input | input source | before | after |",
+            "|---|---|---|---|---|---|",
         ]
         for g in audit.gaps:
             w = g.witness or {}
             esc = lambda s: str(s).replace("|", "\\|")[:80]  # noqa: E731
             out.append(
-                f"| `{g.target}` | `{g.kind}` | `{esc(w.get('args'))}` | "
+                f"| `{g.target}` | `{g.kind}` | `{esc(w.get('args'))}` | {g.provenance or '-'} | "
                 f"`{esc(w.get('old'))}` | `{esc(w.get('new'))}` |"
             )
     if audit.uncovered:
         out += ["", "## Reached by no test", ""]
         out += [f"- `{k}`" for k in audit.uncovered]
+    if audit.failing_only:
+        out += ["", "## Reached only by tests that fail", ""]
+        out += [f"- `{k}`" for k in audit.failing_only]
 
     unproven = [r for r in audit.results if r.verdict is Verdict.UNPROVEN]
     if unproven:

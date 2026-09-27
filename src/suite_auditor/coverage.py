@@ -1,18 +1,24 @@
-"""Which tests actually execute which functions.
+"""Which tests actually execute which functions - and with what arguments.
 
 This is what makes a mutation run on a real library finish. Running a whole suite once per
 mutant is the naive approach and it is quadratic in the worst way: `toolz` has ~500 tests
 and a few hundred mutable functions, so a full pass is hours. Only the tests that *reach* a
 function can possibly kill its mutants, and for most functions that is two or three tests.
 
-The map is built in a single pass. A tiny pytest plugin is written into the target repo, the
-suite runs once under it, and `sys.settrace` records which functions each test enters. The
-plugin is removed afterwards.
+The map is built in a single pass. A tiny pytest plugin is written into a scratch directory
+(never into the target), put on PYTHONPATH, and the suite runs once under it while
+`sys.settrace` records which functions each test enters.
 
-`coverage.py` would do this and is the obvious choice. It is not used because it would be
-the only runtime dependency in a tool whose output is a claim about somebody else's tests,
-and forty lines of `settrace` is a smaller thing to trust than a package. The trade is real
-and it is the wrong call for a library; for a one-shot auditor it is the right one.
+The same pass records **the arguments each function was actually called with**, when they
+are plain literals. Those are the inputs the differential stage uses to prove a survivor
+wrong: values the covering tests really passed, not text scraped out of the test source.
+Scraping the source handed a function the *decorator's* arguments -
+`('x,exp', 'x,exp', [(-1, 0), (0, 0), ...])` - and reported the resulting difference as a
+proven gap on a suite that was fine.
+
+`coverage.py` would do the tracing and is the obvious choice. It is not used because it
+would be the only runtime dependency in a tool whose output is a claim about somebody
+else's tests, and a short `settrace` hook is a smaller thing to trust than a package.
 
 A function nothing covers is **reported, not skipped**. "No test reaches this" is a finding
 in its own right, and the cheapest one available.
@@ -22,44 +28,160 @@ from __future__ import annotations
 
 import json
 import re
-import subprocess
-import sys
-from dataclasses import dataclass
+import shutil
+import tempfile
+from dataclasses import dataclass, field
 from pathlib import Path
 
-PLUGIN = '''"""Injected by suite-auditor, and removed again.
+from suite_auditor.workspace import Timeout, child_env, run
 
-Records which functions each test enters.
-"""
+# Runs inside the TARGET's interpreter, which may be older than this package's own
+# minimum - so plain Python 3.8 syntax, and no import of suite_auditor.
+PLUGIN = r'''"""Injected by suite-auditor from a scratch directory. Records which functions each
+test enters, and the literal arguments they were entered with."""
 import json
+import math
 import os
 import sys
 
 import pytest
 
-_OUT = os.environ["SA_COVERAGE_OUT"]
-_ROOT = os.path.abspath(os.environ["SA_ROOT"])
+_OUT = os.environ["SA_COVERAGE_OUT"] + "." + str(os.getpid())
+_ROOT_REAL = os.path.realpath(os.environ["SA_ROOT"])
+_ROOT = os.path.normcase(_ROOT_REAL) + os.sep
+_ORIG = os.environ.get("SA_ORIGINAL", "")
+_ORIG = (os.path.normcase(os.path.realpath(_ORIG)) + os.sep) if _ORIG else ""
+_TEST_DIRS = {"tests", "test", "testing"}
+_MAX_CALLS = 16
+_MAX_TRIES = 400
+_MAX_REPR = 400
+_VARARGS = 0x04 | 0x08
+_GENLIKE = 0x20 | 0x80 | 0x200
+
 _seen = {}
+_calls = {}
+_tries = {}
+_stray = set()
+_failed = set()
+_rel_cache = {}
+_gen_frames = set()
 _current = [None]
 
 
+def _is_test(rel):
+    parts = rel.split("/")
+    name = parts[-1]
+    if name == "conftest.py" or (name.startswith("test_") and name.endswith(".py")):
+        return True
+    if name.endswith("_test.py"):
+        return True
+    return any(p in _TEST_DIRS for p in parts[:-1])
+
+
+def _classify(path):
+    hit = _rel_cache.get(path)
+    if hit is not None:
+        return hit
+    # realpath on both sides: a temp directory can be spelled with an 8.3 short name on
+    # Windows, or through a symlink on macOS, and a spelling mismatch traces nothing.
+    result = ("", "")
+    if path.startswith("<"):
+        # "<frozen os>", "<string>": not a file, and realpath would resolve it against
+        # the working directory - which is the repo root.
+        _rel_cache[path] = result
+        return result
+    real = os.path.realpath(path)
+    norm = os.path.normcase(real)
+    if norm.startswith(_ROOT):
+        rel = norm[len(_ROOT):].replace(os.sep, "/")
+        if not _is_test(rel):
+            # Keep the file's real spelling, not the normcased one.
+            result = ("in", real[len(_ROOT):].replace(os.sep, "/"))
+    elif _ORIG and norm.startswith(_ORIG):
+        rel = norm[len(_ORIG):].replace(os.sep, "/")
+        if not _is_test(rel):
+            result = ("stray", rel)
+    _rel_cache[path] = result
+    return result
+
+
+def _simple(v, depth=0):
+    t = type(v)
+    if t is float:
+        return math.isfinite(v)
+    if t in (int, str, bool, bytes, type(None)):
+        return True
+    if depth >= 3:
+        return False
+    if t in (list, tuple, set, frozenset):
+        return len(v) <= 32 and all(_simple(x, depth + 1) for x in v)
+    if t is dict:
+        return len(v) <= 32 and all(
+            _simple(k, depth + 1) and _simple(x, depth + 1) for k, x in v.items()
+        )
+    return False
+
+
+def _capture(key, frame, code):
+    tries = _tries.get(key, 0)
+    if tries >= _MAX_TRIES:
+        return
+    _tries[key] = tries + 1
+    bucket = _calls.setdefault(key, [])
+    if len(bucket) >= _MAX_CALLS or code.co_flags & _VARARGS:
+        return
+    if code.co_flags & _GENLIKE:
+        # A generator's frame fires "call" again on every resume, with arguments that
+        # may have been reassigned by then. Only its first entry is a real call.
+        if id(frame) in _gen_frames:
+            return
+        _gen_frames.add(id(frame))
+    loc = frame.f_locals
+    names = code.co_varnames[: code.co_argcount + code.co_kwonlyargcount]
+    npos = code.co_argcount
+    pos, kw = [], {}
+    for i, name in enumerate(names):
+        if i == 0 and name in ("self", "cls"):
+            continue
+        if name not in loc:
+            return
+        v = loc[name]
+        if not _simple(v):
+            return
+        r = repr(v)
+        if len(r) > _MAX_REPR:
+            return
+        if i < npos:
+            pos.append(r)
+        else:
+            kw[name] = r
+    entry = {"pos": pos, "kw": kw}
+    if entry not in bucket:
+        bucket.append(entry)
+
+
 def _tracer(frame, event, arg):
-    # Only "call" events are wanted, and returning None declines to trace the frame's
-    # lines - which keeps the overhead to one dict write per function entry rather than
-    # one per executed line.
     if event != "call":
-        return None
-    code = frame.f_code
-    path = code.co_filename
-    if not path.startswith(_ROOT):
-        return None
-    rel = os.path.relpath(path, _ROOT).replace(os.sep, "/")
-    if "test" in os.path.basename(rel) or "tests/" in rel:
         return None
     test = _current[0]
     if test is None:
         return None
-    _seen.setdefault(rel + "::" + code.co_name, set()).add(test)
+    code = frame.f_code
+    where, rel = _classify(code.co_filename)
+    if not where:
+        return None
+    if where == "stray":
+        _stray.add(rel)
+        return None
+    name = getattr(code, "co_qualname", code.co_name)
+    if "<" in name:
+        return None
+    key = rel + "::" + name
+    _seen.setdefault(key, set()).add(test)
+    try:
+        _capture(key, frame, code)
+    except Exception:
+        pass
     return None
 
 
@@ -73,11 +195,25 @@ def pytest_runtest_call(item):
     finally:
         sys.settrace(previous)
         _current[0] = None
+        _gen_frames.clear()
+
+
+def pytest_runtest_logreport(report):
+    if report.failed:
+        _failed.add(report.nodeid)
 
 
 def pytest_sessionfinish(session, exitstatus):
     with open(_OUT, "w", encoding="utf-8") as fh:
-        json.dump({k: sorted(v) for k, v in _seen.items()}, fh)
+        json.dump(
+            {
+                "seen": {k: sorted(v) for k, v in _seen.items()},
+                "calls": _calls,
+                "failed": sorted(_failed),
+                "stray": sorted(_stray),
+            },
+            fh,
+        )
 '''
 
 
@@ -104,6 +240,7 @@ class SuiteHealth:
     failed: int = 0
     errors: int = 0
     collected_nothing: bool = False
+    output_tail: str = ""
 
     @property
     def clean(self) -> bool:
@@ -134,6 +271,7 @@ def _read_health(stdout: str, stderr: str, returncode: int) -> SuiteHealth:
         key = "errors" if word.startswith("error") else word
         if key in counts:
             counts[key] = max(counts[key], int(n))
+    tail = "\n".join(blob.strip().splitlines()[-12:])
     # pytest exits 5 when it collected nothing at all, which is a different
     # problem from a suite that ran and failed.
     return SuiteHealth(
@@ -143,93 +281,140 @@ def _read_health(stdout: str, stderr: str, returncode: int) -> SuiteHealth:
         failed=counts["failed"],
         errors=counts["errors"],
         collected_nothing=returncode == 5 or ("no tests ran" in blob and not counts["passed"]),
+        output_tail=tail,
     )
 
 
-def build_map(
-    repo: Path, test_target: str = "", timeout: float = 1800.0
-) -> tuple[dict[str, list[str]], SuiteHealth]:
-    """`path::function` -> the test ids that execute it, and how the run went.
+@dataclass
+class Trace:
+    """Everything one traced suite run established."""
 
-    Returns an empty map rather than raising if the trace could not be collected; the
-    caller then falls back to running the whole suite, which is slow but correct.
+    cov: dict[str, list[str]]
+    """`path::function` -> ids of the PASSING tests that execute it."""
+    health: SuiteHealth
+    calls: dict[str, list[dict]] = field(default_factory=dict)
+    """`path::function` -> the literal arguments it was really called with."""
+    failed: list[str] = field(default_factory=list)
+    failing_only: dict[str, list[str]] = field(default_factory=dict)
+    """`path::function` -> the FAILING tests that reach it, for functions no passing test
+    reaches. Not "unreached": the suite tries, and the test is broken."""
+    stray: list[str] = field(default_factory=list)
+    """Files of the ORIGINAL repo the suite executed while running in the scratch copy -
+    the sign of an install that bypasses the copy, which would hide every mutant."""
+
+    def __iter__(self):
+        # `cov, health = build_map(...)` - the shape callers had before calls were traced.
+        return iter((self.cov, self.health))
+
+
+def build_map(
+    repo: Path,
+    test_target: str = "",
+    timeout: float = 1800.0,
+    python: str = "",
+    original: Path | None = None,
+    extra_paths: list[str] | None = None,
+) -> Trace:
+    """Trace the suite once. Never raises for a target that will not run.
 
     The SuiteHealth is returned alongside and is not optional. The result of the
-    pytest subprocess used to be discarded entirely - `check=False`, return value
-    unused - so a target whose tests could not even be imported produced an empty
-    map, and the report presented every function in the package as reached by no
-    test. Total failure and total absence of coverage are indistinguishable from
-    the map alone, and they call for opposite responses.
+    pytest subprocess used to be discarded entirely, so a target whose tests could
+    not even be imported produced an empty map, and the report presented every
+    function in the package as reached by no test.
+
+    Tests that FAILED are dropped from the map. A covering test that already fails on
+    the unmutated code "kills" every mutant it is run against, and the kill rate would
+    count a broken test as a vigilant one.
     """
-    # Absolute, always. The subprocess runs with cwd=repo, so a relative path here is
-    # re-resolved against the repo and the plugin writes to `repo/repo/_sa_coverage.json`.
-    # Nothing raises: the file is simply not where it is looked for, the map comes back
-    # empty, and every function in the project reads as uncovered.
+    import sys
+
+    # Absolute, always. The subprocess runs with cwd=repo, so a relative path would be
+    # re-resolved against the repo and the output looked for in the wrong place.
     repo = repo.resolve()
-    plugin = repo / "_sa_plugin.py"
-    out_file = repo / "_sa_coverage.json"
-    plugin.write_text(PLUGIN, encoding="utf-8", newline="")
-
-    env = {
-        **dict(__import__("os").environ),
-        "SA_COVERAGE_OUT": str(out_file),
-        "SA_ROOT": str(repo),
-        "PYTHONDONTWRITEBYTECODE": "1",
-    }
-    cmd = [
-        sys.executable,
-        "-m",
-        "pytest",
-        "-q",
-        "--no-header",
-        "-p",
-        "no:cacheprovider",
-        "-p",
-        "_sa_plugin",
-        "--tb=no",
-    ]
-    if test_target:
-        cmd.append(test_target)
-
+    scratch = Path(tempfile.mkdtemp(prefix="suite-auditor-trace-"))
     try:
-        proc = subprocess.run(
-            cmd,
-            cwd=repo,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            env=env,
-            check=False,
+        (scratch / "_sa_plugin.py").write_text(PLUGIN, encoding="utf-8", newline="\n")
+        out_base = scratch / "coverage.json"
+        env = child_env(
+            [str(scratch), *(extra_paths or [])],
+            SA_COVERAGE_OUT=str(out_base),
+            SA_ROOT=str(repo),
+            SA_ORIGINAL=str(original.resolve()) if original else "",
         )
-        health = _read_health(proc.stdout, proc.stderr, proc.returncode)
-        if out_file.is_file():
-            raw = json.loads(out_file.read_text(encoding="utf-8"))
-            # The plugin traces itself; drop it and any lambda, neither of which is a
-            # mutation target.
-            return {
-                k: v
-                for k, v in raw.items()
-                if not k.startswith("_sa_plugin") and not k.endswith("::<lambda>")
-            }, health
-        return {}, health
-    except (subprocess.TimeoutExpired, OSError, json.JSONDecodeError) as exc:
-        return {}, SuiteHealth(
-            ran=False, exit_code=-1, collected_nothing=isinstance(exc, subprocess.TimeoutExpired)
+        cmd = [
+            python or sys.executable,
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "--no-header",
+            "-p",
+            "no:cacheprovider",
+            "-p",
+            "_sa_plugin",
+            "--tb=short",
+            f"--basetemp={scratch / 'basetemp'}",
+        ]
+        if test_target:
+            cmd.append(test_target)
+        try:
+            code, out = run(cmd, repo, env, timeout)
+        except Timeout:
+            return Trace({}, SuiteHealth(ran=False, exit_code=-1, collected_nothing=True))
+        except OSError as exc:
+            return Trace({}, SuiteHealth(ran=False, exit_code=-1, output_tail=str(exc)))
+        health = _read_health(out, "", code)
+
+        seen: dict[str, set[str]] = {}
+        calls: dict[str, list[dict]] = {}
+        failed: set[str] = set()
+        stray: set[str] = set()
+        # One file per process: under pytest-xdist every worker traces its own share.
+        for f in scratch.glob("coverage.json.*"):
+            try:
+                raw = json.loads(f.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            for k, v in raw.get("seen", {}).items():
+                seen.setdefault(k, set()).update(v)
+            for k, v in raw.get("calls", {}).items():
+                bucket = calls.setdefault(k, [])
+                bucket.extend(e for e in v if e not in bucket)
+            failed.update(raw.get("failed", []))
+            stray.update(raw.get("stray", []))
+        cov = {k: sorted(v - failed) for k, v in seen.items()}
+        cov = {k: v for k, v in cov.items() if v}
+        failing_only = {k: sorted(v) for k, v in seen.items() if k not in cov}
+        return Trace(
+            cov,
+            health,
+            calls=calls,
+            failed=sorted(failed),
+            stray=sorted(stray),
+            failing_only=failing_only,
         )
     finally:
-        plugin.unlink(missing_ok=True)
-        out_file.unlink(missing_ok=True)
+        shutil.rmtree(scratch, ignore_errors=True)
 
 
 def tests_for(cov: dict[str, list[str]], path: str, name: str) -> list[str]:
     """Tests covering one function, including the methods of a class it belongs to.
 
-    `settrace` reports a method's own `co_name`, not `Class.method`, so a lookup for
-    `Curry.__eq__` has to also try `__eq__`. Getting this wrong makes every method look
-    uncovered, and a whole class of function would then be silently dropped.
+    The trace keys functions by `co_qualname` (`Curry.__eq__`) on Python 3.11+, and by
+    the bare `co_name` on older interpreters, so a lookup for `Curry.__eq__` falls back
+    to `__eq__`. Getting this wrong makes every method look uncovered, and a whole class
+    of function would then be silently dropped.
     """
     direct = cov.get(f"{path}::{name}")
     if direct:
         return direct
     bare = name.rpartition(".")[2]
     return cov.get(f"{path}::{bare}", [])
+
+
+def calls_for(calls: dict[str, list[dict]], path: str, name: str) -> list[dict]:
+    """The recorded argument sets for one function, found the same way as its tests."""
+    direct = calls.get(f"{path}::{name}")
+    if direct:
+        return direct
+    return calls.get(f"{path}::{name.rpartition('.')[2]}", [])

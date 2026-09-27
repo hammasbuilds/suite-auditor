@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import ast
 import textwrap
-from pathlib import Path
 
 from suite_auditor.audit import patch_file
 from suite_auditor.coverage import tests_for as covering_tests
@@ -97,7 +96,7 @@ def test_a_survivor_that_really_differs_gets_a_witness():
     new = "def f(n):\n    return n >= 2\n"
     r = compare("", old, new, "f", ["(2,)", "(5,)"])
     assert r["status"] == "differs"
-    assert r["witness"]["args"] == "(2,)"
+    assert r["witness"]["args"] == "(2)"  # rendered as the call: f(2)
 
 
 def test_an_equivalent_mutant_is_not_a_gap():
@@ -219,25 +218,20 @@ def test_values_come_from_the_covering_tests(tmp_path):
 def test_argument_sets_vary_one_parameter_at_a_time():
     fn = ast.parse("def f(a, b):\n    pass\n").body[0]
     sets = argument_sets(fn, {}, cap=8)
-
-    def parts(call: str) -> list[str]:
-        # Parsed, not split on ", ": a value can contain a comma of its own, and the
-        # naive split then reports two differences where there is one.
-        return [ast.unparse(e) for e in ast.parse(call).body[0].value.elts]
-
-    baseline = parts(sets[0])
-    for call in sets[1:]:
-        differing = sum(x != y for x, y in zip(parts(call), baseline, strict=True))
-        assert differing <= 1, f"{call} differs from {sets[0]} in {differing} places"
+    baseline = sets[0].pos
+    for a in sets[1:]:
+        differing = sum(x != y for x, y in zip(a.pos, baseline, strict=True))
+        assert differing <= 1, f"{a.pos} differs from {baseline} in {differing} places"
 
 
 def test_self_is_not_an_argument():
     fn = ast.parse("def m(self, x):\n    pass\n").body[0]
-    assert argument_sets(fn, {}, cap=3)[0].count(",") == 1
+    assert len(argument_sets(fn, {}, cap=3)[0].pos) == 1
 
 
 def test_a_function_with_no_parameters_gives_an_empty_call():
-    assert argument_sets(ast.parse("def f():\n    pass\n").body[0], {}) == ["()"]
+    sets = argument_sets(ast.parse("def f():\n    pass\n").body[0], {})
+    assert [a.display() for a in sets] == ["()"]
 
 
 # --- patching -----------------------------------------------------------------------------
@@ -267,7 +261,7 @@ def test_a_method_mutant_is_written_back_at_the_right_indentation(tmp_path):
     assert ast.parse(out)  # still valid Python
     assert "n >= 0" in out
 
-    Path(tmp_path / "m.py").write_text(before, encoding="utf-8", newline="")
+    f.write_bytes(before)
     assert f.read_text(encoding="utf-8") == src + "\n"
 
 
@@ -390,9 +384,7 @@ def test_a_high_kill_rate_over_a_narrow_base_cannot_hide():
         covered_total=1,
     )
     wide = Audit(
-        results=[
-            Result(f"pkg.f{i}", "x + 1", "arithmetic", Verdict.KILLED) for i in range(10)
-        ],
+        results=[Result(f"pkg.f{i}", "x + 1", "arithmetic", Verdict.KILLED) for i in range(10)],
         uncovered=[],
         covered_total=10,
     )

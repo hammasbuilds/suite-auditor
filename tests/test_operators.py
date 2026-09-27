@@ -31,11 +31,7 @@ CASES = [
         # produces byte-identical source to the drop_raise mutant, and the dedup in
         # `mutants()` drops the second - so the operator fires and disappears.
         "a swallowed exception",
-        "def f(a):\n"
-        "    try:\n"
-        "        return int(a)\n"
-        "    except ValueError:\n"
-        "        return 0\n",
+        "def f(a):\n    try:\n        return int(a)\n    except ValueError:\n        return 0\n",
         "swallow_except",
     ),
     ("a deleted contract", "def f(a):\n    assert a > 0\n    return a\n", "drop_assert"),
@@ -91,7 +87,7 @@ def test_the_operator_set_matches_what_the_mutator_can_produce():
         produced |= {kind for _t, kind in mutants(source, cap=12)}
 
     assert produced <= OPERATORS, f"produced but undeclared: {sorted(produced - OPERATORS)}"
-    assert OPERATORS <= produced, (
+    assert produced >= OPERATORS, (
         f"declared but never produced by any case above: {sorted(OPERATORS - produced)}"
     )
 

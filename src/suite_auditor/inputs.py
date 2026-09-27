@@ -1,35 +1,126 @@
 """Argument values for proving a survivor wrong, taken from the tests that cover it.
 
 The quality of a gap report is the quality of its witness, and a witness is only as good as
-the input it rests on. The first version of this tool harvested literals from the whole
-repository and produced this:
+the input it rests on. Three generations of this module, each fixing the last:
 
-    GAP toolz/_signatures.py::get_exclude_keywords
-        args: (0, 0)
-        old: ok: ()
-        new: raise: AttributeError: 'int' object has no attribute 'parameters'
+1. Literals from the whole repository. A function expecting signature objects was handed
+   `(0, 0)` and "proved" to differ. Real, and worthless.
+2. Literals from the text of the covering test files. Better, but text is not a call:
+   `@pytest.mark.parametrize("x,exp", [(-1, 0), (0, 0)])` was harvested as the argument
+   `('x,exp', 'x,exp', [(-1, 0), (0, 0), ...])`, and a correct, fully tested suite was
+   reported with two "proven gaps".
+3. **The arguments the function was really called with**, recorded while the covering
+   tests ran (see coverage.py). Those are by definition inputs the suite exercises, and
+   a mutant that differs on one of them is a mutant the suite called and did not check.
 
-That is a genuine behavioural difference and it is worthless. The function expects signature
-objects; `(0, 0)` is not an input it will ever see, and a maintainer shown that would close
-the report in a second - correctly.
+Every argument set carries its provenance, and the proof step treats them differently:
 
-So values come from the **tests that cover this specific function**. Those files contain,
-by definition, the values somebody thought were worth calling it with. A repo-wide pool is
-kept only as a fallback for functions whose covering tests yield nothing.
-
-The other half of the fix is ranking: a disagreement where both versions *return something*
-is worth far more than one where the mutant merely crashes on an argument the original also
-had no real use for. Both are reported; only the first kind leads.
+- `observed`   - a call a covering test really made. Any disagreement where at least one
+                 side returns a value counts.
+- `recombined` - values the tests used, one swapped in from another call. Counts only
+                 when the ORIGINAL handles the input cleanly: a combination nobody makes
+                 can be outside the function's domain.
+- `generated`  - literals from the test files and a few generic corner values, used when
+                 the function's real arguments could not be recorded (objects, not
+                 literals). Same rule as recombined. An injected `''` on which both
+                 versions raise, differently, is a statement about the argument, not
+                 about the suite, and is never a gap.
 """
 
 from __future__ import annotations
 
 import ast
 import contextlib
+from dataclasses import dataclass
 from pathlib import Path
 
 # Values that exercise the corners most mutation operators live at.
 GENERIC = ["0", "1", "-1", "2", '""', '"a"', "[]", "[1, 2]", "None", "True", "False", "{}"]
+
+OBSERVED, RECOMBINED, GENERATED = "observed", "recombined", "generated"
+
+PROVENANCE_LABEL = {
+    OBSERVED: "a call your tests really made",
+    RECOMBINED: "values your tests use, recombined",
+    GENERATED: "generated - not a value your tests use; judge whether it is realistic",
+}
+
+
+@dataclass(frozen=True)
+class ArgSet:
+    """One way to call the function: positional sources, keyword sources, provenance."""
+
+    pos: tuple[str, ...]
+    kw: tuple[tuple[str, str], ...] = ()
+    provenance: str = GENERATED
+
+    def source(self) -> str:
+        """A Python expression evaluating to `(args_tuple, kwargs_dict)`."""
+        args = "(" + "".join(p + ", " for p in self.pos) + ")"
+        kwargs = "{" + ", ".join(f"{k!r}: {v}" for k, v in self.kw) + "}"
+        return f"({args}, {kwargs})"
+
+    def display(self) -> str:
+        parts = list(self.pos) + [f"{k}={v}" for k, v in self.kw]
+        return "(" + ", ".join(parts) + ")"
+
+
+def _is_parametrize(node: ast.Call) -> bool:
+    f = node.func
+    return isinstance(f, ast.Attribute) and f.attr == "parametrize"
+
+
+def _literal_source(node: ast.AST) -> str | None:
+    """Source for a node that is a pure literal, else None."""
+    try:
+        ast.literal_eval(node)
+    except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError):
+        return None
+    with contextlib.suppress(AttributeError, ValueError):
+        return ast.unparse(node)
+    return None
+
+
+def _parametrize_rows(node: ast.Call) -> list[dict[str, str]]:
+    """Expand `@pytest.mark.parametrize(names, values)` into one {name: source} per row.
+
+    The decorator's arguments are a table, not a call: the first is a list of column
+    names and the second the rows. Reading them as call arguments is exactly how the
+    string `'x,exp'` ended up passed to a function under test.
+    """
+    if len(node.args) < 2:
+        return []
+    names_node, rows_node = node.args[0], node.args[1]
+    try:
+        names = ast.literal_eval(names_node)
+    except (ValueError, TypeError, SyntaxError):
+        return []
+    if isinstance(names, str):
+        names = [n.strip() for n in names.split(",") if n.strip()]
+    if not isinstance(names, list | tuple) or not all(isinstance(n, str) for n in names):
+        return []
+    if not isinstance(rows_node, ast.List | ast.Tuple):
+        return []
+    out: list[dict[str, str]] = []
+    for row in rows_node.elts:
+        # pytest.param(1, 2, id="x") carries its values positionally.
+        if isinstance(row, ast.Call) and getattr(row.func, "attr", "") == "param":
+            cells = row.args
+        elif len(names) == 1:
+            cells = [row]
+        elif isinstance(row, ast.Tuple | ast.List):
+            cells = row.elts
+        else:
+            continue
+        if len(cells) != len(names):
+            continue
+        got = {}
+        for name, cell in zip(names, cells, strict=True):
+            src = _literal_source(cell)
+            if src is not None:
+                got[name] = src
+        out.append(got)
+    return out
 
 
 def _literals_from(path: Path, limit: int = 40) -> dict[str, list[str]]:
@@ -42,12 +133,18 @@ def _literals_from(path: Path, limit: int = 40) -> dict[str, list[str]]:
             bucket.append(value)
 
     try:
-        tree = ast.parse(path.read_text(encoding="utf-8"))
-    except (SyntaxError, UnicodeDecodeError, OSError):
+        tree = ast.parse(path.read_text(encoding="utf-8-sig"))
+    except (SyntaxError, UnicodeDecodeError, OSError, ValueError):
         return found
 
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
+            continue
+        if _is_parametrize(node):
+            for row in _parametrize_rows(node):
+                for name, src in row.items():
+                    add(name, src)
+                    add("*", src)
             continue
         for kw in node.keywords:
             if kw.arg and isinstance(kw.value, ast.Constant):
@@ -58,8 +155,9 @@ def _literals_from(path: Path, limit: int = 40) -> dict[str, list[str]]:
             if isinstance(arg, ast.Constant) and isinstance(arg.value, str | int | float):
                 add("*", repr(arg.value))
             elif isinstance(arg, ast.List | ast.Tuple | ast.Dict | ast.Set):
-                with contextlib.suppress(AttributeError, ValueError):
-                    add("*", ast.unparse(arg))
+                src = _literal_source(arg)
+                if src is not None:
+                    add("*", src)
     return found
 
 
@@ -67,7 +165,7 @@ def harvest_for(repo: Path, covering_tests: list[str]) -> dict[str, list[str]]:
     """Pool the literals from just the test files that cover this function."""
     files = {t.split("::")[0] for t in covering_tests}
     pool: dict[str, list[str]] = {}
-    for rel in files:
+    for rel in sorted(files):
         path = repo / rel
         if not path.is_file():
             continue
@@ -79,38 +177,148 @@ def harvest_for(repo: Path, covering_tests: list[str]) -> dict[str, list[str]]:
     return pool
 
 
+def _params(fn: ast.FunctionDef | ast.AsyncFunctionDef) -> tuple[list[str], list[str]]:
+    """(positional parameter names, keyword-only names that have no default)."""
+    positional = [a.arg for a in fn.args.posonlyargs + fn.args.args]
+    if positional and positional[0] in ("self", "cls"):
+        positional = positional[1:]
+    required_kw = [
+        a.arg for a, d in zip(fn.args.kwonlyargs, fn.args.kw_defaults, strict=True) if d is None
+    ]
+    return positional, required_kw
+
+
 def argument_sets(
     fn: ast.FunctionDef | ast.AsyncFunctionDef,
     pool: dict[str, list[str]],
-    cap: int = 40,
-) -> list[str]:
-    """Source strings for calling `fn`, varying one parameter at a time.
+    cap: int = 64,
+    observed: list[dict] | None = None,
+) -> list[ArgSet]:
+    """Ways to call `fn`: real recorded calls first, then careful variations.
 
-    One-at-a-time rather than a cross product: the product explodes, and a witness in which
-    exactly one value differs from the baseline is immediately readable - that value is the
-    cause.
+    Variations change one parameter at a time rather than taking a cross product: the
+    product explodes, and a witness in which exactly one value differs from a real call
+    is immediately readable - that value is the cause.
     """
-    params = [a.arg for a in fn.args.args if a.arg not in ("self", "cls")]
-    if not params:
-        return ["()"]
+    positional, required_kw = _params(fn)
+    out: list[ArgSet] = []
+    seen: set[tuple] = set()
 
+    def push(a: ArgSet) -> bool:
+        # Keyed on the call alone: the same call reached twice keeps its first, and
+        # strongest, provenance.
+        if (a.pos, a.kw) not in seen:
+            seen.add((a.pos, a.kw))
+            out.append(a)
+        return len(out) >= cap
+
+    # 1. Real calls, verbatim.
+    real: list[ArgSet] = []
+    for call in observed or []:
+        a = ArgSet(tuple(call.get("pos", [])), tuple(sorted(call.get("kw", {}).items())), OBSERVED)
+        real.append(a)
+        if push(a):
+            return out
+
+    # 2. Real values, recombined: swap one positional value for one seen in another call
+    #    of the same shape. Capped, so the generated boundaries below still get a turn.
+    recombined_cap = len(out) + 12
+    for base in real:
+        if len(out) >= recombined_cap:
+            break
+        for other in real:
+            if other is base or len(other.pos) != len(base.pos):
+                continue
+            for i, v in enumerate(other.pos):
+                if v == base.pos[i]:
+                    continue
+                pos = list(base.pos)
+                pos[i] = v
+                if push(ArgSet(tuple(pos), base.kw, RECOMBINED)):
+                    return out
+                if len(out) >= recombined_cap:
+                    break
+            if len(out) >= recombined_cap:
+                break
+
+    # 3. Generated. Boundary values first - the function's own constants and their
+    #    neighbours, and the neighbours of each value the tests passed for this parameter
+    #    - because that is where comparison and constant mutants differ from the
+    #    original. Then literals from the covering test files, then generic corners.
+    #    Without the boundaries, `if w <= 2` vs `if w <= 3` was left unproven because the
+    #    only candidate that separates them, 3, never made it into a pool crowded with
+    #    another function's parametrize rows.
+    boundaries = _boundaries(fn)
     pools: list[list[str]] = []
-    for name in params:
-        vals = list(pool.get(name, []))
-        vals += [v for v in pool.get("*", []) if v not in vals]
-        vals += [v for v in GENERIC if v not in vals]
-        pools.append(vals[:12])
+    for i, name in enumerate(positional):
+        near: list[str] = []
+        for a in real:
+            if i < len(a.pos):
+                near += _neighbours(a.pos[i])
+        vals: list[str] = []
+        for group in (
+            boundaries,
+            near,
+            pool.get(name, []),
+            pool.get("*", []),
+            GENERIC,
+        ):
+            vals += [v for v in group[:12] if v not in vals]
+        pools.append(vals[:24])
 
-    baseline = [p[0] if p else "None" for p in pools]
-    sets = ["(" + ", ".join(baseline) + ",)"]
+    if real:
+        baseline = list(real[0].pos)
+        base_kw = real[0].kw
+        if len(baseline) != len(positional):
+            return out
+    else:
+        baseline = [p[0] if p else "None" for p in pools]
+        base_kw = tuple((k, (pool.get(k) or ["None"])[0]) for k in required_kw)
+        if push(ArgSet(tuple(baseline), base_kw, GENERATED)):
+            return out
+
     for i, p in enumerate(pools):
-        for value in p[1:]:
+        for value in p:
+            if value == baseline[i]:
+                continue
             args = list(baseline)
             args[i] = value
-            sets.append("(" + ", ".join(args) + ",)")
-            if len(sets) >= cap:
-                return sets
-    return sets
+            if push(ArgSet(tuple(args), base_kw, GENERATED)):
+                return out
+    return out
+
+
+def _neighbours(src: str) -> list[str]:
+    """For an integer literal, the values either side of it; otherwise nothing."""
+    try:
+        v = ast.literal_eval(src)
+    except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError):
+        return []
+    if isinstance(v, bool) or not isinstance(v, int):
+        return []
+    return [repr(v - 1), repr(v + 1)]
+
+
+def _boundaries(fn: ast.FunctionDef | ast.AsyncFunctionDef) -> list[str]:
+    """Numeric constants in the function body, each with its neighbours: v, v-1, v+1."""
+    body = fn.body
+    if (
+        body
+        and isinstance(body[0], ast.Expr)
+        and isinstance(body[0].value, ast.Constant)
+        and isinstance(body[0].value.value, str)
+    ):
+        body = body[1:]  # the docstring
+    out: list[str] = []
+    for stmt in body:
+        for node in ast.walk(stmt):
+            if not isinstance(node, ast.Constant) or isinstance(node.value, bool):
+                continue
+            if isinstance(node.value, int | float):
+                for cand in [repr(node.value), *_neighbours(repr(node.value))]:
+                    if cand not in out:
+                        out.append(cand)
+    return out
 
 
 def _returned_cleanly(side: str) -> bool:
@@ -132,7 +340,8 @@ def witness_strength(witness: dict | None) -> int:
 
     0 - both versions returned a value, and the values differ. Unarguable.
     1 - one returned, one raised. Real, and needs the reader to judge the input.
-    2 - both raised, differently. Weakest: often says more about the argument than the bug.
+    2 - both raised, differently. Never counted as a gap: it says more about the
+        argument than about the suite.
     """
     if not witness:
         return 3
@@ -143,3 +352,38 @@ def witness_strength(witness: dict | None) -> int:
     if old_ok or new_ok:
         return 1
     return 2
+
+
+_TYPE_CONFUSION = {"TypeError", "AttributeError"}
+
+
+def _exception_type(side: str) -> str:
+    """`raise: KeyError: 'x'` -> `KeyError`; `ok: [1]...then ValueError: y` -> `ValueError`."""
+    tail = side.split("...then ", 1)[1] if "...then " in side else side.partition(": ")[2]
+    return tail.split(":", 1)[0].strip()
+
+
+def eligible(provenance: str, old: str, new: str) -> bool:
+    """Whether a disagreement on this input may be offered as proof of a gap.
+
+    - Both sides raising (differently) is never proof.
+    - On an input a test really passed, one side returning is enough: the suite made
+      that call and did not notice the difference.
+    - On any other input the ORIGINAL must return cleanly, which is the only evidence
+      available that the input is one the function is meant to accept - and the mutant
+      must either return too or fail with something other than a TypeError or
+      AttributeError, which on a made-up input mostly mean "wrong type of argument".
+    """
+    old_ok, new_ok = _returned_cleanly(old), _returned_cleanly(new)
+    if not (old_ok or new_ok):
+        return False
+    if provenance == OBSERVED:
+        return True
+    if not old_ok:
+        return False
+    # The mutant raising a type error on an input nobody passed usually means the input
+    # is the wrong type for the path the mutant took, not that the mutant is wrong.
+    # toolz's `get_exclude_keywords(0, 0)`: the original returns early on the first 0 and
+    # never looks at the second; the mutant does not return early and asks the int 0 for
+    # `.parameters`. A real signature object would not have noticed the difference.
+    return new_ok or _exception_type(new) not in _TYPE_CONFUSION

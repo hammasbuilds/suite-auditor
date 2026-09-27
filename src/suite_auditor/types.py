@@ -19,6 +19,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import StrEnum
+from typing import Any
+
+_PROVENANCE_RANK = {"observed": 0, "recombined": 1, "generated": 2}
 
 
 class Verdict(StrEnum):
@@ -79,13 +82,18 @@ class Result:
     top of a report instead of buried.
     """
 
+    provenance: str = ""
+    """Where the witness input came from: observed, recombined or generated."""
+
     def as_row(self) -> dict:
         return {
             "target": self.target,
             "kind": self.kind,
             "verdict": self.verdict.value,
+            "mutant": self.mutant,
             "witness": self.witness,
             "strength": self.strength,
+            "provenance": self.provenance,
             "detail": self.detail[:300],
         }
 
@@ -126,6 +134,16 @@ class Audit:
 
     seconds: float = 0.0
 
+    health: Any = None
+    """The SuiteHealth of the traced baseline run, when there was one."""
+
+    failing_only: list[str] = field(default_factory=list)
+    """Functions reached only by tests that fail on the unmodified code. Not covered -
+    a broken test catches nothing - but not "no test tries" either."""
+
+    stray: list[str] = field(default_factory=list)
+    """Files of the real repository the suite executed instead of the scratch copy."""
+
     def counts(self) -> dict[str, int]:
         out: dict[str, int] = {}
         for r in self.results:
@@ -142,7 +160,7 @@ class Audit:
         """Proven gaps, strongest witness first."""
         return sorted(
             (r for r in self.results if r.verdict is Verdict.PROVEN_GAP),
-            key=lambda r: (r.strength, r.target),
+            key=lambda r: (r.strength, _PROVENANCE_RANK.get(r.provenance, 3), r.target),
         )
 
     @property
@@ -160,7 +178,7 @@ class Audit:
     @property
     def covered_fraction(self) -> float | None:
         """Share of the package's functions that any test reaches at all."""
-        total = self.covered_total + len(self.uncovered)
+        total = self.covered_total + len(self.uncovered) + len(self.failing_only)
         if not total:
             return None
         return self.covered_total / total
