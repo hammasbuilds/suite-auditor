@@ -1,0 +1,4 @@
+# A self-contained example target for suite-auditor's demo.py. Its own pytest config
+# makes this directory the rootdir, so it runs the same wherever it is copied.
+[tool.pytest.ini_options]
+testpaths = ["tests"]

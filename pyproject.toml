@@ -1,9 +1,10 @@
 [project]
 name = "suite-auditor"
 version = "0.1.0"
-description = "Provable gaps in a real test suite: mutate, run only the covering tests, and find the input that proves each survivor wrong"
+description = "Mutation-test a pytest suite and report only the gaps it can prove, with the call that proves each one"
 classifiers = [
     "Development Status :: 4 - Beta",
+    "Environment :: Console",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",

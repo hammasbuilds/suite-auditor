@@ -2,16 +2,13 @@
 
     python demo.py
 
-Audits `toolz`, a real and well-maintained library vendored under targets/,
-and reports the functions its own test suite never reaches - not as a
-percentage, which averages the gaps away, but as a list of names you can go
-and look at.
+Audits `examples/pricing`, a small project bundled with this repository: one function
+tested thoroughly, one tested at a single point either side of its boundary, one whose
+test checks almost nothing, and one with no test at all. The audit should find nothing
+wrong with the first and name the input that exposes each of the others.
 
-toolz is a deliberate choice: a library with a serious test suite, so the
-handful of gaps it does have are the interesting kind rather than evidence
-of neglect.
-
-The target is real third-party code, not a fixture built to flatter the tool.
+Needs pytest importable by the interpreter running this script (`uv sync` or
+`pip install -e . pytest` in a clone).
 """
 
 from __future__ import annotations
@@ -22,24 +19,28 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
+TARGET = ROOT / "examples" / "pricing"
+
+
+def _run(*args: str) -> int:
+    cmd = [sys.executable, "-m", "suite_auditor.cli", *args]
+    print("$ suite-auditor " + " ".join(args), flush=True)
+    env = {**os.environ, "PYTHONPATH": str(ROOT / "src"), "PYTHONIOENCODING": "utf-8"}
+    return subprocess.run(cmd, cwd=ROOT, env=env, check=False).returncode
 
 
 def main() -> int:
-    print("suite-auditor: which functions does toolz's own test suite never reach?", flush=True)
+    rel = TARGET.relative_to(ROOT).as_posix()
+    code = _run("coverage", rel, "--python", sys.executable)
+    if code != 0:
+        return code
     print(flush=True)
-    result = subprocess.run(
-        [sys.executable, "-m", "suite_auditor.cli", "coverage", "targets/toolz"],
-        cwd=ROOT,
-        env={**os.environ, "PYTHONPATH": str(ROOT / "src"), "PYTHONIOENCODING": "utf-8"},
-        check=False,
-    )
-    if result.returncode != 0:
-        return result.returncode
+    code = _run("audit", rel, "--python", sys.executable, "-j", "auto")
     print(flush=True)
     print("Point it at your own code with:", flush=True)
     for line in ["suite-auditor coverage <repo>", "suite-auditor audit <repo>"]:
         print("    " + line, flush=True)
-    return 0
+    return code
 
 
 if __name__ == "__main__":

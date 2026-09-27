@@ -1,99 +1,93 @@
 # Results
 
-Two audits, run with:
+Two audits, re-run on 2026-09-27 with the current engine (twelve operators, inputs
+recorded from the covering tests' real calls, admissibility rules for proof):
 
 ```bash
-suite-auditor audit targets/toolz        --test toolz/tests --per-function 5
-suite-auditor audit targets/repo-surgeon --test tests       --per-function 5
+suite-auditor audit targets/toolz        --test toolz/tests --per-function 5 -j 4
+suite-auditor audit targets/repo-surgeon --test tests       --per-function 5 -j 4
 ```
 
-No language model is involved anywhere in this tool. Every number below comes out of
-`docs/audit-*.json`.
+Environment: Windows 11, Python 3.14.7, pytest 9.1.1, a laptop shared with other jobs.
+`toolz` at upstream commit `451af60`. Every number below comes out of
+[`docs/audit-toolz.json`](https://github.com/hammasbuilds/suite-auditor/blob/main/docs/audit-toolz.json)
+and [`docs/audit-repo-surgeon.json`](https://github.com/hammasbuilds/suite-auditor/blob/main/docs/audit-repo-surgeon.json).
+No language model is involved anywhere in this tool.
 
 ## The two runs
 
 | | [`toolz`](https://github.com/pytoolz/toolz) | [`repo-surgeon`](https://github.com/hammasbuilds/repo-surgeon) |
 |---|---:|---:|
 | functions in the package | 157 | 67 |
-| **reached by no test** | 5 | **28 (42%)** |
-| mutants scored | 181 | 100 |
-| killed by the suite | 164 | 68 |
-| **kill rate** | **90.6%** | **68.0%** |
-| proven gaps | 4 | 3 |
-| of those, unarguable | 0 | 0 |
-| unproven survivors | 13 | 29 |
+| reached by a passing test | 141 | 39 |
+| reached only by a failing test | 1 | 0 |
+| **reached by no test** | 15 | **28 (42%)** |
+| mutants scored | 418 | 154 |
+| killed by the suite | 385 | 93 |
+| **kill rate** | **92.1%** | **60.4%** |
+| **caught share** (kill rate x covered fraction) | 82.7% | 35.2% |
+| proven gaps | **0** | **7** |
+| of those, on a call the tests really made | - | 6 |
+| unproven survivors | 33 | 54 |
+| wall clock | 690 s | 160 s |
 
-> **The toolz figure was corrected on 2026-09-24: 14 → 5.** Nothing about toolz
-> or this tool changed. The original run traced a toolz suite in which more
-> tests were failing, and a test that fails executes nothing past the point it
-> failed — so every function it would have reached was counted as unreached.
-> The tool now reports the health of the target's own suite alongside the
-> number and refuses to present an unreached list as a measurement when that
-> suite did not run cleanly. The repo-surgeon figure was produced on a clean
-> run and is unchanged.
+`toolz` had one test failing in this environment; it was left out of the run (a failing
+test would "kill" every mutant it meets), and the one function only it reaches is listed
+separately rather than as unreached.
 
-`toolz` is a mature functional library maintained since 2013. `repo-surgeon` is one of
-mine, shipped a few hours before this run, described in its own README as "47 tests, all on
-the code that decides".
+## What changed since the first published numbers
 
-**42% of its functions have no test at all.** The count was true and it measured nothing.
+The first version of this page reported toolz 90.6% / 4 gaps and repo-surgeon 68.0% /
+3 gaps, over five operators. Nothing about either target changed; the tool did:
 
-## What the audits actually found
+- **toolz, 4 gaps -> 0.** Every one of them rested on a generated argument. The last
+  three were all `get_exclude_keywords(0, 0)`: the original returns early on the first
+  `0` and never looks at the second argument, the mutant does not return early and asks
+  the int `0` for `.parameters`. A real signature object would not have noticed. On a
+  made-up input, a mutant that trips over the argument's *type* is no longer proof.
+- **More operators, and methods.** Seven operators were added (twelve in all) and methods,
+  which silently produced no mutants before, are now mutated. That is why both mutant
+  counts grew, and why repo-surgeon's kill rate fell: `drop_return` alone is 144 of
+  toolz's 418 mutants.
+- **Uncovered, 5 -> 15 on toolz.** The published 5 does not reproduce here: the old code,
+  run with the same flags in this environment, reports 14 - nine of them in
+  `toolz/sandbox`, whose tests live outside `--test toolz/tests`. The new code reports
+  those same 14 plus `_InstanceAnnotations.__init__`, which the old lookup counted as
+  covered only because it matched methods by bare name, so any `__init__` in a file
+  "covered" every other `__init__` in it. The trace now keys functions by qualified name.
 
-### The cheapest finding is the most useful one
+## The seven repo-surgeon gaps
 
-Neither audit produced a gap worth sending to a maintainer. Both produced a list of
-functions nothing executes, and that list costs **one suite run** - no mutation, no
-differential, seconds rather than minutes:
+| function | operator | call | before | after | input |
+|---|---|---|---|---|---|
+| `pipeline.py::_bound_names_of` | boolop | `('from pathlib import Path')` | `{'Path'}` | `{None}` | real call |
+| `pipeline.py::_bound_names_of` | negate_if | `('from pathlib import Path')` | `{'Path'}` | `set()` | real call |
+| `values.py::_looks_like_number` | compare | `('src_path')` | `False` | `True` | real call |
+| `values.py::_looks_like_path` | compare | `('a')` | `False` | `True` | real call |
+| `values.py::_looks_like_number` | drop_return | `('src_path')` | `False` | `None` | real call |
+| `scout.py::free_names` | drop_return | `('    def inner(q): ...')` | `set()` | `None` | real call |
+| `pipeline.py::apply_hunks` | drop_return | `(1, '')` | `[]` | `None` | generated |
 
-```bash
-suite-auditor coverage <repo>
-```
+The first four are the kind worth sending to a maintainer: the suite made that exact call
+and accepted a different, truthy-different answer. The last three change a falsy value
+into `None` - a real difference that an `assert not result` cannot see, and the generated
+`apply_hunks(1, '')` needs the reader to judge whether that call is realistic. The report
+says which is which rather than leaving it to be discovered.
 
-For `repo-surgeon` it named `pipeline.py::run` - the orchestrator the whole tool is built
-around - along with the entire CLI and the model client. Those absences are defensible
-choices, and they were invisible in "47 tests".
+## The cheapest finding is still the most useful one
 
-### A maintained suite accepts very little
-
-The contrast with [`mbpp-false-accepts`](https://github.com/hammasbuilds/mbpp-false-accepts)
-is the point of running this at all. There, MBPP's three-assert suites let **17.6%** of
-mutants through, and 29% of problems accepted a provably wrong program. Here a real suite
-kills 91%.
-
-Three asserts accept a lot. A suite somebody maintains accepts very little. That is worth
-knowing before drawing conclusions about test adequacy from a benchmark.
-
-### Zero unarguable gaps, stated plainly
-
-A gap is graded by its witness:
-
-| grade | meaning |
-|---|---|
-| 0 | both versions return a value, and the values differ - unarguable |
-| 1 | one returns, the other raises - real, and the reader must judge the input |
-| 2 | both raise, differently - weakest |
-
-Across both audits, **every gap is grade 1 or 2**. None rests on two differing return
-values. The tool says so rather than presenting seven "findings" and letting the reader
-discover it.
-
-An earlier version of this run reported one grade-0 gap on `toolz`. It was wrong: the
-grading function read the `ok:` prefix of `ok: []...then TypeError: ...`, which is what a
-drained generator that raised looks like. Both sides had raised. A tool whose product is
-graded evidence cannot mis-grade its own, so that is now pinned by a test.
+Both audits produced a list of functions nothing executes, and that list costs one suite
+run - no mutation - with `suite-auditor coverage <repo>`. For `repo-surgeon` it names
+`pipeline.py::run` (the orchestrator the tool is built around), the whole CLI and the
+model client: 28 of 67 functions, in a project whose README said "47 tests".
 
 ## Limits
 
 - **Two repositories**, one of them mine. A kill rate is a property of a suite, and two
   suites are not a survey.
-- **Five mutation operators**: comparison, arithmetic, boolean, integer constant, negated
-  `if`. Chosen as plausible mistakes rather than maximally destructive ones. A suite could
-  score well here and miss an entire class of error these operators do not produce.
-- **Unproven survivors are not gaps and not non-gaps.** 13
-  and 29 respectively. Some are equivalent mutants nothing
-  could catch; others are failures of the input generator. They are reported and never
-  folded into the headline.
+- **Unproven survivors are not gaps and not non-gaps.** toolz 33, repo-surgeon 54. For
+  toolz: 16 disagreed only on inadmissible inputs, 8 agreed on every input, 6 are methods
+  (never proven: a method needs its instance), 3 could not be loaded in isolation.
 - **Uncovered functions are not mutated at all**, so they contribute nothing to the kill
-  rate. A suite can post a high kill rate over a small covered fraction - which is exactly
-  what `repo-surgeon` does.
+  rate; the caught share is printed next to it for that reason.
+- **Timing is from a loaded laptop** and is only indicative.

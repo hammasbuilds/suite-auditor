@@ -1,12 +1,15 @@
 {
   "counts": {
-    "killed": 68,
-    "unproven": 29,
-    "proven-gap": 3
+    "killed": 93,
+    "unproven": 54,
+    "proven-gap": 7
   },
-  "kill_rate": 0.68,
-  "proven_gaps": 3,
-  "strong_gaps": 0,
+  "kill_rate": 0.6038961038961039,
+  "covered_total": 39,
+  "covered_fraction": 0.582089552238806,
+  "caught_share": 0.3515216127156426,
+  "proven_gaps": 7,
+  "strong_gaps": 7,
   "uncovered": [
     "src/repo_surgeon/cli.py::_dirty",
     "src/repo_surgeon/cli.py::cmd_scout",
@@ -28,827 +31,1584 @@
     "src/repo_surgeon/report.py::summary",
     "src/repo_surgeon/report.py::write_markdown",
     "src/repo_surgeon/report.py::write_json",
-    "src/repo_surgeon/rules/__init__.py::register",
     "src/repo_surgeon/scout.py::scout",
     "src/repo_surgeon/types.py::Site.__str__",
     "src/repo_surgeon/types.py::Hunk.rules",
     "src/repo_surgeon/types.py::Hunk.key",
+    "src/repo_surgeon/rules/__init__.py::register",
     "src/repo_surgeon/verify/__init__.py::verify_hunk",
     "src/repo_surgeon/verify/mutation.py::_Mutator.visit_BoolOp",
     "src/repo_surgeon/verify/suite.py::run_suite"
   ],
-  "seconds": 65.5,
+  "failing_only": [],
+  "seconds": 160.3,
   "results": [
     {
-      "target": "src/repo_surgeon/pipeline.py::split_imports",
-      "kind": "const",
+      "target": "src/repo_surgeon/ledger.py::Ledger.seen",
+      "kind": "compare",
       "verdict": "killed",
+      "mutant": "def seen(self) -> dict[str, dict]:\n    \"\"\"Every verdict already recorded, by hunk key.\"\"\"\n    out: dict[str, dict] = {}\n    if not self.path.is_file():\n        return out\n    for line in self.path.read_text(encoding='utf-8').splitlines():\n        line = line.strip()\n        if not line:\n            continue\n        try:\n            row = json.loads(line)\n        except json.JSONDecodeError:\n            continue\n        if 'hunk' not in row:\n            out[row['hunk']] = row\n    return out",
       "witness": null,
       "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/ledger.py::Ledger.seen",
+      "kind": "swallow_except",
+      "verdict": "unproven",
+      "mutant": "def seen(self) -> dict[str, dict]:\n    \"\"\"Every verdict already recorded, by hunk key.\"\"\"\n    out: dict[str, dict] = {}\n    if not self.path.is_file():\n        return out\n    for line in self.path.read_text(encoding='utf-8').splitlines():\n        line = line.strip()\n        if not line:\n            continue\n        try:\n            row = json.loads(line)\n        except json.JSONDecodeError:\n            pass\n        if 'hunk' in row:\n            out[row['hunk']] = row\n    return out",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; a method cannot be called without its instance, so no separating input was sought"
+    },
+    {
+      "target": "src/repo_surgeon/ledger.py::Ledger.seen",
+      "kind": "drop_not",
+      "verdict": "killed",
+      "mutant": "def seen(self) -> dict[str, dict]:\n    \"\"\"Every verdict already recorded, by hunk key.\"\"\"\n    out: dict[str, dict] = {}\n    if self.path.is_file():\n        return out\n    for line in self.path.read_text(encoding='utf-8').splitlines():\n        line = line.strip()\n        if not line:\n            continue\n        try:\n            row = json.loads(line)\n        except json.JSONDecodeError:\n            continue\n        if 'hunk' in row:\n            out[row['hunk']] = row\n    return out",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/ledger.py::Ledger.seen",
+      "kind": "drop_return",
+      "verdict": "unproven",
+      "mutant": "def seen(self) -> dict[str, dict]:\n    \"\"\"Every verdict already recorded, by hunk key.\"\"\"\n    out: dict[str, dict] = {}\n    if not self.path.is_file():\n        return None\n    for line in self.path.read_text(encoding='utf-8').splitlines():\n        line = line.strip()\n        if not line:\n            continue\n        try:\n            row = json.loads(line)\n        except json.JSONDecodeError:\n            continue\n        if 'hunk' in row:\n            out[row['hunk']] = row\n    return out",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; a method cannot be called without its instance, so no separating input was sought"
+    },
+    {
+      "target": "src/repo_surgeon/ledger.py::Ledger.seen",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "mutant": "def seen(self) -> dict[str, dict]:\n    \"\"\"Every verdict already recorded, by hunk key.\"\"\"\n    out: dict[str, dict] = {}\n    if not not self.path.is_file():\n        return out\n    for line in self.path.read_text(encoding='utf-8').splitlines():\n        line = line.strip()\n        if not line:\n            continue\n        try:\n            row = json.loads(line)\n        except json.JSONDecodeError:\n            continue\n        if 'hunk' in row:\n            out[row['hunk']] = row\n    return out",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/ledger.py::Ledger.append",
+      "kind": "binop",
+      "verdict": "killed",
+      "mutant": "def append(self, verdict: Verdict) -> None:\n    with self.path.open('a', encoding='utf-8', newline='') as fh:\n        fh.write(json.dumps(verdict.as_row()) - '\\n')",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
       "detail": ""
     },
     {
       "target": "src/repo_surgeon/pipeline.py::split_imports",
       "kind": "binop",
       "verdict": "killed",
+      "mutant": "def split_imports(source: str) -> tuple[list[str], str]:\n    \"\"\"Separate a proposal's leading imports from the function itself.\n\n    The model is asked for \"the function plus any imports it needs\", and it obliges - but\n    splicing that whole block in at the function's line number drops `from pathlib import\n    Path` into the middle of the module, once per rewritten function. That is valid Python\n    and it is not something anyone would merge.\n    \"\"\"\n    try:\n        tree = ast.parse(source)\n    except SyntaxError:\n        return ([], source)\n    lines = source.splitlines()\n    imports, keep = ([], [])\n    for node in tree.body:\n        block = lines[node.lineno + 1:node.end_lineno]\n        if isinstance(node, ast.Import | ast.ImportFrom):\n            imports.extend(block)\n        else:\n            keep.extend(block)\n    return (imports, '\\n'.join(keep))",
       "witness": null,
       "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::split_imports",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def split_imports(source: str) -> tuple[list[str], str]:\n    \"\"\"Separate a proposal's leading imports from the function itself.\n\n    The model is asked for \"the function plus any imports it needs\", and it obliges - but\n    splicing that whole block in at the function's line number drops `from pathlib import\n    Path` into the middle of the module, once per rewritten function. That is valid Python\n    and it is not something anyone would merge.\n    \"\"\"\n    try:\n        tree = ast.parse(source)\n    except SyntaxError:\n        return ([], source)\n    lines = source.splitlines()\n    imports, keep = ([], [])\n    for node in tree.body:\n        block = lines[node.lineno - 2:node.end_lineno]\n        if isinstance(node, ast.Import | ast.ImportFrom):\n            imports.extend(block)\n        else:\n            keep.extend(block)\n    return (imports, '\\n'.join(keep))",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
       "detail": ""
     },
     {
       "target": "src/repo_surgeon/pipeline.py::split_imports",
       "kind": "negate_if",
       "verdict": "killed",
+      "mutant": "def split_imports(source: str) -> tuple[list[str], str]:\n    \"\"\"Separate a proposal's leading imports from the function itself.\n\n    The model is asked for \"the function plus any imports it needs\", and it obliges - but\n    splicing that whole block in at the function's line number drops `from pathlib import\n    Path` into the middle of the module, once per rewritten function. That is valid Python\n    and it is not something anyone would merge.\n    \"\"\"\n    try:\n        tree = ast.parse(source)\n    except SyntaxError:\n        return ([], source)\n    lines = source.splitlines()\n    imports, keep = ([], [])\n    for node in tree.body:\n        block = lines[node.lineno - 1:node.end_lineno]\n        if not isinstance(node, ast.Import | ast.ImportFrom):\n            imports.extend(block)\n        else:\n            keep.extend(block)\n    return (imports, '\\n'.join(keep))",
       "witness": null,
       "strength": 3,
+      "provenance": "",
       "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::split_imports",
+      "kind": "slice_lower",
+      "verdict": "killed",
+      "mutant": "def split_imports(source: str) -> tuple[list[str], str]:\n    \"\"\"Separate a proposal's leading imports from the function itself.\n\n    The model is asked for \"the function plus any imports it needs\", and it obliges - but\n    splicing that whole block in at the function's line number drops `from pathlib import\n    Path` into the middle of the module, once per rewritten function. That is valid Python\n    and it is not something anyone would merge.\n    \"\"\"\n    try:\n        tree = ast.parse(source)\n    except SyntaxError:\n        return ([], source)\n    lines = source.splitlines()\n    imports, keep = ([], [])\n    for node in tree.body:\n        block = lines[node.lineno - 1 + 1:node.end_lineno]\n        if isinstance(node, ast.Import | ast.ImportFrom):\n            imports.extend(block)\n        else:\n            keep.extend(block)\n    return (imports, '\\n'.join(keep))",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::split_imports",
+      "kind": "slice_upper",
+      "verdict": "killed",
+      "mutant": "def split_imports(source: str) -> tuple[list[str], str]:\n    \"\"\"Separate a proposal's leading imports from the function itself.\n\n    The model is asked for \"the function plus any imports it needs\", and it obliges - but\n    splicing that whole block in at the function's line number drops `from pathlib import\n    Path` into the middle of the module, once per rewritten function. That is valid Python\n    and it is not something anyone would merge.\n    \"\"\"\n    try:\n        tree = ast.parse(source)\n    except SyntaxError:\n        return ([], source)\n    lines = source.splitlines()\n    imports, keep = ([], [])\n    for node in tree.body:\n        block = lines[node.lineno - 1:node.end_lineno - 1]\n        if isinstance(node, ast.Import | ast.ImportFrom):\n            imports.extend(block)\n        else:\n            keep.extend(block)\n    return (imports, '\\n'.join(keep))",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::_bound_names_of",
+      "kind": "boolop",
+      "verdict": "proven-gap",
+      "mutant": "def _bound_names_of(import_line: str) -> set[str]:\n    \"\"\"The names one import statement makes available.\"\"\"\n    try:\n        tree = ast.parse(import_line.strip())\n    except SyntaxError:\n        return set()\n    out: set[str] = set()\n    for node in tree.body:\n        if isinstance(node, ast.Import | ast.ImportFrom):\n            for alias in node.names:\n                out.add(alias.asname and alias.name.split('.')[0])\n    return out",
+      "witness": {
+        "args": "('from pathlib import Path')",
+        "old": "ok: {'Path'}",
+        "new": "ok: {None}"
+      },
+      "strength": 0,
+      "provenance": "observed",
+      "detail": "1 of 25 inputs disagree"
     },
     {
       "target": "src/repo_surgeon/pipeline.py::_bound_names_of",
       "kind": "const",
       "verdict": "killed",
+      "mutant": "def _bound_names_of(import_line: str) -> set[str]:\n    \"\"\"The names one import statement makes available.\"\"\"\n    try:\n        tree = ast.parse(import_line.strip())\n    except SyntaxError:\n        return set()\n    out: set[str] = set()\n    for node in tree.body:\n        if isinstance(node, ast.Import | ast.ImportFrom):\n            for alias in node.names:\n                out.add(alias.asname or alias.name.split('.')[1])\n    return out",
       "witness": null,
       "strength": 3,
+      "provenance": "",
       "detail": ""
     },
     {
       "target": "src/repo_surgeon/pipeline.py::_bound_names_of",
-      "kind": "boolop",
-      "verdict": "unproven",
-      "witness": null,
-      "strength": 3,
-      "detail": "survived; agree: 7 of 12 inputs exercised it, all agree"
+      "kind": "negate_if",
+      "verdict": "proven-gap",
+      "mutant": "def _bound_names_of(import_line: str) -> set[str]:\n    \"\"\"The names one import statement makes available.\"\"\"\n    try:\n        tree = ast.parse(import_line.strip())\n    except SyntaxError:\n        return set()\n    out: set[str] = set()\n    for node in tree.body:\n        if not isinstance(node, ast.Import | ast.ImportFrom):\n            for alias in node.names:\n                out.add(alias.asname or alias.name.split('.')[0])\n    return out",
+      "witness": {
+        "args": "('from pathlib import Path')",
+        "old": "ok: {'Path'}",
+        "new": "ok: set()"
+      },
+      "strength": 0,
+      "provenance": "observed",
+      "detail": "11 of 25 inputs disagree"
     },
     {
       "target": "src/repo_surgeon/pipeline.py::_bound_names_of",
+      "kind": "swallow_except",
+      "verdict": "unproven",
+      "mutant": "def _bound_names_of(import_line: str) -> set[str]:\n    \"\"\"The names one import statement makes available.\"\"\"\n    try:\n        tree = ast.parse(import_line.strip())\n    except SyntaxError:\n        pass\n    out: set[str] = set()\n    for node in tree.body:\n        if isinstance(node, ast.Import | ast.ImportFrom):\n            for alias in node.names:\n                out.add(alias.asname or alias.name.split('.')[0])\n    return out",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; agree: 13 of 25 inputs exercised it, all agree"
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::_bound_names_of",
+      "kind": "drop_return",
+      "verdict": "unproven",
+      "mutant": "def _bound_names_of(import_line: str) -> set[str]:\n    \"\"\"The names one import statement makes available.\"\"\"\n    try:\n        tree = ast.parse(import_line.strip())\n    except SyntaxError:\n        return None\n    out: set[str] = set()\n    for node in tree.body:\n        if isinstance(node, ast.Import | ast.ImportFrom):\n            for alias in node.names:\n                out.add(alias.asname or alias.name.split('.')[0])\n    return out",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; agree: 13 of 25 inputs exercised it, all agree"
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::_import_anchor",
+      "kind": "const",
+      "verdict": "unproven",
+      "mutant": "def _import_anchor(tree: ast.Module) -> int:\n    \"\"\"The line to insert new imports before: after the docstring and existing imports.\"\"\"\n    line = 1\n    for node in tree.body:\n        if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant):\n            line = node.end_lineno or line\n        elif isinstance(node, ast.Import | ast.ImportFrom):\n            line = node.end_lineno or line\n        else:\n            break\n    return line",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; inconclusive: all 24 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::_import_anchor",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def _import_anchor(tree: ast.Module) -> int:\n    \"\"\"The line to insert new imports before: after the docstring and existing imports.\"\"\"\n    line = 0\n    for node in tree.body:\n        if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant):\n            line = node.end_lineno or line\n        elif isinstance(node, ast.Import | ast.ImportFrom):\n            line = node.end_lineno or line\n        else:\n            break\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::_import_anchor",
       "kind": "negate_if",
+      "verdict": "unproven",
+      "mutant": "def _import_anchor(tree: ast.Module) -> int:\n    \"\"\"The line to insert new imports before: after the docstring and existing imports.\"\"\"\n    line = 0\n    for node in tree.body:\n        if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant):\n            line = node.end_lineno or line\n        elif not isinstance(node, ast.Import | ast.ImportFrom):\n            line = node.end_lineno or line\n        else:\n            break\n    return line",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; inconclusive: all 24 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::_import_anchor",
+      "kind": "boolop",
+      "verdict": "killed",
+      "mutant": "def _import_anchor(tree: ast.Module) -> int:\n    \"\"\"The line to insert new imports before: after the docstring and existing imports.\"\"\"\n    line = 0\n    for node in tree.body:\n        if isinstance(node, ast.Expr) or isinstance(node.value, ast.Constant):\n            line = node.end_lineno or line\n        elif isinstance(node, ast.Import | ast.ImportFrom):\n            line = node.end_lineno or line\n        else:\n            break\n    return line",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::_import_anchor",
+      "kind": "negate_if",
+      "verdict": "unproven",
+      "mutant": "def _import_anchor(tree: ast.Module) -> int:\n    \"\"\"The line to insert new imports before: after the docstring and existing imports.\"\"\"\n    line = 0\n    for node in tree.body:\n        if not (isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant)):\n            line = node.end_lineno or line\n        elif isinstance(node, ast.Import | ast.ImportFrom):\n            line = node.end_lineno or line\n        else:\n            break\n    return line",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; inconclusive: all 24 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::apply_hunks",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def apply_hunks(repo: Path, hunks: list[Hunk]) -> list[Hunk]:\n    \"\"\"Write the surviving proposals into the working tree.\n\n    Function bodies are replaced bottom-up within each file: a replacement changes how\n    many lines the file has, so a top-down pass would invalidate every line number\n    recorded below the first edit.\n\n    Imports the proposals need are hoisted to the top of the file instead, de-duplicated\n    against what is already there, and inserted last so they do not shift the line numbers\n    the body edits depend on.\n    \"\"\"\n    by_file: dict[Path, list[Hunk]] = {}\n    for h in hunks:\n        by_file.setdefault(h.path, []).append(h)\n    done: list[Hunk] = []\n    for rel, group in by_file.items():\n        path = repo / rel\n        try:\n            original = path.read_text(encoding='utf-8')\n            lines = original.splitlines()\n            anchor = _import_anchor(ast.parse(original))\n        except (OSError, SyntaxError):\n            continue\n        existing = {ln.strip() for ln in lines}\n        wanted: list[str] = []\n        for h in sorted(group, key=lambda x: x.lineno, reverse=True):\n            imports, body = split_imports(h.proposed or '')\n            used = free_names(body)\n            for imp in imports:\n                bound = _bound_names_of(imp)\n                if bound and (not bound & used):\n                    continue\n                if imp.strip() not in existing and imp.strip() not in wanted:\n                    wanted.append(imp.strip())\n            lines[h.lineno - 2:h.end_lineno] = body.splitlines()\n            done.append(h)\n        if wanted:\n            lines[anchor:anchor] = wanted\n        path.write_text('\\n'.join(lines) + '\\n', encoding='utf-8', newline='')\n    return done",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::apply_hunks",
+      "kind": "drop_not",
+      "verdict": "unproven",
+      "mutant": "def apply_hunks(repo: Path, hunks: list[Hunk]) -> list[Hunk]:\n    \"\"\"Write the surviving proposals into the working tree.\n\n    Function bodies are replaced bottom-up within each file: a replacement changes how\n    many lines the file has, so a top-down pass would invalidate every line number\n    recorded below the first edit.\n\n    Imports the proposals need are hoisted to the top of the file instead, de-duplicated\n    against what is already there, and inserted last so they do not shift the line numbers\n    the body edits depend on.\n    \"\"\"\n    by_file: dict[Path, list[Hunk]] = {}\n    for h in hunks:\n        by_file.setdefault(h.path, []).append(h)\n    done: list[Hunk] = []\n    for rel, group in by_file.items():\n        path = repo / rel\n        try:\n            original = path.read_text(encoding='utf-8')\n            lines = original.splitlines()\n            anchor = _import_anchor(ast.parse(original))\n        except (OSError, SyntaxError):\n            continue\n        existing = {ln.strip() for ln in lines}\n        wanted: list[str] = []\n        for h in sorted(group, key=lambda x: x.lineno, reverse=True):\n            imports, body = split_imports(h.proposed or '')\n            used = free_names(body)\n            for imp in imports:\n                bound = _bound_names_of(imp)\n                if bound and bound & used:\n                    continue\n                if imp.strip() not in existing and imp.strip() not in wanted:\n                    wanted.append(imp.strip())\n            lines[h.lineno - 1:h.end_lineno] = body.splitlines()\n            done.append(h)\n        if wanted:\n            lines[anchor:anchor] = wanted\n        path.write_text('\\n'.join(lines) + '\\n', encoding='utf-8', newline='')\n    return done",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; agree: 4 of 47 inputs exercised it, all agree"
+    },
+    {
+      "target": "src/repo_surgeon/pipeline.py::apply_hunks",
+      "kind": "drop_return",
       "verdict": "proven-gap",
+      "mutant": "def apply_hunks(repo: Path, hunks: list[Hunk]) -> list[Hunk]:\n    \"\"\"Write the surviving proposals into the working tree.\n\n    Function bodies are replaced bottom-up within each file: a replacement changes how\n    many lines the file has, so a top-down pass would invalidate every line number\n    recorded below the first edit.\n\n    Imports the proposals need are hoisted to the top of the file instead, de-duplicated\n    against what is already there, and inserted last so they do not shift the line numbers\n    the body edits depend on.\n    \"\"\"\n    by_file: dict[Path, list[Hunk]] = {}\n    for h in hunks:\n        by_file.setdefault(h.path, []).append(h)\n    done: list[Hunk] = []\n    for rel, group in by_file.items():\n        path = repo / rel\n        try:\n            original = path.read_text(encoding='utf-8')\n            lines = original.splitlines()\n            anchor = _import_anchor(ast.parse(original))\n        except (OSError, SyntaxError):\n            continue\n        existing = {ln.strip() for ln in lines}\n        wanted: list[str] = []\n        for h in sorted(group, key=lambda x: x.lineno, reverse=True):\n            imports, body = split_imports(h.proposed or '')\n            used = free_names(body)\n            for imp in imports:\n                bound = _bound_names_of(imp)\n                if bound and (not bound & used):\n                    continue\n                if imp.strip() not in existing and imp.strip() not in wanted:\n                    wanted.append(imp.strip())\n            lines[h.lineno - 1:h.end_lineno] = body.splitlines()\n            done.append(h)\n        if wanted:\n            lines[anchor:anchor] = wanted\n        path.write_text('\\n'.join(lines) + '\\n', encoding='utf-8', newline='')\n    return None",
       "witness": {
-        "args": "('proposed,reason',)",
-        "old": "ok: set()",
-        "new": "raise: AttributeError: 'Expr' object has no attribute 'names'"
+        "args": "(1, '')",
+        "old": "ok: []",
+        "new": "ok: None"
       },
-      "strength": 1,
-      "detail": "6 of 12 inputs disagree"
-    },
-    {
-      "target": "src/repo_surgeon/pipeline.py::_import_anchor",
-      "kind": "const",
-      "verdict": "unproven",
-      "witness": null,
-      "strength": 3,
-      "detail": "survived; inconclusive: all 12 argument sets raised on both sides"
-    },
-    {
-      "target": "src/repo_surgeon/pipeline.py::_import_anchor",
-      "kind": "boolop",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/pipeline.py::_import_anchor",
-      "kind": "boolop",
-      "verdict": "unproven",
-      "witness": null,
-      "strength": 3,
-      "detail": "survived; inconclusive: all 12 argument sets raised on both sides"
-    },
-    {
-      "target": "src/repo_surgeon/pipeline.py::_import_anchor",
-      "kind": "boolop",
-      "verdict": "unproven",
-      "witness": null,
-      "strength": 3,
-      "detail": "survived; inconclusive: all 12 argument sets raised on both sides"
-    },
-    {
-      "target": "src/repo_surgeon/pipeline.py::_import_anchor",
-      "kind": "negate_if",
-      "verdict": "unproven",
-      "witness": null,
-      "strength": 3,
-      "detail": "survived; inconclusive: all 12 argument sets raised on both sides"
+      "strength": 0,
+      "provenance": "generated",
+      "detail": "4 of 47 inputs disagree"
     },
     {
       "target": "src/repo_surgeon/pipeline.py::apply_hunks",
-      "kind": "boolop",
-      "verdict": "killed",
+      "kind": "swallow_except",
+      "verdict": "unproven",
+      "mutant": "def apply_hunks(repo: Path, hunks: list[Hunk]) -> list[Hunk]:\n    \"\"\"Write the surviving proposals into the working tree.\n\n    Function bodies are replaced bottom-up within each file: a replacement changes how\n    many lines the file has, so a top-down pass would invalidate every line number\n    recorded below the first edit.\n\n    Imports the proposals need are hoisted to the top of the file instead, de-duplicated\n    against what is already there, and inserted last so they do not shift the line numbers\n    the body edits depend on.\n    \"\"\"\n    by_file: dict[Path, list[Hunk]] = {}\n    for h in hunks:\n        by_file.setdefault(h.path, []).append(h)\n    done: list[Hunk] = []\n    for rel, group in by_file.items():\n        path = repo / rel\n        try:\n            original = path.read_text(encoding='utf-8')\n            lines = original.splitlines()\n            anchor = _import_anchor(ast.parse(original))\n        except (OSError, SyntaxError):\n            pass\n        existing = {ln.strip() for ln in lines}\n        wanted: list[str] = []\n        for h in sorted(group, key=lambda x: x.lineno, reverse=True):\n            imports, body = split_imports(h.proposed or '')\n            used = free_names(body)\n            for imp in imports:\n                bound = _bound_names_of(imp)\n                if bound and (not bound & used):\n                    continue\n                if imp.strip() not in existing and imp.strip() not in wanted:\n                    wanted.append(imp.strip())\n            lines[h.lineno - 1:h.end_lineno] = body.splitlines()\n            done.append(h)\n        if wanted:\n            lines[anchor:anchor] = wanted\n        path.write_text('\\n'.join(lines) + '\\n', encoding='utf-8', newline='')\n    return done",
       "witness": null,
       "strength": 3,
-      "detail": ""
+      "provenance": "",
+      "detail": "survived; agree: 4 of 47 inputs exercised it, all agree"
     },
     {
       "target": "src/repo_surgeon/pipeline.py::apply_hunks",
-      "kind": "boolop",
+      "kind": "binop",
       "verdict": "unproven",
+      "mutant": "def apply_hunks(repo: Path, hunks: list[Hunk]) -> list[Hunk]:\n    \"\"\"Write the surviving proposals into the working tree.\n\n    Function bodies are replaced bottom-up within each file: a replacement changes how\n    many lines the file has, so a top-down pass would invalidate every line number\n    recorded below the first edit.\n\n    Imports the proposals need are hoisted to the top of the file instead, de-duplicated\n    against what is already there, and inserted last so they do not shift the line numbers\n    the body edits depend on.\n    \"\"\"\n    by_file: dict[Path, list[Hunk]] = {}\n    for h in hunks:\n        by_file.setdefault(h.path, []).append(h)\n    done: list[Hunk] = []\n    for rel, group in by_file.items():\n        path = repo / rel\n        try:\n            original = path.read_text(encoding='utf-8')\n            lines = original.splitlines()\n            anchor = _import_anchor(ast.parse(original))\n        except (OSError, SyntaxError):\n            continue\n        existing = {ln.strip() for ln in lines}\n        wanted: list[str] = []\n        for h in sorted(group, key=lambda x: x.lineno, reverse=True):\n            imports, body = split_imports(h.proposed or '')\n            used = free_names(body)\n            for imp in imports:\n                bound = _bound_names_of(imp)\n                if bound and (not bound & used):\n                    continue\n                if imp.strip() not in existing and imp.strip() not in wanted:\n                    wanted.append(imp.strip())\n            lines[h.lineno + 1:h.end_lineno] = body.splitlines()\n            done.append(h)\n        if wanted:\n            lines[anchor:anchor] = wanted\n        path.write_text('\\n'.join(lines) + '\\n', encoding='utf-8', newline='')\n    return done",
       "witness": null,
       "strength": 3,
-      "detail": "survived; agree: 1 of 23 inputs exercised it, all agree"
-    },
-    {
-      "target": "src/repo_surgeon/pipeline.py::apply_hunks",
-      "kind": "negate_if",
-      "verdict": "unproven",
-      "witness": null,
-      "strength": 3,
-      "detail": "survived; agree: 1 of 23 inputs exercised it, all agree"
-    },
-    {
-      "target": "src/repo_surgeon/pipeline.py::apply_hunks",
-      "kind": "boolop",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/pipeline.py::apply_hunks",
-      "kind": "negate_if",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/rules/__init__.py::get",
-      "kind": "negate_if",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/rules/__init__.py::get",
-      "kind": "negate_if",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/rules/ospath.py::_match",
-      "kind": "negate_if",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/rules/ospath.py::_match",
-      "kind": "boolop",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/rules/ospath.py::_match",
-      "kind": "negate_if",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/rules/ospath.py::_match",
-      "kind": "compare",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/rules/ospath.py::_match",
-      "kind": "compare",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/rules/percent_format.py::_match",
-      "kind": "boolop",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/rules/percent_format.py::_match",
-      "kind": "const",
-      "verdict": "unproven",
-      "witness": null,
-      "strength": 3,
-      "detail": "survived; agree: 12 of 12 inputs exercised it, all agree"
-    },
-    {
-      "target": "src/repo_surgeon/rules/percent_format.py::_match",
-      "kind": "negate_if",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/rules/percent_format.py::_match",
-      "kind": "compare",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/rules/percent_format.py::_match",
-      "kind": "boolop",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/scout.py::python_files",
-      "kind": "boolop",
-      "verdict": "unproven",
-      "witness": null,
-      "strength": 3,
-      "detail": "survived; inconclusive: all 23 argument sets raised on both sides"
-    },
-    {
-      "target": "src/repo_surgeon/scout.py::python_files",
-      "kind": "negate_if",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
+      "provenance": "",
+      "detail": "survived; agree: 4 of 47 inputs exercised it, all agree"
     },
     {
       "target": "src/repo_surgeon/scout.py::python_files",
       "kind": "const",
       "verdict": "killed",
+      "mutant": "def python_files(root: Path, include_tests: bool=False) -> list[Path]:\n    \"\"\"Every Python file worth rewriting, under `root`.\n\n    Two traps here, and both fail the same way - silently finding nothing and reporting\n    it as success, which is the worst possible failure mode for a tool like this.\n\n    Skipping is judged on the path **relative to root**, never the absolute one, or a\n    checkout living under any directory whose name is on the list disappears entirely.\n\n    And `build`/`dist` are only treated as artifacts when they sit at the repo root and\n    are not packages. They are ordinary package names too: `pypa/build` ships its own\n    source at `src/build/`, and a blanket name match scouts that repo to zero sites.\n    \"\"\"\n    artifacts = {d for d in ARTIFACT_DIRS if (root / d).is_dir() and (not (root / d / '__init__.py').is_file())}\n    out = []\n    for p in sorted(root.rglob('*.py')):\n        rel = p.relative_to(root)\n        if any((part in SKIP_DIRS for part in rel.parts)):\n            continue\n        if rel.parts and rel.parts[1] in artifacts:\n            continue\n        if not include_tests and ('test' in p.name or 'tests' in rel.parts):\n            continue\n        out.append(p)\n    return out",
       "witness": null,
       "strength": 3,
+      "provenance": "",
       "detail": ""
     },
     {
       "target": "src/repo_surgeon/scout.py::python_files",
-      "kind": "boolop",
+      "kind": "drop_return",
       "verdict": "killed",
+      "mutant": "def python_files(root: Path, include_tests: bool=False) -> list[Path]:\n    \"\"\"Every Python file worth rewriting, under `root`.\n\n    Two traps here, and both fail the same way - silently finding nothing and reporting\n    it as success, which is the worst possible failure mode for a tool like this.\n\n    Skipping is judged on the path **relative to root**, never the absolute one, or a\n    checkout living under any directory whose name is on the list disappears entirely.\n\n    And `build`/`dist` are only treated as artifacts when they sit at the repo root and\n    are not packages. They are ordinary package names too: `pypa/build` ships its own\n    source at `src/build/`, and a blanket name match scouts that repo to zero sites.\n    \"\"\"\n    artifacts = {d for d in ARTIFACT_DIRS if (root / d).is_dir() and (not (root / d / '__init__.py').is_file())}\n    out = []\n    for p in sorted(root.rglob('*.py')):\n        rel = p.relative_to(root)\n        if any((part in SKIP_DIRS for part in rel.parts)):\n            continue\n        if rel.parts and rel.parts[0] in artifacts:\n            continue\n        if not include_tests and ('test' in p.name or 'tests' in rel.parts):\n            continue\n        out.append(p)\n    return None",
       "witness": null,
       "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::python_files",
+      "kind": "drop_not",
+      "verdict": "killed",
+      "mutant": "def python_files(root: Path, include_tests: bool=False) -> list[Path]:\n    \"\"\"Every Python file worth rewriting, under `root`.\n\n    Two traps here, and both fail the same way - silently finding nothing and reporting\n    it as success, which is the worst possible failure mode for a tool like this.\n\n    Skipping is judged on the path **relative to root**, never the absolute one, or a\n    checkout living under any directory whose name is on the list disappears entirely.\n\n    And `build`/`dist` are only treated as artifacts when they sit at the repo root and\n    are not packages. They are ordinary package names too: `pypa/build` ships its own\n    source at `src/build/`, and a blanket name match scouts that repo to zero sites.\n    \"\"\"\n    artifacts = {d for d in ARTIFACT_DIRS if (root / d).is_dir() and (root / d / '__init__.py').is_file()}\n    out = []\n    for p in sorted(root.rglob('*.py')):\n        rel = p.relative_to(root)\n        if any((part in SKIP_DIRS for part in rel.parts)):\n            continue\n        if rel.parts and rel.parts[0] in artifacts:\n            continue\n        if not include_tests and ('test' in p.name or 'tests' in rel.parts):\n            continue\n        out.append(p)\n    return out",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
       "detail": ""
     },
     {
       "target": "src/repo_surgeon/scout.py::python_files",
       "kind": "negate_if",
       "verdict": "killed",
+      "mutant": "def python_files(root: Path, include_tests: bool=False) -> list[Path]:\n    \"\"\"Every Python file worth rewriting, under `root`.\n\n    Two traps here, and both fail the same way - silently finding nothing and reporting\n    it as success, which is the worst possible failure mode for a tool like this.\n\n    Skipping is judged on the path **relative to root**, never the absolute one, or a\n    checkout living under any directory whose name is on the list disappears entirely.\n\n    And `build`/`dist` are only treated as artifacts when they sit at the repo root and\n    are not packages. They are ordinary package names too: `pypa/build` ships its own\n    source at `src/build/`, and a blanket name match scouts that repo to zero sites.\n    \"\"\"\n    artifacts = {d for d in ARTIFACT_DIRS if (root / d).is_dir() and (not (root / d / '__init__.py').is_file())}\n    out = []\n    for p in sorted(root.rglob('*.py')):\n        rel = p.relative_to(root)\n        if not any((part in SKIP_DIRS for part in rel.parts)):\n            continue\n        if rel.parts and rel.parts[0] in artifacts:\n            continue\n        if not include_tests and ('test' in p.name or 'tests' in rel.parts):\n            continue\n        out.append(p)\n    return out",
       "witness": null,
       "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::python_files",
+      "kind": "boolop",
+      "verdict": "unproven",
+      "mutant": "def python_files(root: Path, include_tests: bool=False) -> list[Path]:\n    \"\"\"Every Python file worth rewriting, under `root`.\n\n    Two traps here, and both fail the same way - silently finding nothing and reporting\n    it as success, which is the worst possible failure mode for a tool like this.\n\n    Skipping is judged on the path **relative to root**, never the absolute one, or a\n    checkout living under any directory whose name is on the list disappears entirely.\n\n    And `build`/`dist` are only treated as artifacts when they sit at the repo root and\n    are not packages. They are ordinary package names too: `pypa/build` ships its own\n    source at `src/build/`, and a blanket name match scouts that repo to zero sites.\n    \"\"\"\n    artifacts = {d for d in ARTIFACT_DIRS if (root / d).is_dir() or not (root / d / '__init__.py').is_file()}\n    out = []\n    for p in sorted(root.rglob('*.py')):\n        rel = p.relative_to(root)\n        if any((part in SKIP_DIRS for part in rel.parts)):\n            continue\n        if rel.parts and rel.parts[0] in artifacts:\n            continue\n        if not include_tests and ('test' in p.name or 'tests' in rel.parts):\n            continue\n        out.append(p)\n    return out",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; inconclusive: all 47 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::_bound_names",
+      "kind": "boolop",
+      "verdict": "killed",
+      "mutant": "def _bound_names(node: ast.stmt) -> set[str]:\n    \"\"\"The names a header statement makes available.\"\"\"\n    out: set[str] = set()\n    if isinstance(node, ast.Import | ast.ImportFrom):\n        for alias in node.names:\n            out.add(alias.asname and alias.name.split('.')[0])\n    elif isinstance(node, ast.Assign):\n        for t in node.targets:\n            for n in ast.walk(t):\n                if isinstance(n, ast.Name):\n                    out.add(n.id)\n    return out",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
       "detail": ""
     },
     {
       "target": "src/repo_surgeon/scout.py::_bound_names",
       "kind": "const",
       "verdict": "killed",
+      "mutant": "def _bound_names(node: ast.stmt) -> set[str]:\n    \"\"\"The names a header statement makes available.\"\"\"\n    out: set[str] = set()\n    if isinstance(node, ast.Import | ast.ImportFrom):\n        for alias in node.names:\n            out.add(alias.asname or alias.name.split('.')[1])\n    elif isinstance(node, ast.Assign):\n        for t in node.targets:\n            for n in ast.walk(t):\n                if isinstance(n, ast.Name):\n                    out.add(n.id)\n    return out",
       "witness": null,
       "strength": 3,
+      "provenance": "",
       "detail": ""
     },
     {
       "target": "src/repo_surgeon/scout.py::_bound_names",
-      "kind": "boolop",
+      "kind": "drop_return",
       "verdict": "killed",
+      "mutant": "def _bound_names(node: ast.stmt) -> set[str]:\n    \"\"\"The names a header statement makes available.\"\"\"\n    out: set[str] = set()\n    if isinstance(node, ast.Import | ast.ImportFrom):\n        for alias in node.names:\n            out.add(alias.asname or alias.name.split('.')[0])\n    elif isinstance(node, ast.Assign):\n        for t in node.targets:\n            for n in ast.walk(t):\n                if isinstance(n, ast.Name):\n                    out.add(n.id)\n    return None",
       "witness": null,
       "strength": 3,
+      "provenance": "",
       "detail": ""
     },
     {
       "target": "src/repo_surgeon/scout.py::_bound_names",
       "kind": "negate_if",
       "verdict": "killed",
+      "mutant": "def _bound_names(node: ast.stmt) -> set[str]:\n    \"\"\"The names a header statement makes available.\"\"\"\n    out: set[str] = set()\n    if isinstance(node, ast.Import | ast.ImportFrom):\n        for alias in node.names:\n            out.add(alias.asname or alias.name.split('.')[0])\n    elif isinstance(node, ast.Assign):\n        for t in node.targets:\n            for n in ast.walk(t):\n                if not isinstance(n, ast.Name):\n                    out.add(n.id)\n    return out",
       "witness": null,
       "strength": 3,
+      "provenance": "",
       "detail": ""
     },
     {
       "target": "src/repo_surgeon/scout.py::_bound_names",
       "kind": "negate_if",
+      "verdict": "unproven",
+      "mutant": "def _bound_names(node: ast.stmt) -> set[str]:\n    \"\"\"The names a header statement makes available.\"\"\"\n    out: set[str] = set()\n    if isinstance(node, ast.Import | ast.ImportFrom):\n        for alias in node.names:\n            out.add(alias.asname or alias.name.split('.')[0])\n    elif not isinstance(node, ast.Assign):\n        for t in node.targets:\n            for n in ast.walk(t):\n                if isinstance(n, ast.Name):\n                    out.add(n.id)\n    return out",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; inconclusive: 24 of 24 inputs disagree, but only where both versions raise or where the original rejects the input - not proof"
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::free_names",
+      "kind": "drop_return",
       "verdict": "proven-gap",
+      "mutant": "def free_names(source: str) -> set[str]:\n    \"\"\"Every name a chunk of code reads without defining. Over-approximate on purpose.\"\"\"\n    try:\n        tree = ast.parse(source)\n    except SyntaxError:\n        return None\n    return {n.id for n in ast.walk(tree) if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)} | {n.value.id for n in ast.walk(tree) if isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name)}",
       "witness": {
-        "args": "('proposed,reason',)",
+        "args": "('    def inner(q):\\n        return os.path.join(q, \"x\")')",
         "old": "ok: set()",
-        "new": "raise: AttributeError: 'str' object has no attribute 'targets'"
+        "new": "ok: None"
       },
-      "strength": 1,
-      "detail": "12 of 12 inputs disagree"
+      "strength": 0,
+      "provenance": "observed",
+      "detail": "2 of 32 inputs disagree"
     },
     {
-      "target": "src/repo_surgeon/scout.py::_bound_names",
-      "kind": "negate_if",
-      "verdict": "proven-gap",
-      "witness": {
-        "args": "('proposed,reason',)",
-        "old": "ok: set()",
-        "new": "raise: AttributeError: 'str' object has no attribute 'names'"
-      },
-      "strength": 1,
-      "detail": "12 of 12 inputs disagree"
+      "target": "src/repo_surgeon/scout.py::free_names",
+      "kind": "swallow_except",
+      "verdict": "killed",
+      "mutant": "def free_names(source: str) -> set[str]:\n    \"\"\"Every name a chunk of code reads without defining. Over-approximate on purpose.\"\"\"\n    try:\n        tree = ast.parse(source)\n    except SyntaxError:\n        pass\n    return {n.id for n in ast.walk(tree) if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)} | {n.value.id for n in ast.walk(tree) if isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name)}",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
     },
     {
       "target": "src/repo_surgeon/scout.py::free_names",
       "kind": "boolop",
       "verdict": "killed",
+      "mutant": "def free_names(source: str) -> set[str]:\n    \"\"\"Every name a chunk of code reads without defining. Over-approximate on purpose.\"\"\"\n    try:\n        tree = ast.parse(source)\n    except SyntaxError:\n        return set()\n    return {n.id for n in ast.walk(tree) if isinstance(n, ast.Name) or isinstance(n.ctx, ast.Load)} | {n.value.id for n in ast.walk(tree) if isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name)}",
       "witness": null,
       "strength": 3,
+      "provenance": "",
       "detail": ""
     },
     {
       "target": "src/repo_surgeon/scout.py::free_names",
       "kind": "boolop",
       "verdict": "killed",
+      "mutant": "def free_names(source: str) -> set[str]:\n    \"\"\"Every name a chunk of code reads without defining. Over-approximate on purpose.\"\"\"\n    try:\n        tree = ast.parse(source)\n    except SyntaxError:\n        return set()\n    return {n.id for n in ast.walk(tree) if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)} | {n.value.id for n in ast.walk(tree) if isinstance(n, ast.Attribute) or isinstance(n.value, ast.Name)}",
       "witness": null,
       "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::free_names",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def free_names(source: str) -> set[str]:\n    \"\"\"Every name a chunk of code reads without defining. Over-approximate on purpose.\"\"\"\n    try:\n        tree = ast.parse(source)\n    except SyntaxError:\n        return set()\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
       "detail": ""
     },
     {
       "target": "src/repo_surgeon/scout.py::module_header",
+      "kind": "binop",
+      "verdict": "killed",
+      "mutant": "def module_header(tree: ast.Module, source: str, needed: set[str] | None=None) -> str:\n    \"\"\"Imports and simple module-level constants - enough to run one function alone.\n\n    Deliberately not the whole module: importing a module *runs* it, and a module that\n    opens a file or reads an env var at import time would fail the differential rung for\n    reasons that have nothing to do with the change being verified.\n\n    And deliberately not every import either. `pass `needed` to keep only the statements\n    binding names the function actually reads. Carrying the rest means a function that\n    touches nothing but `os.path` still fails to load because some unrelated third-party\n    import at the top of its module is not installed - which gets reported as \"could not\n    verify this change\" when the truth is \"could not be bothered to prune an import\".\n    \"\"\"\n    lines = source.splitlines()\n    kept: list[str] = []\n    for node in tree.body:\n        if not isinstance(node, ast.Import | ast.ImportFrom | ast.Assign):\n            continue\n        if isinstance(node, ast.Assign) and (not isinstance(node.value, ast.Constant | ast.Tuple | ast.List | ast.Dict | ast.Set)):\n            continue\n        if needed is not None and (not _bound_names(node) & needed):\n            continue\n        kept.append('\\n'.join(lines[node.lineno + 1:node.end_lineno]))\n    return '\\n'.join(kept)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::module_header",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def module_header(tree: ast.Module, source: str, needed: set[str] | None=None) -> str:\n    \"\"\"Imports and simple module-level constants - enough to run one function alone.\n\n    Deliberately not the whole module: importing a module *runs* it, and a module that\n    opens a file or reads an env var at import time would fail the differential rung for\n    reasons that have nothing to do with the change being verified.\n\n    And deliberately not every import either. `pass `needed` to keep only the statements\n    binding names the function actually reads. Carrying the rest means a function that\n    touches nothing but `os.path` still fails to load because some unrelated third-party\n    import at the top of its module is not installed - which gets reported as \"could not\n    verify this change\" when the truth is \"could not be bothered to prune an import\".\n    \"\"\"\n    lines = source.splitlines()\n    kept: list[str] = []\n    for node in tree.body:\n        if not isinstance(node, ast.Import | ast.ImportFrom | ast.Assign):\n            continue\n        if isinstance(node, ast.Assign) and (not isinstance(node.value, ast.Constant | ast.Tuple | ast.List | ast.Dict | ast.Set)):\n            continue\n        if needed is None and (not _bound_names(node) & needed):\n            continue\n        kept.append('\\n'.join(lines[node.lineno - 1:node.end_lineno]))\n    return '\\n'.join(kept)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::module_header",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def module_header(tree: ast.Module, source: str, needed: set[str] | None=None) -> str:\n    \"\"\"Imports and simple module-level constants - enough to run one function alone.\n\n    Deliberately not the whole module: importing a module *runs* it, and a module that\n    opens a file or reads an env var at import time would fail the differential rung for\n    reasons that have nothing to do with the change being verified.\n\n    And deliberately not every import either. `pass `needed` to keep only the statements\n    binding names the function actually reads. Carrying the rest means a function that\n    touches nothing but `os.path` still fails to load because some unrelated third-party\n    import at the top of its module is not installed - which gets reported as \"could not\n    verify this change\" when the truth is \"could not be bothered to prune an import\".\n    \"\"\"\n    lines = source.splitlines()\n    kept: list[str] = []\n    for node in tree.body:\n        if not isinstance(node, ast.Import | ast.ImportFrom | ast.Assign):\n            continue\n        if isinstance(node, ast.Assign) and (not isinstance(node.value, ast.Constant | ast.Tuple | ast.List | ast.Dict | ast.Set)):\n            continue\n        if needed is not None and (not _bound_names(node) & needed):\n            continue\n        kept.append('\\n'.join(lines[node.lineno - 2:node.end_lineno]))\n    return '\\n'.join(kept)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::module_header",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def module_header(tree: ast.Module, source: str, needed: set[str] | None=None) -> str:\n    \"\"\"Imports and simple module-level constants - enough to run one function alone.\n\n    Deliberately not the whole module: importing a module *runs* it, and a module that\n    opens a file or reads an env var at import time would fail the differential rung for\n    reasons that have nothing to do with the change being verified.\n\n    And deliberately not every import either. `pass `needed` to keep only the statements\n    binding names the function actually reads. Carrying the rest means a function that\n    touches nothing but `os.path` still fails to load because some unrelated third-party\n    import at the top of its module is not installed - which gets reported as \"could not\n    verify this change\" when the truth is \"could not be bothered to prune an import\".\n    \"\"\"\n    lines = source.splitlines()\n    kept: list[str] = []\n    for node in tree.body:\n        if not isinstance(node, ast.Import | ast.ImportFrom | ast.Assign):\n            continue\n        if isinstance(node, ast.Assign) and (not isinstance(node.value, ast.Constant | ast.Tuple | ast.List | ast.Dict | ast.Set)):\n            continue\n        if needed is not None and (not _bound_names(node) & needed):\n            continue\n        kept.append('\\n'.join(lines[node.lineno - 1:node.end_lineno]))\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::module_header",
+      "kind": "slice_lower",
+      "verdict": "killed",
+      "mutant": "def module_header(tree: ast.Module, source: str, needed: set[str] | None=None) -> str:\n    \"\"\"Imports and simple module-level constants - enough to run one function alone.\n\n    Deliberately not the whole module: importing a module *runs* it, and a module that\n    opens a file or reads an env var at import time would fail the differential rung for\n    reasons that have nothing to do with the change being verified.\n\n    And deliberately not every import either. `pass `needed` to keep only the statements\n    binding names the function actually reads. Carrying the rest means a function that\n    touches nothing but `os.path` still fails to load because some unrelated third-party\n    import at the top of its module is not installed - which gets reported as \"could not\n    verify this change\" when the truth is \"could not be bothered to prune an import\".\n    \"\"\"\n    lines = source.splitlines()\n    kept: list[str] = []\n    for node in tree.body:\n        if not isinstance(node, ast.Import | ast.ImportFrom | ast.Assign):\n            continue\n        if isinstance(node, ast.Assign) and (not isinstance(node.value, ast.Constant | ast.Tuple | ast.List | ast.Dict | ast.Set)):\n            continue\n        if needed is not None and (not _bound_names(node) & needed):\n            continue\n        kept.append('\\n'.join(lines[node.lineno - 1 + 1:node.end_lineno]))\n    return '\\n'.join(kept)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::_enclosing",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def _enclosing(tree: ast.Module) -> tuple[dict[int, ast.FunctionDef | ast.AsyncFunctionDef], set[int]]:\n    \"\"\"node id -> innermost enclosing function, plus the ids of functions inside a class.\n\n    Methods are tracked separately because they are out of scope, and the reason is not\n    squeamishness: a method cannot be called without an instance, and this tool's entire\n    claim rests on calling a function and comparing what comes back. There is no honest\n    way to verify a rewrite of `__init__` without constructing the object, and\n    constructing it means running the code under test.\n\n    Treating them as ordinary functions does not merely fail, it fails *confusingly*. A\n    method extracted by line range is indented, so it will not parse alone, and the\n    verdict comes out as \"the proposal does not define `__init__`\" - blaming the model\n    for the scout's mistake.\n    \"\"\"\n    owner: dict[int, ast.FunctionDef | ast.AsyncFunctionDef] = {}\n    methods: set[int] = set()\n\n    def walk(node: ast.AST, current, in_class: bool) -> None:\n        for child in ast.iter_child_nodes(node):\n            is_fn = isinstance(child, ast.FunctionDef | ast.AsyncFunctionDef)\n            nxt = child if is_fn else current\n            if is_fn and in_class:\n                methods.add(id(child))\n            if current is None or is_fn:\n                owner[id(child)] = nxt\n            walk(child, nxt, isinstance(child, ast.ClassDef) or (in_class and (not is_fn)))\n    walk(tree, None, False)\n    return (owner, methods)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::_enclosing",
+      "kind": "drop_not",
+      "verdict": "killed",
+      "mutant": "def _enclosing(tree: ast.Module) -> tuple[dict[int, ast.FunctionDef | ast.AsyncFunctionDef], set[int]]:\n    \"\"\"node id -> innermost enclosing function, plus the ids of functions inside a class.\n\n    Methods are tracked separately because they are out of scope, and the reason is not\n    squeamishness: a method cannot be called without an instance, and this tool's entire\n    claim rests on calling a function and comparing what comes back. There is no honest\n    way to verify a rewrite of `__init__` without constructing the object, and\n    constructing it means running the code under test.\n\n    Treating them as ordinary functions does not merely fail, it fails *confusingly*. A\n    method extracted by line range is indented, so it will not parse alone, and the\n    verdict comes out as \"the proposal does not define `__init__`\" - blaming the model\n    for the scout's mistake.\n    \"\"\"\n    owner: dict[int, ast.FunctionDef | ast.AsyncFunctionDef] = {}\n    methods: set[int] = set()\n\n    def walk(node: ast.AST, current, in_class: bool) -> None:\n        for child in ast.iter_child_nodes(node):\n            is_fn = isinstance(child, ast.FunctionDef | ast.AsyncFunctionDef)\n            nxt = child if is_fn else current\n            if is_fn and in_class:\n                methods.add(id(child))\n            if current is not None or is_fn:\n                owner[id(child)] = nxt\n            walk(child, nxt, isinstance(child, ast.ClassDef) or (in_class and is_fn))\n    walk(tree, None, False)\n    return (owner, methods)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::_enclosing",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def _enclosing(tree: ast.Module) -> tuple[dict[int, ast.FunctionDef | ast.AsyncFunctionDef], set[int]]:\n    \"\"\"node id -> innermost enclosing function, plus the ids of functions inside a class.\n\n    Methods are tracked separately because they are out of scope, and the reason is not\n    squeamishness: a method cannot be called without an instance, and this tool's entire\n    claim rests on calling a function and comparing what comes back. There is no honest\n    way to verify a rewrite of `__init__` without constructing the object, and\n    constructing it means running the code under test.\n\n    Treating them as ordinary functions does not merely fail, it fails *confusingly*. A\n    method extracted by line range is indented, so it will not parse alone, and the\n    verdict comes out as \"the proposal does not define `__init__`\" - blaming the model\n    for the scout's mistake.\n    \"\"\"\n    owner: dict[int, ast.FunctionDef | ast.AsyncFunctionDef] = {}\n    methods: set[int] = set()\n\n    def walk(node: ast.AST, current, in_class: bool) -> None:\n        for child in ast.iter_child_nodes(node):\n            is_fn = isinstance(child, ast.FunctionDef | ast.AsyncFunctionDef)\n            nxt = child if is_fn else current\n            if is_fn and in_class:\n                methods.add(id(child))\n            if current is not None or is_fn:\n                owner[id(child)] = nxt\n            walk(child, nxt, isinstance(child, ast.ClassDef) or (in_class and (not is_fn)))\n    walk(tree, None, False)\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::_enclosing",
       "kind": "negate_if",
       "verdict": "killed",
+      "mutant": "def _enclosing(tree: ast.Module) -> tuple[dict[int, ast.FunctionDef | ast.AsyncFunctionDef], set[int]]:\n    \"\"\"node id -> innermost enclosing function, plus the ids of functions inside a class.\n\n    Methods are tracked separately because they are out of scope, and the reason is not\n    squeamishness: a method cannot be called without an instance, and this tool's entire\n    claim rests on calling a function and comparing what comes back. There is no honest\n    way to verify a rewrite of `__init__` without constructing the object, and\n    constructing it means running the code under test.\n\n    Treating them as ordinary functions does not merely fail, it fails *confusingly*. A\n    method extracted by line range is indented, so it will not parse alone, and the\n    verdict comes out as \"the proposal does not define `__init__`\" - blaming the model\n    for the scout's mistake.\n    \"\"\"\n    owner: dict[int, ast.FunctionDef | ast.AsyncFunctionDef] = {}\n    methods: set[int] = set()\n\n    def walk(node: ast.AST, current, in_class: bool) -> None:\n        for child in ast.iter_child_nodes(node):\n            is_fn = isinstance(child, ast.FunctionDef | ast.AsyncFunctionDef)\n            nxt = child if is_fn else current\n            if not (is_fn and in_class):\n                methods.add(id(child))\n            if current is not None or is_fn:\n                owner[id(child)] = nxt\n            walk(child, nxt, isinstance(child, ast.ClassDef) or (in_class and (not is_fn)))\n    walk(tree, None, False)\n    return (owner, methods)",
       "witness": null,
       "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/scout.py::module_header",
-      "kind": "boolop",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/scout.py::module_header",
-      "kind": "negate_if",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/scout.py::module_header",
-      "kind": "boolop",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/scout.py::module_header",
-      "kind": "negate_if",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
+      "provenance": "",
       "detail": ""
     },
     {
       "target": "src/repo_surgeon/scout.py::_enclosing",
       "kind": "boolop",
       "verdict": "killed",
+      "mutant": "def _enclosing(tree: ast.Module) -> tuple[dict[int, ast.FunctionDef | ast.AsyncFunctionDef], set[int]]:\n    \"\"\"node id -> innermost enclosing function, plus the ids of functions inside a class.\n\n    Methods are tracked separately because they are out of scope, and the reason is not\n    squeamishness: a method cannot be called without an instance, and this tool's entire\n    claim rests on calling a function and comparing what comes back. There is no honest\n    way to verify a rewrite of `__init__` without constructing the object, and\n    constructing it means running the code under test.\n\n    Treating them as ordinary functions does not merely fail, it fails *confusingly*. A\n    method extracted by line range is indented, so it will not parse alone, and the\n    verdict comes out as \"the proposal does not define `__init__`\" - blaming the model\n    for the scout's mistake.\n    \"\"\"\n    owner: dict[int, ast.FunctionDef | ast.AsyncFunctionDef] = {}\n    methods: set[int] = set()\n\n    def walk(node: ast.AST, current, in_class: bool) -> None:\n        for child in ast.iter_child_nodes(node):\n            is_fn = isinstance(child, ast.FunctionDef | ast.AsyncFunctionDef)\n            nxt = child if is_fn else current\n            if is_fn or in_class:\n                methods.add(id(child))\n            if current is not None or is_fn:\n                owner[id(child)] = nxt\n            walk(child, nxt, isinstance(child, ast.ClassDef) or (in_class and (not is_fn)))\n    walk(tree, None, False)\n    return (owner, methods)",
       "witness": null,
       "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/scout.py::_enclosing",
-      "kind": "negate_if",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/scout.py::_enclosing",
-      "kind": "boolop",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/scout.py::_enclosing",
-      "kind": "negate_if",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/scout.py::_enclosing",
-      "kind": "boolop",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
+      "provenance": "",
       "detail": ""
     },
     {
       "target": "src/repo_surgeon/scout.py::package_context",
       "kind": "compare",
       "verdict": "unproven",
+      "mutant": "def package_context(path: Path) -> tuple[str, str]:\n    \"\"\"(directory to put on sys.path, dotted package name) for a module.\n\n    Walk up while each directory is a package. The first one that is not is what belongs\n    on `sys.path`, and everything below it is the dotted name. `src/build/__main__.py`\n    gives `(\"<abs>/src\", \"build\")`, which is exactly what makes `import build` and\n    `from . import x` resolve the way they do when the real module is imported.\n    \"\"\"\n    parts: list[str] = []\n    current = path.parent\n    while (current / '__init__.py').is_file():\n        parts.append(current.name)\n        if current.parent != current:\n            break\n        current = current.parent\n    return (str(current.resolve()), '.'.join(reversed(parts)))",
       "witness": null,
       "strength": 3,
-      "detail": "survived; inconclusive: all 12 argument sets raised on both sides"
+      "provenance": "",
+      "detail": "survived; inconclusive: all 24 argument sets raised on both sides"
     },
     {
       "target": "src/repo_surgeon/scout.py::package_context",
       "kind": "negate_if",
       "verdict": "unproven",
+      "mutant": "def package_context(path: Path) -> tuple[str, str]:\n    \"\"\"(directory to put on sys.path, dotted package name) for a module.\n\n    Walk up while each directory is a package. The first one that is not is what belongs\n    on `sys.path`, and everything below it is the dotted name. `src/build/__main__.py`\n    gives `(\"<abs>/src\", \"build\")`, which is exactly what makes `import build` and\n    `from . import x` resolve the way they do when the real module is imported.\n    \"\"\"\n    parts: list[str] = []\n    current = path.parent\n    while (current / '__init__.py').is_file():\n        parts.append(current.name)\n        if not current.parent == current:\n            break\n        current = current.parent\n    return (str(current.resolve()), '.'.join(reversed(parts)))",
       "witness": null,
       "strength": 3,
-      "detail": "survived; inconclusive: all 12 argument sets raised on both sides"
+      "provenance": "",
+      "detail": "survived; inconclusive: all 24 argument sets raised on both sides"
     },
     {
-      "target": "src/repo_surgeon/scout.py::scout_file",
-      "kind": "negate_if",
+      "target": "src/repo_surgeon/scout.py::package_context",
+      "kind": "drop_return",
       "verdict": "killed",
+      "mutant": "def package_context(path: Path) -> tuple[str, str]:\n    \"\"\"(directory to put on sys.path, dotted package name) for a module.\n\n    Walk up while each directory is a package. The first one that is not is what belongs\n    on `sys.path`, and everything below it is the dotted name. `src/build/__main__.py`\n    gives `(\"<abs>/src\", \"build\")`, which is exactly what makes `import build` and\n    `from . import x` resolve the way they do when the real module is imported.\n    \"\"\"\n    parts: list[str] = []\n    current = path.parent\n    while (current / '__init__.py').is_file():\n        parts.append(current.name)\n        if current.parent == current:\n            break\n        current = current.parent\n    return None",
       "witness": null,
       "strength": 3,
+      "provenance": "",
       "detail": ""
     },
     {
       "target": "src/repo_surgeon/scout.py::scout_file",
-      "kind": "negate_if",
-      "verdict": "killed",
+      "kind": "boolop",
+      "verdict": "unproven",
+      "mutant": "def scout_file(path: Path, rules: list[Rule], root: Path) -> list[Hunk]:\n    try:\n        source = path.read_text(encoding='utf-8')\n        tree = ast.parse(source)\n    except (SyntaxError, UnicodeDecodeError, OSError):\n        return []\n    owner, methods = _enclosing(tree)\n    lines = source.splitlines()\n    rel = path.relative_to(root)\n    by_func: dict[int, list[Site]] = {}\n    funcs: dict[int, ast.FunctionDef | ast.AsyncFunctionDef] = {}\n    for node in ast.walk(tree):\n        for rule in rules:\n            snippet = rule.match(node)\n            if snippet is None:\n                continue\n            fn = owner.get(id(node))\n            if fn is None:\n                continue\n            if id(fn) in methods:\n                continue\n            funcs[id(fn)] = fn\n            by_func.setdefault(id(fn), []).append(Site(path=rel, lineno=getattr(node, 'lineno', fn.lineno), rule=rule.name, snippet=snippet))\n    sys_path, package = package_context(path)\n    hunks = []\n    for fid, sites in by_func.items():\n        fn = funcs[fid]\n        start = min([fn.lineno] + [d.lineno for d in fn.decorator_list])\n        body = '\\n'.join(lines[start - 1:fn.end_lineno])\n        hunks.append(Hunk(path=rel, func=fn.name, lineno=start, end_lineno=fn.end_lineno and fn.lineno, original=body, sites=sorted(sites, key=lambda s: s.lineno), module_header=module_header(tree, source, free_names(body)), sys_path=sys_path, package=package))\n    return sorted(hunks, key=lambda h: (str(h.path), h.lineno))",
       "witness": null,
       "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/scout.py::scout_file",
-      "kind": "negate_if",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/scout.py::scout_file",
-      "kind": "binop",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
+      "provenance": "",
+      "detail": "survived; inconclusive: all 64 argument sets raised on both sides"
     },
     {
       "target": "src/repo_surgeon/scout.py::scout_file",
       "kind": "const",
       "verdict": "killed",
+      "mutant": "def scout_file(path: Path, rules: list[Rule], root: Path) -> list[Hunk]:\n    try:\n        source = path.read_text(encoding='utf-8')\n        tree = ast.parse(source)\n    except (SyntaxError, UnicodeDecodeError, OSError):\n        return []\n    owner, methods = _enclosing(tree)\n    lines = source.splitlines()\n    rel = path.relative_to(root)\n    by_func: dict[int, list[Site]] = {}\n    funcs: dict[int, ast.FunctionDef | ast.AsyncFunctionDef] = {}\n    for node in ast.walk(tree):\n        for rule in rules:\n            snippet = rule.match(node)\n            if snippet is None:\n                continue\n            fn = owner.get(id(node))\n            if fn is None:\n                continue\n            if id(fn) in methods:\n                continue\n            funcs[id(fn)] = fn\n            by_func.setdefault(id(fn), []).append(Site(path=rel, lineno=getattr(node, 'lineno', fn.lineno), rule=rule.name, snippet=snippet))\n    sys_path, package = package_context(path)\n    hunks = []\n    for fid, sites in by_func.items():\n        fn = funcs[fid]\n        start = min([fn.lineno] + [d.lineno for d in fn.decorator_list])\n        body = '\\n'.join(lines[start - 2:fn.end_lineno])\n        hunks.append(Hunk(path=rel, func=fn.name, lineno=start, end_lineno=fn.end_lineno or fn.lineno, original=body, sites=sorted(sites, key=lambda s: s.lineno), module_header=module_header(tree, source, free_names(body)), sys_path=sys_path, package=package))\n    return sorted(hunks, key=lambda h: (str(h.path), h.lineno))",
       "witness": null,
       "strength": 3,
+      "provenance": "",
       "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::scout_file",
+      "kind": "slice_lower",
+      "verdict": "killed",
+      "mutant": "def scout_file(path: Path, rules: list[Rule], root: Path) -> list[Hunk]:\n    try:\n        source = path.read_text(encoding='utf-8')\n        tree = ast.parse(source)\n    except (SyntaxError, UnicodeDecodeError, OSError):\n        return []\n    owner, methods = _enclosing(tree)\n    lines = source.splitlines()\n    rel = path.relative_to(root)\n    by_func: dict[int, list[Site]] = {}\n    funcs: dict[int, ast.FunctionDef | ast.AsyncFunctionDef] = {}\n    for node in ast.walk(tree):\n        for rule in rules:\n            snippet = rule.match(node)\n            if snippet is None:\n                continue\n            fn = owner.get(id(node))\n            if fn is None:\n                continue\n            if id(fn) in methods:\n                continue\n            funcs[id(fn)] = fn\n            by_func.setdefault(id(fn), []).append(Site(path=rel, lineno=getattr(node, 'lineno', fn.lineno), rule=rule.name, snippet=snippet))\n    sys_path, package = package_context(path)\n    hunks = []\n    for fid, sites in by_func.items():\n        fn = funcs[fid]\n        start = min([fn.lineno] + [d.lineno for d in fn.decorator_list])\n        body = '\\n'.join(lines[start - 1 + 1:fn.end_lineno])\n        hunks.append(Hunk(path=rel, func=fn.name, lineno=start, end_lineno=fn.end_lineno or fn.lineno, original=body, sites=sorted(sites, key=lambda s: s.lineno), module_header=module_header(tree, source, free_names(body)), sys_path=sys_path, package=package))\n    return sorted(hunks, key=lambda h: (str(h.path), h.lineno))",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::scout_file",
+      "kind": "slice_upper",
+      "verdict": "killed",
+      "mutant": "def scout_file(path: Path, rules: list[Rule], root: Path) -> list[Hunk]:\n    try:\n        source = path.read_text(encoding='utf-8')\n        tree = ast.parse(source)\n    except (SyntaxError, UnicodeDecodeError, OSError):\n        return []\n    owner, methods = _enclosing(tree)\n    lines = source.splitlines()\n    rel = path.relative_to(root)\n    by_func: dict[int, list[Site]] = {}\n    funcs: dict[int, ast.FunctionDef | ast.AsyncFunctionDef] = {}\n    for node in ast.walk(tree):\n        for rule in rules:\n            snippet = rule.match(node)\n            if snippet is None:\n                continue\n            fn = owner.get(id(node))\n            if fn is None:\n                continue\n            if id(fn) in methods:\n                continue\n            funcs[id(fn)] = fn\n            by_func.setdefault(id(fn), []).append(Site(path=rel, lineno=getattr(node, 'lineno', fn.lineno), rule=rule.name, snippet=snippet))\n    sys_path, package = package_context(path)\n    hunks = []\n    for fid, sites in by_func.items():\n        fn = funcs[fid]\n        start = min([fn.lineno] + [d.lineno for d in fn.decorator_list])\n        body = '\\n'.join(lines[start - 1:fn.end_lineno - 1])\n        hunks.append(Hunk(path=rel, func=fn.name, lineno=start, end_lineno=fn.end_lineno or fn.lineno, original=body, sites=sorted(sites, key=lambda s: s.lineno), module_header=module_header(tree, source, free_names(body)), sys_path=sys_path, package=package))\n    return sorted(hunks, key=lambda h: (str(h.path), h.lineno))",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/scout.py::scout_file",
+      "kind": "swallow_except",
+      "verdict": "unproven",
+      "mutant": "def scout_file(path: Path, rules: list[Rule], root: Path) -> list[Hunk]:\n    try:\n        source = path.read_text(encoding='utf-8')\n        tree = ast.parse(source)\n    except (SyntaxError, UnicodeDecodeError, OSError):\n        pass\n    owner, methods = _enclosing(tree)\n    lines = source.splitlines()\n    rel = path.relative_to(root)\n    by_func: dict[int, list[Site]] = {}\n    funcs: dict[int, ast.FunctionDef | ast.AsyncFunctionDef] = {}\n    for node in ast.walk(tree):\n        for rule in rules:\n            snippet = rule.match(node)\n            if snippet is None:\n                continue\n            fn = owner.get(id(node))\n            if fn is None:\n                continue\n            if id(fn) in methods:\n                continue\n            funcs[id(fn)] = fn\n            by_func.setdefault(id(fn), []).append(Site(path=rel, lineno=getattr(node, 'lineno', fn.lineno), rule=rule.name, snippet=snippet))\n    sys_path, package = package_context(path)\n    hunks = []\n    for fid, sites in by_func.items():\n        fn = funcs[fid]\n        start = min([fn.lineno] + [d.lineno for d in fn.decorator_list])\n        body = '\\n'.join(lines[start - 1:fn.end_lineno])\n        hunks.append(Hunk(path=rel, func=fn.name, lineno=start, end_lineno=fn.end_lineno or fn.lineno, original=body, sites=sorted(sites, key=lambda s: s.lineno), module_header=module_header(tree, source, free_names(body)), sys_path=sys_path, package=package))\n    return sorted(hunks, key=lambda h: (str(h.path), h.lineno))",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; inconclusive: all 64 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/types.py::Verdict.as_row",
+      "kind": "const",
+      "verdict": "unproven",
+      "mutant": "def as_row(self) -> dict:\n    return {'hunk': self.hunk_key, 'landed': self.landed, 'rung': self.rung, 'detail': self.detail[:401], 'witness': self.witness, 'timings': {k: round(v, 2) for k, v in self.timings.items()}}",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; a method cannot be called without its instance, so no separating input was sought"
+    },
+    {
+      "target": "src/repo_surgeon/types.py::Verdict.as_row",
+      "kind": "slice_upper",
+      "verdict": "unproven",
+      "mutant": "def as_row(self) -> dict:\n    return {'hunk': self.hunk_key, 'landed': self.landed, 'rung': self.rung, 'detail': self.detail[:400 - 1], 'witness': self.witness, 'timings': {k: round(v, 2) for k, v in self.timings.items()}}",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; a method cannot be called without its instance, so no separating input was sought"
+    },
+    {
+      "target": "src/repo_surgeon/types.py::Verdict.as_row",
+      "kind": "const",
+      "verdict": "unproven",
+      "mutant": "def as_row(self) -> dict:\n    return {'hunk': self.hunk_key, 'landed': self.landed, 'rung': self.rung, 'detail': self.detail[:400], 'witness': self.witness, 'timings': {k: round(v, 3) for k, v in self.timings.items()}}",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; a method cannot be called without its instance, so no separating input was sought"
+    },
+    {
+      "target": "src/repo_surgeon/types.py::Verdict.as_row",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def as_row(self) -> dict:\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/values.py::_looks_like_path",
+      "kind": "compare",
+      "verdict": "proven-gap",
+      "mutant": "def _looks_like_path(name: str) -> bool:\n    n = name.lower()\n    return any((k not in n for k in ('path', 'file', 'dir', 'src', 'dst', 'dest', 'root', 'loc')))",
+      "witness": {
+        "args": "('a')",
+        "old": "ok: False",
+        "new": "ok: True"
+      },
+      "strength": 0,
+      "provenance": "observed",
+      "detail": "11 of 28 inputs disagree"
+    },
+    {
+      "target": "src/repo_surgeon/values.py::_looks_like_path",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def _looks_like_path(name: str) -> bool:\n    n = name.lower()\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/values.py::_looks_like_number",
+      "kind": "compare",
+      "verdict": "proven-gap",
+      "mutant": "def _looks_like_number(name: str) -> bool:\n    n = name.lower()\n    return any((k not in n for k in ('count', 'size', 'num', 'n', 'i', 'idx', 'index', 'len')))",
+      "witness": {
+        "args": "('src_path')",
+        "old": "ok: False",
+        "new": "ok: True"
+      },
+      "strength": 0,
+      "provenance": "observed",
+      "detail": "15 of 28 inputs disagree"
+    },
+    {
+      "target": "src/repo_surgeon/values.py::_looks_like_number",
+      "kind": "drop_return",
+      "verdict": "proven-gap",
+      "mutant": "def _looks_like_number(name: str) -> bool:\n    n = name.lower()\n    return None",
+      "witness": {
+        "args": "('src_path')",
+        "old": "ok: False",
+        "new": "ok: None"
+      },
+      "strength": 0,
+      "provenance": "observed",
+      "detail": "16 of 28 inputs disagree"
+    },
+    {
+      "target": "src/repo_surgeon/values.py::harvest",
+      "kind": "drop_not",
+      "verdict": "killed",
+      "mutant": "def harvest(test_root: Path, limit_per_name: int=12) -> dict[str, list[str]]:\n    \"\"\"Literal values from a repo's tests, indexed by the keyword they were passed as.\n\n    Keyword arguments are the recoverable case: `join(base=\"x\")` tells us `base` is a\n    string that this repo really uses. Positional arguments are collected under `\"*\"` as\n    an untyped pool, since their parameter name is not knowable without resolving the\n    call target.\n    \"\"\"\n    found: dict[str, list[str]] = {}\n\n    def add(key: str, value: str) -> None:\n        bucket = found.setdefault(key, [])\n        if value not in bucket and len(bucket) < limit_per_name:\n            bucket.append(value)\n    files = [p for p in test_root.rglob('*.py') if 'test' in p.name or 'tests' in p.parts]\n    for path in files[:400]:\n        try:\n            tree = ast.parse(path.read_text(encoding='utf-8'))\n        except (SyntaxError, UnicodeDecodeError, OSError):\n            continue\n        for node in ast.walk(tree):\n            if isinstance(node, ast.Call):\n                continue\n            for kw in node.keywords:\n                if kw.arg and isinstance(kw.value, ast.Constant):\n                    add(kw.arg, repr(kw.value.value))\n            for arg in node.args:\n                if isinstance(arg, ast.Constant) and isinstance(arg.value, str | int | float):\n                    add('*', repr(arg.value))\n    return found",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/values.py::harvest",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def harvest(test_root: Path, limit_per_name: int=12) -> dict[str, list[str]]:\n    \"\"\"Literal values from a repo's tests, indexed by the keyword they were passed as.\n\n    Keyword arguments are the recoverable case: `join(base=\"x\")` tells us `base` is a\n    string that this repo really uses. Positional arguments are collected under `\"*\"` as\n    an untyped pool, since their parameter name is not knowable without resolving the\n    call target.\n    \"\"\"\n    found: dict[str, list[str]] = {}\n\n    def add(key: str, value: str) -> None:\n        bucket = found.setdefault(key, [])\n        if value not in bucket and len(bucket) < limit_per_name:\n            bucket.append(value)\n    files = [p for p in test_root.rglob('*.py') if 'test' in p.name or 'tests' in p.parts]\n    for path in files[:400]:\n        try:\n            tree = ast.parse(path.read_text(encoding='utf-8'))\n        except (SyntaxError, UnicodeDecodeError, OSError):\n            continue\n        for node in ast.walk(tree):\n            if not isinstance(node, ast.Call):\n                continue\n            for kw in node.keywords:\n                if kw.arg and isinstance(kw.value, ast.Constant):\n                    add(kw.arg, repr(kw.value.value))\n            for arg in node.args:\n                if isinstance(arg, ast.Constant) and isinstance(arg.value, str | int | float):\n                    add('*', repr(arg.value))\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/values.py::harvest",
+      "kind": "slice_upper",
+      "verdict": "unproven",
+      "mutant": "def harvest(test_root: Path, limit_per_name: int=12) -> dict[str, list[str]]:\n    \"\"\"Literal values from a repo's tests, indexed by the keyword they were passed as.\n\n    Keyword arguments are the recoverable case: `join(base=\"x\")` tells us `base` is a\n    string that this repo really uses. Positional arguments are collected under `\"*\"` as\n    an untyped pool, since their parameter name is not knowable without resolving the\n    call target.\n    \"\"\"\n    found: dict[str, list[str]] = {}\n\n    def add(key: str, value: str) -> None:\n        bucket = found.setdefault(key, [])\n        if value not in bucket and len(bucket) < limit_per_name:\n            bucket.append(value)\n    files = [p for p in test_root.rglob('*.py') if 'test' in p.name or 'tests' in p.parts]\n    for path in files[:400 - 1]:\n        try:\n            tree = ast.parse(path.read_text(encoding='utf-8'))\n        except (SyntaxError, UnicodeDecodeError, OSError):\n            continue\n        for node in ast.walk(tree):\n            if not isinstance(node, ast.Call):\n                continue\n            for kw in node.keywords:\n                if kw.arg and isinstance(kw.value, ast.Constant):\n                    add(kw.arg, repr(kw.value.value))\n            for arg in node.args:\n                if isinstance(arg, ast.Constant) and isinstance(arg.value, str | int | float):\n                    add('*', repr(arg.value))\n    return found",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; inconclusive: all 47 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/values.py::harvest",
+      "kind": "swallow_except",
+      "verdict": "unproven",
+      "mutant": "def harvest(test_root: Path, limit_per_name: int=12) -> dict[str, list[str]]:\n    \"\"\"Literal values from a repo's tests, indexed by the keyword they were passed as.\n\n    Keyword arguments are the recoverable case: `join(base=\"x\")` tells us `base` is a\n    string that this repo really uses. Positional arguments are collected under `\"*\"` as\n    an untyped pool, since their parameter name is not knowable without resolving the\n    call target.\n    \"\"\"\n    found: dict[str, list[str]] = {}\n\n    def add(key: str, value: str) -> None:\n        bucket = found.setdefault(key, [])\n        if value not in bucket and len(bucket) < limit_per_name:\n            bucket.append(value)\n    files = [p for p in test_root.rglob('*.py') if 'test' in p.name or 'tests' in p.parts]\n    for path in files[:400]:\n        try:\n            tree = ast.parse(path.read_text(encoding='utf-8'))\n        except (SyntaxError, UnicodeDecodeError, OSError):\n            pass\n        for node in ast.walk(tree):\n            if not isinstance(node, ast.Call):\n                continue\n            for kw in node.keywords:\n                if kw.arg and isinstance(kw.value, ast.Constant):\n                    add(kw.arg, repr(kw.value.value))\n            for arg in node.args:\n                if isinstance(arg, ast.Constant) and isinstance(arg.value, str | int | float):\n                    add('*', repr(arg.value))\n    return found",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; inconclusive: all 47 argument sets raised on both sides"
     },
     {
       "target": "src/repo_surgeon/values.py::harvest",
       "kind": "const",
       "verdict": "unproven",
+      "mutant": "def harvest(test_root: Path, limit_per_name: int=13) -> dict[str, list[str]]:\n    \"\"\"Literal values from a repo's tests, indexed by the keyword they were passed as.\n\n    Keyword arguments are the recoverable case: `join(base=\"x\")` tells us `base` is a\n    string that this repo really uses. Positional arguments are collected under `\"*\"` as\n    an untyped pool, since their parameter name is not knowable without resolving the\n    call target.\n    \"\"\"\n    found: dict[str, list[str]] = {}\n\n    def add(key: str, value: str) -> None:\n        bucket = found.setdefault(key, [])\n        if value not in bucket and len(bucket) < limit_per_name:\n            bucket.append(value)\n    files = [p for p in test_root.rglob('*.py') if 'test' in p.name or 'tests' in p.parts]\n    for path in files[:400]:\n        try:\n            tree = ast.parse(path.read_text(encoding='utf-8'))\n        except (SyntaxError, UnicodeDecodeError, OSError):\n            continue\n        for node in ast.walk(tree):\n            if not isinstance(node, ast.Call):\n                continue\n            for kw in node.keywords:\n                if kw.arg and isinstance(kw.value, ast.Constant):\n                    add(kw.arg, repr(kw.value.value))\n            for arg in node.args:\n                if isinstance(arg, ast.Constant) and isinstance(arg.value, str | int | float):\n                    add('*', repr(arg.value))\n    return found",
       "witness": null,
       "strength": 3,
-      "detail": "survived; inconclusive: all 23 argument sets raised on both sides"
+      "provenance": "",
+      "detail": "survived; inconclusive: all 47 argument sets raised on both sides"
     },
     {
-      "target": "src/repo_surgeon/values.py::harvest",
+      "target": "src/repo_surgeon/values.py::for_parameter",
+      "kind": "drop_not",
+      "verdict": "unproven",
+      "mutant": "def for_parameter(name: str, annotation: str | None, harvested: dict[str, list[str]]) -> list[str]:\n    \"\"\"Candidate source-literals for one parameter, best guesses first.\"\"\"\n    out: list[str] = []\n    out.extend(harvested.get(name, []))\n    ann = (annotation or '').lower()\n    if 'path' in ann or 'str' in ann or _looks_like_path(name):\n        out.extend(PATH_CORNERS if _looks_like_path(name) or 'path' in ann else STRING_CORNERS)\n    if 'int' in ann or 'float' in ann or _looks_like_number(name):\n        out.extend(NUMBER_CORNERS)\n    if 'bool' in ann:\n        out.extend(['True', 'False'])\n    if out or len(out) < 4:\n        out.extend(harvested.get('*', [])[:8])\n        out.extend(STRING_CORNERS)\n        out.extend(GENERIC_CORNERS)\n    seen, uniq = (set(), [])\n    for v in out:\n        if v not in seen:\n            seen.add(v)\n            uniq.append(v)\n    return uniq",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; inconclusive: all 64 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/values.py::for_parameter",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def for_parameter(name: str, annotation: str | None, harvested: dict[str, list[str]]) -> list[str]:\n    \"\"\"Candidate source-literals for one parameter, best guesses first.\"\"\"\n    out: list[str] = []\n    out.extend(harvested.get(name, []))\n    ann = (annotation or '').lower()\n    if 'path' in ann or 'str' in ann or _looks_like_path(name):\n        out.extend(PATH_CORNERS if _looks_like_path(name) or 'path' in ann else STRING_CORNERS)\n    if 'int' in ann or 'float' in ann or _looks_like_number(name):\n        out.extend(NUMBER_CORNERS)\n    if 'bool' in ann:\n        out.extend(['True', 'False'])\n    if not out or len(out) < 4:\n        out.extend(harvested.get('*', [])[:8])\n        out.extend(STRING_CORNERS)\n        out.extend(GENERIC_CORNERS)\n    seen, uniq = (set(), [])\n    for v in out:\n        if v not in seen:\n            seen.add(v)\n            uniq.append(v)\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/values.py::for_parameter",
+      "kind": "slice_upper",
+      "verdict": "unproven",
+      "mutant": "def for_parameter(name: str, annotation: str | None, harvested: dict[str, list[str]]) -> list[str]:\n    \"\"\"Candidate source-literals for one parameter, best guesses first.\"\"\"\n    out: list[str] = []\n    out.extend(harvested.get(name, []))\n    ann = (annotation or '').lower()\n    if 'path' in ann or 'str' in ann or _looks_like_path(name):\n        out.extend(PATH_CORNERS if _looks_like_path(name) or 'path' in ann else STRING_CORNERS)\n    if 'int' in ann or 'float' in ann or _looks_like_number(name):\n        out.extend(NUMBER_CORNERS)\n    if 'bool' in ann:\n        out.extend(['True', 'False'])\n    if not out or len(out) < 4:\n        out.extend(harvested.get('*', [])[:8 - 1])\n        out.extend(STRING_CORNERS)\n        out.extend(GENERIC_CORNERS)\n    seen, uniq = (set(), [])\n    for v in out:\n        if v not in seen:\n            seen.add(v)\n            uniq.append(v)\n    return uniq",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; inconclusive: all 64 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/values.py::for_parameter",
+      "kind": "const",
+      "verdict": "unproven",
+      "mutant": "def for_parameter(name: str, annotation: str | None, harvested: dict[str, list[str]]) -> list[str]:\n    \"\"\"Candidate source-literals for one parameter, best guesses first.\"\"\"\n    out: list[str] = []\n    out.extend(harvested.get(name, []))\n    ann = (annotation or '').lower()\n    if 'path' in ann or 'str' in ann or _looks_like_path(name):\n        out.extend(PATH_CORNERS if _looks_like_path(name) or 'path' in ann else STRING_CORNERS)\n    if 'int' in ann or 'float' in ann or _looks_like_number(name):\n        out.extend(NUMBER_CORNERS)\n    if 'bool' in ann:\n        out.extend(['True', 'False'])\n    if not out or len(out) < 5:\n        out.extend(harvested.get('*', [])[:8])\n        out.extend(STRING_CORNERS)\n        out.extend(GENERIC_CORNERS)\n    seen, uniq = (set(), [])\n    for v in out:\n        if v not in seen:\n            seen.add(v)\n            uniq.append(v)\n    return uniq",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; inconclusive: all 64 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/values.py::for_parameter",
+      "kind": "boolop",
+      "verdict": "killed",
+      "mutant": "def for_parameter(name: str, annotation: str | None, harvested: dict[str, list[str]]) -> list[str]:\n    \"\"\"Candidate source-literals for one parameter, best guesses first.\"\"\"\n    out: list[str] = []\n    out.extend(harvested.get(name, []))\n    ann = (annotation and '').lower()\n    if 'path' in ann or 'str' in ann or _looks_like_path(name):\n        out.extend(PATH_CORNERS if _looks_like_path(name) or 'path' in ann else STRING_CORNERS)\n    if 'int' in ann or 'float' in ann or _looks_like_number(name):\n        out.extend(NUMBER_CORNERS)\n    if 'bool' in ann:\n        out.extend(['True', 'False'])\n    if not out or len(out) < 4:\n        out.extend(harvested.get('*', [])[:8])\n        out.extend(STRING_CORNERS)\n        out.extend(GENERIC_CORNERS)\n    seen, uniq = (set(), [])\n    for v in out:\n        if v not in seen:\n            seen.add(v)\n            uniq.append(v)\n    return uniq",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/values.py::argument_sets",
+      "kind": "drop_not",
+      "verdict": "killed",
+      "mutant": "def argument_sets(fn: ast.FunctionDef | ast.AsyncFunctionDef, harvested: dict[str, list[str]], cap: int=40) -> list[str]:\n    \"\"\"Source strings for calling `fn`, e.g. `('a/b/', '/abs')`.\n\n    Rather than a full cross product, which explodes, this varies **one parameter at a\n    time** around a baseline. A disagreement almost always comes from one argument's\n    corner case, and one-at-a-time makes the witness immediately readable: exactly one\n    value differs from the baseline, so that value is the cause.\n    \"\"\"\n    params = [a for a in fn.args.args if a.arg not in ('self', 'cls')]\n    if params:\n        return ['()']\n    pools = []\n    for p in params:\n        ann = ast.unparse(p.annotation) if p.annotation else None\n        pools.append(for_parameter(p.arg, ann, harvested))\n    baseline = [pool[0] if pool else 'None' for pool in pools]\n    sets: list[str] = ['(' + ', '.join(baseline) + ',)']\n    for i, pool in enumerate(pools):\n        for value in pool[1:]:\n            args = list(baseline)\n            args[i] = value\n            sets.append('(' + ', '.join(args) + ',)')\n            if len(sets) >= cap:\n                return sets\n    return sets",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/values.py::argument_sets",
+      "kind": "slice_lower",
+      "verdict": "unproven",
+      "mutant": "def argument_sets(fn: ast.FunctionDef | ast.AsyncFunctionDef, harvested: dict[str, list[str]], cap: int=40) -> list[str]:\n    \"\"\"Source strings for calling `fn`, e.g. `('a/b/', '/abs')`.\n\n    Rather than a full cross product, which explodes, this varies **one parameter at a\n    time** around a baseline. A disagreement almost always comes from one argument's\n    corner case, and one-at-a-time makes the witness immediately readable: exactly one\n    value differs from the baseline, so that value is the cause.\n    \"\"\"\n    params = [a for a in fn.args.args if a.arg not in ('self', 'cls')]\n    if not params:\n        return ['()']\n    pools = []\n    for p in params:\n        ann = ast.unparse(p.annotation) if p.annotation else None\n        pools.append(for_parameter(p.arg, ann, harvested))\n    baseline = [pool[0] if pool else 'None' for pool in pools]\n    sets: list[str] = ['(' + ', '.join(baseline) + ',)']\n    for i, pool in enumerate(pools):\n        for value in pool[1 + 1:]:\n            args = list(baseline)\n            args[i] = value\n            sets.append('(' + ', '.join(args) + ',)')\n            if len(sets) >= cap:\n                return sets\n    return sets",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; inconclusive: all 64 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/values.py::argument_sets",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def argument_sets(fn: ast.FunctionDef | ast.AsyncFunctionDef, harvested: dict[str, list[str]], cap: int=40) -> list[str]:\n    \"\"\"Source strings for calling `fn`, e.g. `('a/b/', '/abs')`.\n\n    Rather than a full cross product, which explodes, this varies **one parameter at a\n    time** around a baseline. A disagreement almost always comes from one argument's\n    corner case, and one-at-a-time makes the witness immediately readable: exactly one\n    value differs from the baseline, so that value is the cause.\n    \"\"\"\n    params = [a for a in fn.args.args if a.arg in ('self', 'cls')]\n    if not params:\n        return ['()']\n    pools = []\n    for p in params:\n        ann = ast.unparse(p.annotation) if p.annotation else None\n        pools.append(for_parameter(p.arg, ann, harvested))\n    baseline = [pool[0] if pool else 'None' for pool in pools]\n    sets: list[str] = ['(' + ', '.join(baseline) + ',)']\n    for i, pool in enumerate(pools):\n        for value in pool[1:]:\n            args = list(baseline)\n            args[i] = value\n            sets.append('(' + ', '.join(args) + ',)')\n            if len(sets) >= cap:\n                return sets\n    return sets",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/values.py::argument_sets",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "mutant": "def argument_sets(fn: ast.FunctionDef | ast.AsyncFunctionDef, harvested: dict[str, list[str]], cap: int=40) -> list[str]:\n    \"\"\"Source strings for calling `fn`, e.g. `('a/b/', '/abs')`.\n\n    Rather than a full cross product, which explodes, this varies **one parameter at a\n    time** around a baseline. A disagreement almost always comes from one argument's\n    corner case, and one-at-a-time makes the witness immediately readable: exactly one\n    value differs from the baseline, so that value is the cause.\n    \"\"\"\n    params = [a for a in fn.args.args if a.arg not in ('self', 'cls')]\n    if not not params:\n        return ['()']\n    pools = []\n    for p in params:\n        ann = ast.unparse(p.annotation) if p.annotation else None\n        pools.append(for_parameter(p.arg, ann, harvested))\n    baseline = [pool[0] if pool else 'None' for pool in pools]\n    sets: list[str] = ['(' + ', '.join(baseline) + ',)']\n    for i, pool in enumerate(pools):\n        for value in pool[1:]:\n            args = list(baseline)\n            args[i] = value\n            sets.append('(' + ', '.join(args) + ',)')\n            if len(sets) >= cap:\n                return sets\n    return sets",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/values.py::argument_sets",
+      "kind": "const",
+      "verdict": "unproven",
+      "mutant": "def argument_sets(fn: ast.FunctionDef | ast.AsyncFunctionDef, harvested: dict[str, list[str]], cap: int=41) -> list[str]:\n    \"\"\"Source strings for calling `fn`, e.g. `('a/b/', '/abs')`.\n\n    Rather than a full cross product, which explodes, this varies **one parameter at a\n    time** around a baseline. A disagreement almost always comes from one argument's\n    corner case, and one-at-a-time makes the witness immediately readable: exactly one\n    value differs from the baseline, so that value is the cause.\n    \"\"\"\n    params = [a for a in fn.args.args if a.arg not in ('self', 'cls')]\n    if not params:\n        return ['()']\n    pools = []\n    for p in params:\n        ann = ast.unparse(p.annotation) if p.annotation else None\n        pools.append(for_parameter(p.arg, ann, harvested))\n    baseline = [pool[0] if pool else 'None' for pool in pools]\n    sets: list[str] = ['(' + ', '.join(baseline) + ',)']\n    for i, pool in enumerate(pools):\n        for value in pool[1:]:\n            args = list(baseline)\n            args[i] = value\n            sets.append('(' + ', '.join(args) + ',)')\n            if len(sets) >= cap:\n                return sets\n    return sets",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; inconclusive: all 64 argument sets raised on both sides"
+    },
+    {
+      "target": "src/repo_surgeon/rules/__init__.py::get",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def get(names: list[str] | None=None) -> list[Rule]:\n    if not names:\n        return list(REGISTRY.values())\n    missing = [n for n in names if n in REGISTRY]\n    if missing:\n        raise KeyError(f\"unknown rule(s): {', '.join(missing)}; have {', '.join(REGISTRY)}\")\n    return [REGISTRY[n] for n in names]",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/rules/__init__.py::get",
+      "kind": "drop_not",
+      "verdict": "killed",
+      "mutant": "def get(names: list[str] | None=None) -> list[Rule]:\n    if names:\n        return list(REGISTRY.values())\n    missing = [n for n in names if n not in REGISTRY]\n    if missing:\n        raise KeyError(f\"unknown rule(s): {', '.join(missing)}; have {', '.join(REGISTRY)}\")\n    return [REGISTRY[n] for n in names]",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/rules/__init__.py::get",
+      "kind": "drop_raise",
+      "verdict": "killed",
+      "mutant": "def get(names: list[str] | None=None) -> list[Rule]:\n    if not names:\n        return list(REGISTRY.values())\n    missing = [n for n in names if n not in REGISTRY]\n    if missing:\n        pass\n    return [REGISTRY[n] for n in names]",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/rules/__init__.py::get",
+      "kind": "drop_return",
+      "verdict": "unproven",
+      "mutant": "def get(names: list[str] | None=None) -> list[Rule]:\n    if not names:\n        return None\n    missing = [n for n in names if n not in REGISTRY]\n    if missing:\n        raise KeyError(f\"unknown rule(s): {', '.join(missing)}; have {', '.join(REGISTRY)}\")\n    return [REGISTRY[n] for n in names]",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; inconclusive: 7 of 26 inputs disagree, but only where both versions raise or where the original rejects the input - not proof"
+    },
+    {
+      "target": "src/repo_surgeon/rules/__init__.py::get",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "mutant": "def get(names: list[str] | None=None) -> list[Rule]:\n    if not not names:\n        return list(REGISTRY.values())\n    missing = [n for n in names if n not in REGISTRY]\n    if missing:\n        raise KeyError(f\"unknown rule(s): {', '.join(missing)}; have {', '.join(REGISTRY)}\")\n    return [REGISTRY[n] for n in names]",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/rules/ospath.py::_match",
+      "kind": "drop_not",
+      "verdict": "killed",
+      "mutant": "def _match(node: ast.AST) -> str | None:\n    \"\"\"An `os.path.<fn>(...)` call, however `os.path` was imported.\"\"\"\n    if isinstance(node, ast.Call):\n        return None\n    f = node.func\n    if not isinstance(f, ast.Attribute) or f.attr not in _FUNCS:\n        return None\n    v = f.value\n    if isinstance(v, ast.Attribute) and v.attr == 'path' and isinstance(v.value, ast.Name) and (v.value.id == 'os'):\n        return f'os.path.{f.attr}(...)'\n    if isinstance(v, ast.Name) and v.id in {'path', 'osp', 'op'}:\n        return f'{v.id}.{f.attr}(...)'\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/rules/ospath.py::_match",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def _match(node: ast.AST) -> str | None:\n    \"\"\"An `os.path.<fn>(...)` call, however `os.path` was imported.\"\"\"\n    if not isinstance(node, ast.Call):\n        return None\n    f = node.func\n    if not isinstance(f, ast.Attribute) or f.attr not in _FUNCS:\n        return None\n    v = f.value\n    if isinstance(v, ast.Attribute) and v.attr == 'path' and isinstance(v.value, ast.Name) and (v.value.id == 'os'):\n        return None\n    if isinstance(v, ast.Name) and v.id in {'path', 'osp', 'op'}:\n        return f'{v.id}.{f.attr}(...)'\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/rules/ospath.py::_match",
+      "kind": "boolop",
+      "verdict": "killed",
+      "mutant": "def _match(node: ast.AST) -> str | None:\n    \"\"\"An `os.path.<fn>(...)` call, however `os.path` was imported.\"\"\"\n    if not isinstance(node, ast.Call):\n        return None\n    f = node.func\n    if not isinstance(f, ast.Attribute) and f.attr not in _FUNCS:\n        return None\n    v = f.value\n    if isinstance(v, ast.Attribute) and v.attr == 'path' and isinstance(v.value, ast.Name) and (v.value.id == 'os'):\n        return f'os.path.{f.attr}(...)'\n    if isinstance(v, ast.Name) and v.id in {'path', 'osp', 'op'}:\n        return f'{v.id}.{f.attr}(...)'\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/rules/ospath.py::_match",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def _match(node: ast.AST) -> str | None:\n    \"\"\"An `os.path.<fn>(...)` call, however `os.path` was imported.\"\"\"\n    if not isinstance(node, ast.Call):\n        return None\n    f = node.func\n    if not isinstance(f, ast.Attribute) or f.attr in _FUNCS:\n        return None\n    v = f.value\n    if isinstance(v, ast.Attribute) and v.attr == 'path' and isinstance(v.value, ast.Name) and (v.value.id == 'os'):\n        return f'os.path.{f.attr}(...)'\n    if isinstance(v, ast.Name) and v.id in {'path', 'osp', 'op'}:\n        return f'{v.id}.{f.attr}(...)'\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/rules/ospath.py::_match",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "mutant": "def _match(node: ast.AST) -> str | None:\n    \"\"\"An `os.path.<fn>(...)` call, however `os.path` was imported.\"\"\"\n    if not not isinstance(node, ast.Call):\n        return None\n    f = node.func\n    if not isinstance(f, ast.Attribute) or f.attr not in _FUNCS:\n        return None\n    v = f.value\n    if isinstance(v, ast.Attribute) and v.attr == 'path' and isinstance(v.value, ast.Name) and (v.value.id == 'os'):\n        return f'os.path.{f.attr}(...)'\n    if isinstance(v, ast.Name) and v.id in {'path', 'osp', 'op'}:\n        return f'{v.id}.{f.attr}(...)'\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/rules/percent_format.py::_match",
+      "kind": "boolop",
+      "verdict": "killed",
+      "mutant": "def _match(node: ast.AST) -> str | None:\n    if isinstance(node, ast.BinOp) or isinstance(node.op, ast.Mod) or isinstance(node.left, ast.Constant) or isinstance(node.left.value, str) or ('%' in node.left.value):\n        return f'\"{node.left.value[:40]}\" % ...'\n    if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and (node.func.attr == 'format') and isinstance(node.func.value, ast.Constant) and isinstance(node.func.value.value, str):\n        return f'\"{node.func.value.value[:40]}\".format(...)'\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/rules/percent_format.py::_match",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def _match(node: ast.AST) -> str | None:\n    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Mod) and isinstance(node.left, ast.Constant) and isinstance(node.left.value, str) and ('%' not in node.left.value):\n        return f'\"{node.left.value[:40]}\" % ...'\n    if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and (node.func.attr == 'format') and isinstance(node.func.value, ast.Constant) and isinstance(node.func.value.value, str):\n        return f'\"{node.func.value.value[:40]}\".format(...)'\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/rules/percent_format.py::_match",
+      "kind": "const",
+      "verdict": "unproven",
+      "mutant": "def _match(node: ast.AST) -> str | None:\n    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Mod) and isinstance(node.left, ast.Constant) and isinstance(node.left.value, str) and ('%' in node.left.value):\n        return f'\"{node.left.value[:41]}\" % ...'\n    if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and (node.func.attr == 'format') and isinstance(node.func.value, ast.Constant) and isinstance(node.func.value.value, str):\n        return f'\"{node.func.value.value[:40]}\".format(...)'\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; agree: 24 of 24 inputs exercised it, all agree"
+    },
+    {
+      "target": "src/repo_surgeon/rules/percent_format.py::_match",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def _match(node: ast.AST) -> str | None:\n    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Mod) and isinstance(node.left, ast.Constant) and isinstance(node.left.value, str) and ('%' in node.left.value):\n        return None\n    if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and (node.func.attr == 'format') and isinstance(node.func.value, ast.Constant) and isinstance(node.func.value.value, str):\n        return f'\"{node.func.value.value[:40]}\".format(...)'\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/rules/percent_format.py::_match",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "mutant": "def _match(node: ast.AST) -> str | None:\n    if not (isinstance(node, ast.BinOp) and isinstance(node.op, ast.Mod) and isinstance(node.left, ast.Constant) and isinstance(node.left.value, str) and ('%' in node.left.value)):\n        return f'\"{node.left.value[:40]}\" % ...'\n    if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and (node.func.attr == 'format') and isinstance(node.func.value, ast.Constant) and isinstance(node.func.value.value, str):\n        return f'\"{node.func.value.value[:40]}\".format(...)'\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/differential.py::run_differential",
+      "kind": "slice_lower",
+      "verdict": "killed",
+      "mutant": "def run_differential(header: str, original: str, proposed: str, func: str, argsets: list[str], timeout: float=30.0, sys_path: str='', package: str='') -> dict:\n    \"\"\"Compare the two versions. Returns a verdict dict; never raises.\"\"\"\n    if not argsets:\n        return {'status': 'inconclusive', 'detail': 'no argument sets could be built'}\n    script = RUNNER.format(sys_path=sys_path, package=package, header=header, old=original, new=proposed, name=func, argsets='[' + ', '.join(argsets) + ']')\n    with tempfile.TemporaryDirectory() as tmp:\n        path = Path(tmp) / 'differential.py'\n        path.write_text(script, encoding='utf-8', newline='')\n        try:\n            proc = subprocess.run([sys.executable, str(path)], capture_output=True, text=True, timeout=timeout, cwd=tmp)\n        except subprocess.TimeoutExpired:\n            return {'status': 'timeout', 'detail': f'no result within {timeout}s'}\n    out = proc.stdout or ''\n    if '__RS_LOAD_FAIL__' in out:\n        which = out.split('__RS_LOAD_FAIL__', 1)[1].strip().splitlines()[0]\n        side = 'old' if which.startswith('old') else 'new'\n        return {'status': 'uncallable' if side == 'old' else 'load_error', 'detail': which[:300]}\n    marker = out.find('__RS_JSON__')\n    if marker < 0:\n        err = (proc.stderr or out).strip().splitlines()\n        return {'status': 'error', 'detail': err[-1][:300] if err else 'the comparison harness produced no output'}\n    rows = json.loads(out[marker + len('__RS_JSON__') + 1:])\n    disagreements = [r for r in rows if not r['same']]\n    exercised = [r for r in rows if r['old'][0] == 'ok' or r['new'][0] == 'ok']\n    if not exercised:\n        return {'status': 'inconclusive', 'detail': f'all {len(rows)} argument sets raised on both sides', 'tried': len(rows)}\n    if disagreements:\n        w = disagreements[0]\n        return {'status': 'differs', 'detail': f'{len(disagreements)} of {len(rows)} inputs disagree', 'witness': {'args': w['args'], 'old': f\"{w['old'][0]}: {w['old'][1]}\", 'new': f\"{w['new'][0]}: {w['new'][1]}\"}, 'tried': len(rows), 'exercised': len(exercised)}\n    return {'status': 'agree', 'detail': f'{len(exercised)} of {len(rows)} inputs exercised it, all agree', 'tried': len(rows), 'exercised': len(exercised)}",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/differential.py::run_differential",
+      "kind": "swallow_except",
+      "verdict": "unproven",
+      "mutant": "def run_differential(header: str, original: str, proposed: str, func: str, argsets: list[str], timeout: float=30.0, sys_path: str='', package: str='') -> dict:\n    \"\"\"Compare the two versions. Returns a verdict dict; never raises.\"\"\"\n    if not argsets:\n        return {'status': 'inconclusive', 'detail': 'no argument sets could be built'}\n    script = RUNNER.format(sys_path=sys_path, package=package, header=header, old=original, new=proposed, name=func, argsets='[' + ', '.join(argsets) + ']')\n    with tempfile.TemporaryDirectory() as tmp:\n        path = Path(tmp) / 'differential.py'\n        path.write_text(script, encoding='utf-8', newline='')\n        try:\n            proc = subprocess.run([sys.executable, str(path)], capture_output=True, text=True, timeout=timeout, cwd=tmp)\n        except subprocess.TimeoutExpired:\n            pass\n    out = proc.stdout or ''\n    if '__RS_LOAD_FAIL__' in out:\n        which = out.split('__RS_LOAD_FAIL__', 1)[1].strip().splitlines()[0]\n        side = 'old' if which.startswith('old') else 'new'\n        return {'status': 'uncallable' if side == 'old' else 'load_error', 'detail': which[:300]}\n    marker = out.find('__RS_JSON__')\n    if marker < 0:\n        err = (proc.stderr or out).strip().splitlines()\n        return {'status': 'error', 'detail': err[-1][:300] if err else 'the comparison harness produced no output'}\n    rows = json.loads(out[marker + len('__RS_JSON__'):])\n    disagreements = [r for r in rows if not r['same']]\n    exercised = [r for r in rows if r['old'][0] == 'ok' or r['new'][0] == 'ok']\n    if not exercised:\n        return {'status': 'inconclusive', 'detail': f'all {len(rows)} argument sets raised on both sides', 'tried': len(rows)}\n    if disagreements:\n        w = disagreements[0]\n        return {'status': 'differs', 'detail': f'{len(disagreements)} of {len(rows)} inputs disagree', 'witness': {'args': w['args'], 'old': f\"{w['old'][0]}: {w['old'][1]}\", 'new': f\"{w['new'][0]}: {w['new'][1]}\"}, 'tried': len(rows), 'exercised': len(exercised)}\n    return {'status': 'agree', 'detail': f'{len(exercised)} of {len(rows)} inputs exercised it, all agree', 'tried': len(rows), 'exercised': len(exercised)}",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; agree: 64 of 64 inputs exercised it, all agree"
+    },
+    {
+      "target": "src/repo_surgeon/verify/differential.py::run_differential",
+      "kind": "slice_upper",
+      "verdict": "unproven",
+      "mutant": "def run_differential(header: str, original: str, proposed: str, func: str, argsets: list[str], timeout: float=30.0, sys_path: str='', package: str='') -> dict:\n    \"\"\"Compare the two versions. Returns a verdict dict; never raises.\"\"\"\n    if not argsets:\n        return {'status': 'inconclusive', 'detail': 'no argument sets could be built'}\n    script = RUNNER.format(sys_path=sys_path, package=package, header=header, old=original, new=proposed, name=func, argsets='[' + ', '.join(argsets) + ']')\n    with tempfile.TemporaryDirectory() as tmp:\n        path = Path(tmp) / 'differential.py'\n        path.write_text(script, encoding='utf-8', newline='')\n        try:\n            proc = subprocess.run([sys.executable, str(path)], capture_output=True, text=True, timeout=timeout, cwd=tmp)\n        except subprocess.TimeoutExpired:\n            return {'status': 'timeout', 'detail': f'no result within {timeout}s'}\n    out = proc.stdout or ''\n    if '__RS_LOAD_FAIL__' in out:\n        which = out.split('__RS_LOAD_FAIL__', 1)[1].strip().splitlines()[0]\n        side = 'old' if which.startswith('old') else 'new'\n        return {'status': 'uncallable' if side == 'old' else 'load_error', 'detail': which[:300 - 1]}\n    marker = out.find('__RS_JSON__')\n    if marker < 0:\n        err = (proc.stderr or out).strip().splitlines()\n        return {'status': 'error', 'detail': err[-1][:300] if err else 'the comparison harness produced no output'}\n    rows = json.loads(out[marker + len('__RS_JSON__'):])\n    disagreements = [r for r in rows if not r['same']]\n    exercised = [r for r in rows if r['old'][0] == 'ok' or r['new'][0] == 'ok']\n    if not exercised:\n        return {'status': 'inconclusive', 'detail': f'all {len(rows)} argument sets raised on both sides', 'tried': len(rows)}\n    if disagreements:\n        w = disagreements[0]\n        return {'status': 'differs', 'detail': f'{len(disagreements)} of {len(rows)} inputs disagree', 'witness': {'args': w['args'], 'old': f\"{w['old'][0]}: {w['old'][1]}\", 'new': f\"{w['new'][0]}: {w['new'][1]}\"}, 'tried': len(rows), 'exercised': len(exercised)}\n    return {'status': 'agree', 'detail': f'{len(exercised)} of {len(rows)} inputs exercised it, all agree', 'tried': len(rows), 'exercised': len(exercised)}",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; agree: 64 of 64 inputs exercised it, all agree"
+    },
+    {
+      "target": "src/repo_surgeon/verify/differential.py::run_differential",
+      "kind": "binop",
+      "verdict": "killed",
+      "mutant": "def run_differential(header: str, original: str, proposed: str, func: str, argsets: list[str], timeout: float=30.0, sys_path: str='', package: str='') -> dict:\n    \"\"\"Compare the two versions. Returns a verdict dict; never raises.\"\"\"\n    if not argsets:\n        return {'status': 'inconclusive', 'detail': 'no argument sets could be built'}\n    script = RUNNER.format(sys_path=sys_path, package=package, header=header, old=original, new=proposed, name=func, argsets='[' - ', '.join(argsets) + ']')\n    with tempfile.TemporaryDirectory() as tmp:\n        path = Path(tmp) / 'differential.py'\n        path.write_text(script, encoding='utf-8', newline='')\n        try:\n            proc = subprocess.run([sys.executable, str(path)], capture_output=True, text=True, timeout=timeout, cwd=tmp)\n        except subprocess.TimeoutExpired:\n            return {'status': 'timeout', 'detail': f'no result within {timeout}s'}\n    out = proc.stdout or ''\n    if '__RS_LOAD_FAIL__' in out:\n        which = out.split('__RS_LOAD_FAIL__', 1)[1].strip().splitlines()[0]\n        side = 'old' if which.startswith('old') else 'new'\n        return {'status': 'uncallable' if side == 'old' else 'load_error', 'detail': which[:300]}\n    marker = out.find('__RS_JSON__')\n    if marker < 0:\n        err = (proc.stderr or out).strip().splitlines()\n        return {'status': 'error', 'detail': err[-1][:300] if err else 'the comparison harness produced no output'}\n    rows = json.loads(out[marker + len('__RS_JSON__'):])\n    disagreements = [r for r in rows if not r['same']]\n    exercised = [r for r in rows if r['old'][0] == 'ok' or r['new'][0] == 'ok']\n    if not exercised:\n        return {'status': 'inconclusive', 'detail': f'all {len(rows)} argument sets raised on both sides', 'tried': len(rows)}\n    if disagreements:\n        w = disagreements[0]\n        return {'status': 'differs', 'detail': f'{len(disagreements)} of {len(rows)} inputs disagree', 'witness': {'args': w['args'], 'old': f\"{w['old'][0]}: {w['old'][1]}\", 'new': f\"{w['new'][0]}: {w['new'][1]}\"}, 'tried': len(rows), 'exercised': len(exercised)}\n    return {'status': 'agree', 'detail': f'{len(exercised)} of {len(rows)} inputs exercised it, all agree', 'tried': len(rows), 'exercised': len(exercised)}",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/differential.py::run_differential",
+      "kind": "boolop",
+      "verdict": "killed",
+      "mutant": "def run_differential(header: str, original: str, proposed: str, func: str, argsets: list[str], timeout: float=30.0, sys_path: str='', package: str='') -> dict:\n    \"\"\"Compare the two versions. Returns a verdict dict; never raises.\"\"\"\n    if not argsets:\n        return {'status': 'inconclusive', 'detail': 'no argument sets could be built'}\n    script = RUNNER.format(sys_path=sys_path, package=package, header=header, old=original, new=proposed, name=func, argsets='[' + ', '.join(argsets) + ']')\n    with tempfile.TemporaryDirectory() as tmp:\n        path = Path(tmp) / 'differential.py'\n        path.write_text(script, encoding='utf-8', newline='')\n        try:\n            proc = subprocess.run([sys.executable, str(path)], capture_output=True, text=True, timeout=timeout, cwd=tmp)\n        except subprocess.TimeoutExpired:\n            return {'status': 'timeout', 'detail': f'no result within {timeout}s'}\n    out = proc.stdout and ''\n    if '__RS_LOAD_FAIL__' in out:\n        which = out.split('__RS_LOAD_FAIL__', 1)[1].strip().splitlines()[0]\n        side = 'old' if which.startswith('old') else 'new'\n        return {'status': 'uncallable' if side == 'old' else 'load_error', 'detail': which[:300]}\n    marker = out.find('__RS_JSON__')\n    if marker < 0:\n        err = (proc.stderr or out).strip().splitlines()\n        return {'status': 'error', 'detail': err[-1][:300] if err else 'the comparison harness produced no output'}\n    rows = json.loads(out[marker + len('__RS_JSON__'):])\n    disagreements = [r for r in rows if not r['same']]\n    exercised = [r for r in rows if r['old'][0] == 'ok' or r['new'][0] == 'ok']\n    if not exercised:\n        return {'status': 'inconclusive', 'detail': f'all {len(rows)} argument sets raised on both sides', 'tried': len(rows)}\n    if disagreements:\n        w = disagreements[0]\n        return {'status': 'differs', 'detail': f'{len(disagreements)} of {len(rows)} inputs disagree', 'witness': {'args': w['args'], 'old': f\"{w['old'][0]}: {w['old'][1]}\", 'new': f\"{w['new'][0]}: {w['new'][1]}\"}, 'tried': len(rows), 'exercised': len(exercised)}\n    return {'status': 'agree', 'detail': f'{len(exercised)} of {len(rows)} inputs exercised it, all agree', 'tried': len(rows), 'exercised': len(exercised)}",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::_Mutator.__init__",
+      "kind": "const",
+      "verdict": "unproven",
+      "mutant": "def __init__(self, target: int) -> None:\n    self.target = target\n    self.seen = 1\n    self.applied = False",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; a method cannot be called without its instance, so no separating input was sought"
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::_Mutator._take",
       "kind": "compare",
       "verdict": "unproven",
+      "mutant": "def _take(self) -> bool:\n    hit = self.seen != self.target\n    self.seen += 1\n    return hit",
       "witness": null,
       "strength": 3,
-      "detail": "survived; inconclusive: all 23 argument sets raised on both sides"
+      "provenance": "",
+      "detail": "survived; a method cannot be called without its instance, so no separating input was sought"
     },
     {
-      "target": "src/repo_surgeon/values.py::harvest",
-      "kind": "boolop",
-      "verdict": "unproven",
-      "witness": null,
-      "strength": 3,
-      "detail": "survived; inconclusive: all 23 argument sets raised on both sides"
-    },
-    {
-      "target": "src/repo_surgeon/values.py::harvest",
-      "kind": "negate_if",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/values.py::harvest",
-      "kind": "boolop",
-      "verdict": "unproven",
-      "witness": null,
-      "strength": 3,
-      "detail": "survived; inconclusive: all 23 argument sets raised on both sides"
-    },
-    {
-      "target": "src/repo_surgeon/values.py::for_parameter",
-      "kind": "boolop",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/values.py::for_parameter",
-      "kind": "boolop",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/values.py::for_parameter",
-      "kind": "boolop",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/values.py::for_parameter",
-      "kind": "negate_if",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/values.py::for_parameter",
-      "kind": "boolop",
-      "verdict": "unproven",
-      "witness": null,
-      "strength": 3,
-      "detail": "survived; inconclusive: all 34 argument sets raised on both sides"
-    },
-    {
-      "target": "src/repo_surgeon/values.py::argument_sets",
+      "target": "src/repo_surgeon/verify/mutation.py::_Mutator._take",
       "kind": "const",
       "verdict": "unproven",
+      "mutant": "def _take(self) -> bool:\n    hit = self.seen == self.target\n    self.seen += 2\n    return hit",
       "witness": null,
       "strength": 3,
-      "detail": "survived; inconclusive: all 34 argument sets raised on both sides"
+      "provenance": "",
+      "detail": "survived; a method cannot be called without its instance, so no separating input was sought"
     },
     {
-      "target": "src/repo_surgeon/values.py::argument_sets",
-      "kind": "negate_if",
+      "target": "src/repo_surgeon/verify/mutation.py::_Mutator._take",
+      "kind": "drop_return",
       "verdict": "killed",
+      "mutant": "def _take(self) -> bool:\n    hit = self.seen == self.target\n    self.seen += 1\n    return None",
       "witness": null,
       "strength": 3,
+      "provenance": "",
       "detail": ""
     },
     {
-      "target": "src/repo_surgeon/values.py::argument_sets",
-      "kind": "const",
-      "verdict": "unproven",
-      "witness": null,
-      "strength": 3,
-      "detail": "survived; inconclusive: all 34 argument sets raised on both sides"
-    },
-    {
-      "target": "src/repo_surgeon/values.py::argument_sets",
-      "kind": "binop",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/values.py::argument_sets",
-      "kind": "binop",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/verify/differential.py::run_differential",
-      "kind": "negate_if",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/verify/differential.py::run_differential",
-      "kind": "binop",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/verify/differential.py::run_differential",
-      "kind": "binop",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/verify/differential.py::run_differential",
+      "target": "src/repo_surgeon/verify/mutation.py::_Mutator.visit_Compare",
       "kind": "boolop",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/verify/differential.py::run_differential",
-      "kind": "const",
       "verdict": "unproven",
+      "mutant": "def visit_Compare(self, node: ast.Compare) -> ast.AST:\n    self.generic_visit(node)\n    if node.ops or type(node.ops[0]) in self.SWAPS or self._take():\n        node.ops[0] = self.SWAPS[type(node.ops[0])]()\n        self.applied = True\n    return node",
       "witness": null,
       "strength": 3,
-      "detail": "survived; inconclusive: all 40 argument sets raised on both sides"
+      "provenance": "",
+      "detail": "survived; a method cannot be called without its instance, so no separating input was sought"
     },
     {
-      "target": "src/repo_surgeon/verify/mutation.py::mutants",
-      "kind": "const",
-      "verdict": "unproven",
-      "witness": null,
-      "strength": 3,
-      "detail": "survived; inconclusive: all 23 argument sets raised on both sides"
-    },
-    {
-      "target": "src/repo_surgeon/verify/mutation.py::mutants",
-      "kind": "const",
-      "verdict": "unproven",
-      "witness": null,
-      "strength": 3,
-      "detail": "survived; inconclusive: all 23 argument sets raised on both sides"
-    },
-    {
-      "target": "src/repo_surgeon/verify/mutation.py::mutants",
-      "kind": "binop",
-      "verdict": "unproven",
-      "witness": null,
-      "strength": 3,
-      "detail": "survived; inconclusive: all 23 argument sets raised on both sides"
-    },
-    {
-      "target": "src/repo_surgeon/verify/mutation.py::mutants",
+      "target": "src/repo_surgeon/verify/mutation.py::_Mutator.visit_Compare",
       "kind": "compare",
       "verdict": "unproven",
+      "mutant": "def visit_Compare(self, node: ast.Compare) -> ast.AST:\n    self.generic_visit(node)\n    if node.ops and type(node.ops[0]) not in self.SWAPS and self._take():\n        node.ops[0] = self.SWAPS[type(node.ops[0])]()\n        self.applied = True\n    return node",
       "witness": null,
       "strength": 3,
-      "detail": "survived; inconclusive: all 23 argument sets raised on both sides"
+      "provenance": "",
+      "detail": "survived; a method cannot be called without its instance, so no separating input was sought"
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::_Mutator.visit_Compare",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def visit_Compare(self, node: ast.Compare) -> ast.AST:\n    self.generic_visit(node)\n    if node.ops and type(node.ops[0]) in self.SWAPS and self._take():\n        node.ops[0] = self.SWAPS[type(node.ops[0])]()\n        self.applied = True\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::_Mutator.visit_Compare",
+      "kind": "negate_if",
+      "verdict": "unproven",
+      "mutant": "def visit_Compare(self, node: ast.Compare) -> ast.AST:\n    self.generic_visit(node)\n    if not (node.ops and type(node.ops[0]) in self.SWAPS and self._take()):\n        node.ops[0] = self.SWAPS[type(node.ops[0])]()\n        self.applied = True\n    return node",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; a method cannot be called without its instance, so no separating input was sought"
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::_Mutator.visit_Compare",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def visit_Compare(self, node: ast.Compare) -> ast.AST:\n    self.generic_visit(node)\n    if node.ops and type(node.ops[1]) in self.SWAPS and self._take():\n        node.ops[0] = self.SWAPS[type(node.ops[0])]()\n        self.applied = True\n    return node",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::_Mutator.visit_BinOp",
+      "kind": "compare",
+      "verdict": "unproven",
+      "mutant": "def visit_BinOp(self, node: ast.BinOp) -> ast.AST:\n    self.generic_visit(node)\n    if type(node.op) not in self.SWAPS and self._take():\n        node.op = self.SWAPS[type(node.op)]()\n        self.applied = True\n    return node",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; a method cannot be called without its instance, so no separating input was sought"
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::_Mutator.visit_BinOp",
+      "kind": "boolop",
+      "verdict": "unproven",
+      "mutant": "def visit_BinOp(self, node: ast.BinOp) -> ast.AST:\n    self.generic_visit(node)\n    if type(node.op) in self.SWAPS or self._take():\n        node.op = self.SWAPS[type(node.op)]()\n        self.applied = True\n    return node",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; a method cannot be called without its instance, so no separating input was sought"
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::_Mutator.visit_BinOp",
+      "kind": "negate_if",
+      "verdict": "unproven",
+      "mutant": "def visit_BinOp(self, node: ast.BinOp) -> ast.AST:\n    self.generic_visit(node)\n    if not (type(node.op) in self.SWAPS and self._take()):\n        node.op = self.SWAPS[type(node.op)]()\n        self.applied = True\n    return node",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; a method cannot be called without its instance, so no separating input was sought"
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::_Mutator.visit_BinOp",
+      "kind": "drop_return",
+      "verdict": "unproven",
+      "mutant": "def visit_BinOp(self, node: ast.BinOp) -> ast.AST:\n    self.generic_visit(node)\n    if type(node.op) in self.SWAPS and self._take():\n        node.op = self.SWAPS[type(node.op)]()\n        self.applied = True\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; a method cannot be called without its instance, so no separating input was sought"
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::_Mutator.visit_Constant",
+      "kind": "binop",
+      "verdict": "unproven",
+      "mutant": "def visit_Constant(self, node: ast.Constant) -> ast.AST:\n    if isinstance(node.value, int) and (not isinstance(node.value, bool)) and self._take():\n        self.applied = True\n        return ast.Constant(value=node.value - 1)\n    return node",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; a method cannot be called without its instance, so no separating input was sought"
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::_Mutator.visit_Constant",
+      "kind": "boolop",
+      "verdict": "killed",
+      "mutant": "def visit_Constant(self, node: ast.Constant) -> ast.AST:\n    if isinstance(node.value, int) or not isinstance(node.value, bool) or self._take():\n        self.applied = True\n        return ast.Constant(value=node.value + 1)\n    return node",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::_Mutator.visit_Constant",
+      "kind": "const",
+      "verdict": "unproven",
+      "mutant": "def visit_Constant(self, node: ast.Constant) -> ast.AST:\n    if isinstance(node.value, int) and (not isinstance(node.value, bool)) and self._take():\n        self.applied = True\n        return ast.Constant(value=node.value + 2)\n    return node",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; a method cannot be called without its instance, so no separating input was sought"
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::_Mutator.visit_Constant",
+      "kind": "drop_not",
+      "verdict": "unproven",
+      "mutant": "def visit_Constant(self, node: ast.Constant) -> ast.AST:\n    if isinstance(node.value, int) and isinstance(node.value, bool) and self._take():\n        self.applied = True\n        return ast.Constant(value=node.value + 1)\n    return node",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; a method cannot be called without its instance, so no separating input was sought"
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::_Mutator.visit_Constant",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "mutant": "def visit_Constant(self, node: ast.Constant) -> ast.AST:\n    if not (isinstance(node.value, int) and (not isinstance(node.value, bool)) and self._take()):\n        self.applied = True\n        return ast.Constant(value=node.value + 1)\n    return node",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::_Mutator.visit_If",
+      "kind": "negate_if",
+      "verdict": "unproven",
+      "mutant": "def visit_If(self, node: ast.If) -> ast.AST:\n    self.generic_visit(node)\n    if not self._take():\n        self.applied = True\n        node.test = ast.UnaryOp(op=ast.Not(), operand=node.test)\n    return node",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; a method cannot be called without its instance, so no separating input was sought"
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::_Mutator.visit_If",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def visit_If(self, node: ast.If) -> ast.AST:\n    self.generic_visit(node)\n    if self._take():\n        self.applied = True\n        node.test = ast.UnaryOp(op=ast.Not(), operand=node.test)\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
     },
     {
       "target": "src/repo_surgeon/verify/mutation.py::mutants",
-      "kind": "negate_if",
+      "kind": "binop",
       "verdict": "unproven",
+      "mutant": "def mutants(source: str, cap: int=12) -> list[str]:\n    \"\"\"Single-point mutants of one function's source.\"\"\"\n    try:\n        base = ast.parse(source)\n    except SyntaxError:\n        return []\n    out: list[str] = []\n    for i in range(cap // 3):\n        m = _Mutator(i)\n        try:\n            tree = m.visit(ast.parse(source))\n        except (SyntaxError, RecursionError):\n            continue\n        if not m.applied:\n            if i > m.seen:\n                break\n            continue\n        ast.fix_missing_locations(tree)\n        try:\n            text = ast.unparse(tree)\n        except (AttributeError, ValueError):\n            continue\n        if text != ast.unparse(base) and text not in out:\n            out.append(text)\n        if len(out) >= cap:\n            break\n    return out",
       "witness": null,
       "strength": 3,
-      "detail": "survived; inconclusive: all 23 argument sets raised on both sides"
+      "provenance": "",
+      "detail": "survived; inconclusive: 14 of 47 inputs disagree, but only where both versions raise or where the original rejects the input - not proof"
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::mutants",
+      "kind": "boolop",
+      "verdict": "unproven",
+      "mutant": "def mutants(source: str, cap: int=12) -> list[str]:\n    \"\"\"Single-point mutants of one function's source.\"\"\"\n    try:\n        base = ast.parse(source)\n    except SyntaxError:\n        return []\n    out: list[str] = []\n    for i in range(cap * 3):\n        m = _Mutator(i)\n        try:\n            tree = m.visit(ast.parse(source))\n        except (SyntaxError, RecursionError):\n            continue\n        if not m.applied:\n            if i > m.seen:\n                break\n            continue\n        ast.fix_missing_locations(tree)\n        try:\n            text = ast.unparse(tree)\n        except (AttributeError, ValueError):\n            continue\n        if text != ast.unparse(base) or text not in out:\n            out.append(text)\n        if len(out) >= cap:\n            break\n    return out",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; agree: 1 of 47 inputs exercised it, all agree"
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::mutants",
+      "kind": "drop_not",
+      "verdict": "killed",
+      "mutant": "def mutants(source: str, cap: int=12) -> list[str]:\n    \"\"\"Single-point mutants of one function's source.\"\"\"\n    try:\n        base = ast.parse(source)\n    except SyntaxError:\n        return []\n    out: list[str] = []\n    for i in range(cap * 3):\n        m = _Mutator(i)\n        try:\n            tree = m.visit(ast.parse(source))\n        except (SyntaxError, RecursionError):\n            continue\n        if m.applied:\n            if i > m.seen:\n                break\n            continue\n        ast.fix_missing_locations(tree)\n        try:\n            text = ast.unparse(tree)\n        except (AttributeError, ValueError):\n            continue\n        if text != ast.unparse(base) and text not in out:\n            out.append(text)\n        if len(out) >= cap:\n            break\n    return out",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::mutants",
+      "kind": "const",
+      "verdict": "unproven",
+      "mutant": "def mutants(source: str, cap: int=13) -> list[str]:\n    \"\"\"Single-point mutants of one function's source.\"\"\"\n    try:\n        base = ast.parse(source)\n    except SyntaxError:\n        return []\n    out: list[str] = []\n    for i in range(cap * 3):\n        m = _Mutator(i)\n        try:\n            tree = m.visit(ast.parse(source))\n        except (SyntaxError, RecursionError):\n            continue\n        if not m.applied:\n            if i > m.seen:\n                break\n            continue\n        ast.fix_missing_locations(tree)\n        try:\n            text = ast.unparse(tree)\n        except (AttributeError, ValueError):\n            continue\n        if text != ast.unparse(base) and text not in out:\n            out.append(text)\n        if len(out) >= cap:\n            break\n    return out",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; agree: 1 of 47 inputs exercised it, all agree"
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::mutants",
+      "kind": "drop_return",
+      "verdict": "unproven",
+      "mutant": "def mutants(source: str, cap: int=12) -> list[str]:\n    \"\"\"Single-point mutants of one function's source.\"\"\"\n    try:\n        base = ast.parse(source)\n    except SyntaxError:\n        return None\n    out: list[str] = []\n    for i in range(cap * 3):\n        m = _Mutator(i)\n        try:\n            tree = m.visit(ast.parse(source))\n        except (SyntaxError, RecursionError):\n            continue\n        if not m.applied:\n            if i > m.seen:\n                break\n            continue\n        ast.fix_missing_locations(tree)\n        try:\n            text = ast.unparse(tree)\n        except (AttributeError, ValueError):\n            continue\n        if text != ast.unparse(base) and text not in out:\n            out.append(text)\n        if len(out) >= cap:\n            break\n    return out",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; agree: 1 of 47 inputs exercised it, all agree"
     },
     {
       "target": "src/repo_surgeon/verify/mutation.py::kill_rate",
       "kind": "boolop",
       "verdict": "unproven",
+      "mutant": "def kill_rate(header: str, source: str, func: str, argsets: list[str], timeout: float=30.0, sys_path: str='', package: str='') -> dict:\n    \"\"\"What fraction of this function's mutants the given inputs can tell apart.\n\n    The oracle is the *original function itself*, not the repo's test suite: a mutant is\n    killed if it disagrees with the unmutated version on some input. That keeps this rung\n    at function scope and makes it usable on a repo whose suite does not cover the\n    function at all - where a suite-based score would be a flat zero and say nothing.\n    \"\"\"\n    ms = mutants(source)\n    if not ms and (not argsets):\n        return {'mutants': 0, 'killed': 0, 'rate': None, 'detail': 'no mutable sites'}\n    from repo_surgeon.verify.differential import run_differential\n    killed = 0\n    scored = 0\n    for mutant in ms:\n        res = run_differential(header, source, mutant, func, argsets, timeout, sys_path, package)\n        if res['status'] == 'differs':\n            killed += 1\n            scored += 1\n        elif res['status'] == 'agree':\n            scored += 1\n    if not scored:\n        return {'mutants': len(ms), 'killed': 0, 'rate': None, 'detail': 'no mutant could be scored'}\n    return {'mutants': len(ms), 'scored': scored, 'killed': killed, 'rate': killed / scored, 'detail': f'{killed}/{scored} mutants distinguished'}",
       "witness": null,
       "strength": 3,
-      "detail": "survived; inconclusive: all 40 argument sets raised on both sides"
+      "provenance": "",
+      "detail": "survived; inconclusive: all 64 argument sets raised on both sides"
     },
     {
       "target": "src/repo_surgeon/verify/mutation.py::kill_rate",
-      "kind": "const",
-      "verdict": "unproven",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def kill_rate(header: str, source: str, func: str, argsets: list[str], timeout: float=30.0, sys_path: str='', package: str='') -> dict:\n    \"\"\"What fraction of this function's mutants the given inputs can tell apart.\n\n    The oracle is the *original function itself*, not the repo's test suite: a mutant is\n    killed if it disagrees with the unmutated version on some input. That keeps this rung\n    at function scope and makes it usable on a repo whose suite does not cover the\n    function at all - where a suite-based score would be a flat zero and say nothing.\n    \"\"\"\n    ms = mutants(source)\n    if not ms or not argsets:\n        return {'mutants': 0, 'killed': 0, 'rate': None, 'detail': 'no mutable sites'}\n    from repo_surgeon.verify.differential import run_differential\n    killed = 0\n    scored = 0\n    for mutant in ms:\n        res = run_differential(header, source, mutant, func, argsets, timeout, sys_path, package)\n        if res['status'] != 'differs':\n            killed += 1\n            scored += 1\n        elif res['status'] == 'agree':\n            scored += 1\n    if not scored:\n        return {'mutants': len(ms), 'killed': 0, 'rate': None, 'detail': 'no mutant could be scored'}\n    return {'mutants': len(ms), 'scored': scored, 'killed': killed, 'rate': killed / scored, 'detail': f'{killed}/{scored} mutants distinguished'}",
       "witness": null,
       "strength": 3,
-      "detail": "survived; inconclusive: all 40 argument sets raised on both sides"
+      "provenance": "",
+      "detail": ""
     },
     {
       "target": "src/repo_surgeon/verify/mutation.py::kill_rate",
-      "kind": "const",
-      "verdict": "unproven",
+      "kind": "drop_not",
+      "verdict": "killed",
+      "mutant": "def kill_rate(header: str, source: str, func: str, argsets: list[str], timeout: float=30.0, sys_path: str='', package: str='') -> dict:\n    \"\"\"What fraction of this function's mutants the given inputs can tell apart.\n\n    The oracle is the *original function itself*, not the repo's test suite: a mutant is\n    killed if it disagrees with the unmutated version on some input. That keeps this rung\n    at function scope and makes it usable on a repo whose suite does not cover the\n    function at all - where a suite-based score would be a flat zero and say nothing.\n    \"\"\"\n    ms = mutants(source)\n    if ms or not argsets:\n        return {'mutants': 0, 'killed': 0, 'rate': None, 'detail': 'no mutable sites'}\n    from repo_surgeon.verify.differential import run_differential\n    killed = 0\n    scored = 0\n    for mutant in ms:\n        res = run_differential(header, source, mutant, func, argsets, timeout, sys_path, package)\n        if res['status'] == 'differs':\n            killed += 1\n            scored += 1\n        elif res['status'] == 'agree':\n            scored += 1\n    if not scored:\n        return {'mutants': len(ms), 'killed': 0, 'rate': None, 'detail': 'no mutant could be scored'}\n    return {'mutants': len(ms), 'scored': scored, 'killed': killed, 'rate': killed / scored, 'detail': f'{killed}/{scored} mutants distinguished'}",
       "witness": null,
       "strength": 3,
-      "detail": "survived; inconclusive: all 40 argument sets raised on both sides"
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/mutation.py::kill_rate",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def kill_rate(header: str, source: str, func: str, argsets: list[str], timeout: float=30.0, sys_path: str='', package: str='') -> dict:\n    \"\"\"What fraction of this function's mutants the given inputs can tell apart.\n\n    The oracle is the *original function itself*, not the repo's test suite: a mutant is\n    killed if it disagrees with the unmutated version on some input. That keeps this rung\n    at function scope and makes it usable on a repo whose suite does not cover the\n    function at all - where a suite-based score would be a flat zero and say nothing.\n    \"\"\"\n    ms = mutants(source)\n    if not ms or not argsets:\n        return None\n    from repo_surgeon.verify.differential import run_differential\n    killed = 0\n    scored = 0\n    for mutant in ms:\n        res = run_differential(header, source, mutant, func, argsets, timeout, sys_path, package)\n        if res['status'] == 'differs':\n            killed += 1\n            scored += 1\n        elif res['status'] == 'agree':\n            scored += 1\n    if not scored:\n        return {'mutants': len(ms), 'killed': 0, 'rate': None, 'detail': 'no mutant could be scored'}\n    return {'mutants': len(ms), 'scored': scored, 'killed': killed, 'rate': killed / scored, 'detail': f'{killed}/{scored} mutants distinguished'}",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
     },
     {
       "target": "src/repo_surgeon/verify/mutation.py::kill_rate",
       "kind": "negate_if",
       "verdict": "killed",
+      "mutant": "def kill_rate(header: str, source: str, func: str, argsets: list[str], timeout: float=30.0, sys_path: str='', package: str='') -> dict:\n    \"\"\"What fraction of this function's mutants the given inputs can tell apart.\n\n    The oracle is the *original function itself*, not the repo's test suite: a mutant is\n    killed if it disagrees with the unmutated version on some input. That keeps this rung\n    at function scope and makes it usable on a repo whose suite does not cover the\n    function at all - where a suite-based score would be a flat zero and say nothing.\n    \"\"\"\n    ms = mutants(source)\n    if not (not ms or not argsets):\n        return {'mutants': 0, 'killed': 0, 'rate': None, 'detail': 'no mutable sites'}\n    from repo_surgeon.verify.differential import run_differential\n    killed = 0\n    scored = 0\n    for mutant in ms:\n        res = run_differential(header, source, mutant, func, argsets, timeout, sys_path, package)\n        if res['status'] == 'differs':\n            killed += 1\n            scored += 1\n        elif res['status'] == 'agree':\n            scored += 1\n    if not scored:\n        return {'mutants': len(ms), 'killed': 0, 'rate': None, 'detail': 'no mutant could be scored'}\n    return {'mutants': len(ms), 'scored': scored, 'killed': killed, 'rate': killed / scored, 'detail': f'{killed}/{scored} mutants distinguished'}",
       "witness": null,
       "strength": 3,
+      "provenance": "",
       "detail": ""
     },
     {
-      "target": "src/repo_surgeon/verify/mutation.py::kill_rate",
-      "kind": "const",
-      "verdict": "unproven",
+      "target": "src/repo_surgeon/verify/statics.py::parses",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def parses(source: str) -> tuple[bool, str]:\n    try:\n        ast.parse(source)\n        return None\n    except SyntaxError as exc:\n        return (False, f'line {exc.lineno}: {exc.msg}')",
       "witness": null,
       "strength": 3,
-      "detail": "survived; inconclusive: all 40 argument sets raised on both sides"
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/statics.py::parses",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def parses(source: str) -> tuple[bool, str]:\n    try:\n        ast.parse(source)\n        return (True, '')\n    except SyntaxError as exc:\n        return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/statics.py::parses",
+      "kind": "swallow_except",
+      "verdict": "killed",
+      "mutant": "def parses(source: str) -> tuple[bool, str]:\n    try:\n        ast.parse(source)\n        return (True, '')\n    except SyntaxError as exc:\n        pass",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/statics.py::_ann",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def _ann(p: ast.arg) -> str:\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/statics.py::_signature",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def _signature(fn: ast.FunctionDef | ast.AsyncFunctionDef) -> tuple:\n    a = fn.args\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/statics.py::_first_function",
+      "kind": "swallow_except",
+      "verdict": "unproven",
+      "mutant": "def _first_function(source: str, name: str) -> ast.FunctionDef | ast.AsyncFunctionDef | None:\n    try:\n        tree = ast.parse(source)\n    except SyntaxError:\n        pass\n    for node in ast.walk(tree):\n        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and node.name == name:\n            return node\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; agree: 52 of 64 inputs exercised it, all agree"
     },
     {
       "target": "src/repo_surgeon/verify/statics.py::_first_function",
       "kind": "compare",
       "verdict": "killed",
+      "mutant": "def _first_function(source: str, name: str) -> ast.FunctionDef | ast.AsyncFunctionDef | None:\n    try:\n        tree = ast.parse(source)\n    except SyntaxError:\n        return None\n    for node in ast.walk(tree):\n        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and node.name != name:\n            return node\n    return None",
       "witness": null,
       "strength": 3,
+      "provenance": "",
       "detail": ""
     },
     {
       "target": "src/repo_surgeon/verify/statics.py::_first_function",
       "kind": "boolop",
       "verdict": "killed",
+      "mutant": "def _first_function(source: str, name: str) -> ast.FunctionDef | ast.AsyncFunctionDef | None:\n    try:\n        tree = ast.parse(source)\n    except SyntaxError:\n        return None\n    for node in ast.walk(tree):\n        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) or node.name == name:\n            return node\n    return None",
       "witness": null,
       "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/statics.py::_first_function",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def _first_function(source: str, name: str) -> ast.FunctionDef | ast.AsyncFunctionDef | None:\n    try:\n        tree = ast.parse(source)\n    except SyntaxError:\n        return None\n    for node in ast.walk(tree):\n        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and node.name == name:\n            return None\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
       "detail": ""
     },
     {
       "target": "src/repo_surgeon/verify/statics.py::_first_function",
       "kind": "negate_if",
       "verdict": "killed",
+      "mutant": "def _first_function(source: str, name: str) -> ast.FunctionDef | ast.AsyncFunctionDef | None:\n    try:\n        tree = ast.parse(source)\n    except SyntaxError:\n        return None\n    for node in ast.walk(tree):\n        if not (isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and node.name == name):\n            return node\n    return None",
       "witness": null,
       "strength": 3,
+      "provenance": "",
       "detail": ""
     },
     {
       "target": "src/repo_surgeon/verify/statics.py::signature_kept",
       "kind": "negate_if",
       "verdict": "killed",
+      "mutant": "def signature_kept(original: str, proposed: str, name: str) -> tuple[bool, str]:\n    \"\"\"The proposal must define the same function, callable the same way.\"\"\"\n    old = _first_function(original, name)\n    new = _first_function(proposed, name)\n    if not old is None:\n        return (False, f'could not find `{name}` in the original')\n    if new is None:\n        return (False, f'the proposal does not define `{name}`')\n    a, b = (_signature(old), _signature(new))\n    if a == b:\n        return (True, '')\n    labels = ('name', 'positional-only', 'parameters', '*args', 'keyword-only', '**kwargs', 'positional defaults', 'keyword defaults', 'parameter annotations', 'return annotation')\n    changed = [f'{labels[i]}: {a[i]!r} -> {b[i]!r}' for i in range(len(a)) if a[i] != b[i]]\n    return (False, '; '.join(changed))",
       "witness": null,
       "strength": 3,
-      "detail": ""
-    },
-    {
-      "target": "src/repo_surgeon/verify/statics.py::signature_kept",
-      "kind": "negate_if",
-      "verdict": "killed",
-      "witness": null,
-      "strength": 3,
+      "provenance": "",
       "detail": ""
     },
     {
       "target": "src/repo_surgeon/verify/statics.py::signature_kept",
       "kind": "compare",
       "verdict": "killed",
+      "mutant": "def signature_kept(original: str, proposed: str, name: str) -> tuple[bool, str]:\n    \"\"\"The proposal must define the same function, callable the same way.\"\"\"\n    old = _first_function(original, name)\n    new = _first_function(proposed, name)\n    if old is not None:\n        return (False, f'could not find `{name}` in the original')\n    if new is None:\n        return (False, f'the proposal does not define `{name}`')\n    a, b = (_signature(old), _signature(new))\n    if a == b:\n        return (True, '')\n    labels = ('name', 'positional-only', 'parameters', '*args', 'keyword-only', '**kwargs', 'positional defaults', 'keyword defaults', 'parameter annotations', 'return annotation')\n    changed = [f'{labels[i]}: {a[i]!r} -> {b[i]!r}' for i in range(len(a)) if a[i] != b[i]]\n    return (False, '; '.join(changed))",
       "witness": null,
       "strength": 3,
+      "provenance": "",
       "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/statics.py::signature_kept",
+      "kind": "drop_return",
+      "verdict": "unproven",
+      "mutant": "def signature_kept(original: str, proposed: str, name: str) -> tuple[bool, str]:\n    \"\"\"The proposal must define the same function, callable the same way.\"\"\"\n    old = _first_function(original, name)\n    new = _first_function(proposed, name)\n    if old is None:\n        return None\n    if new is None:\n        return (False, f'the proposal does not define `{name}`')\n    a, b = (_signature(old), _signature(new))\n    if a == b:\n        return (True, '')\n    labels = ('name', 'positional-only', 'parameters', '*args', 'keyword-only', '**kwargs', 'positional defaults', 'keyword defaults', 'parameter annotations', 'return annotation')\n    changed = [f'{labels[i]}: {a[i]!r} -> {b[i]!r}' for i in range(len(a)) if a[i] != b[i]]\n    return (False, '; '.join(changed))",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; inconclusive: all 64 argument sets raised on both sides"
     },
     {
       "target": "src/repo_surgeon/verify/statics.py::signature_kept",
       "kind": "negate_if",
       "verdict": "killed",
+      "mutant": "def signature_kept(original: str, proposed: str, name: str) -> tuple[bool, str]:\n    \"\"\"The proposal must define the same function, callable the same way.\"\"\"\n    old = _first_function(original, name)\n    new = _first_function(proposed, name)\n    if old is None:\n        return (False, f'could not find `{name}` in the original')\n    if not new is None:\n        return (False, f'the proposal does not define `{name}`')\n    a, b = (_signature(old), _signature(new))\n    if a == b:\n        return (True, '')\n    labels = ('name', 'positional-only', 'parameters', '*args', 'keyword-only', '**kwargs', 'positional defaults', 'keyword defaults', 'parameter annotations', 'return annotation')\n    changed = [f'{labels[i]}: {a[i]!r} -> {b[i]!r}' for i in range(len(a)) if a[i] != b[i]]\n    return (False, '; '.join(changed))",
       "witness": null,
       "strength": 3,
+      "provenance": "",
       "detail": ""
     },
     {
       "target": "src/repo_surgeon/verify/statics.py::signature_kept",
       "kind": "compare",
       "verdict": "killed",
+      "mutant": "def signature_kept(original: str, proposed: str, name: str) -> tuple[bool, str]:\n    \"\"\"The proposal must define the same function, callable the same way.\"\"\"\n    old = _first_function(original, name)\n    new = _first_function(proposed, name)\n    if old is None:\n        return (False, f'could not find `{name}` in the original')\n    if new is not None:\n        return (False, f'the proposal does not define `{name}`')\n    a, b = (_signature(old), _signature(new))\n    if a == b:\n        return (True, '')\n    labels = ('name', 'positional-only', 'parameters', '*args', 'keyword-only', '**kwargs', 'positional defaults', 'keyword defaults', 'parameter annotations', 'return annotation')\n    changed = [f'{labels[i]}: {a[i]!r} -> {b[i]!r}' for i in range(len(a)) if a[i] != b[i]]\n    return (False, '; '.join(changed))",
       "witness": null,
       "strength": 3,
+      "provenance": "",
       "detail": ""
     },
     {
       "target": "src/repo_surgeon/verify/statics.py::decorators_kept",
       "kind": "boolop",
       "verdict": "unproven",
+      "mutant": "def decorators_kept(original: str, proposed: str, name: str) -> tuple[bool, str]:\n    \"\"\"Dropping `@property` or `@lru_cache` changes behaviour without changing the body.\"\"\"\n    old = _first_function(original, name)\n    new = _first_function(proposed, name)\n    if old is None and new is None:\n        return (True, '')\n    a = [ast.unparse(d) for d in old.decorator_list]\n    b = [ast.unparse(d) for d in new.decorator_list]\n    if a == b:\n        return (True, '')\n    return (False, f'decorators changed: {a} -> {b}')",
       "witness": null,
       "strength": 3,
-      "detail": "survived; inconclusive: all 34 argument sets raised on both sides"
+      "provenance": "",
+      "detail": "survived; inconclusive: all 64 argument sets raised on both sides"
     },
     {
       "target": "src/repo_surgeon/verify/statics.py::decorators_kept",
       "kind": "negate_if",
       "verdict": "killed",
+      "mutant": "def decorators_kept(original: str, proposed: str, name: str) -> tuple[bool, str]:\n    \"\"\"Dropping `@property` or `@lru_cache` changes behaviour without changing the body.\"\"\"\n    old = _first_function(original, name)\n    new = _first_function(proposed, name)\n    if not (old is None or new is None):\n        return (True, '')\n    a = [ast.unparse(d) for d in old.decorator_list]\n    b = [ast.unparse(d) for d in new.decorator_list]\n    if a == b:\n        return (True, '')\n    return (False, f'decorators changed: {a} -> {b}')",
       "witness": null,
       "strength": 3,
+      "provenance": "",
       "detail": ""
     },
     {
       "target": "src/repo_surgeon/verify/statics.py::decorators_kept",
       "kind": "compare",
       "verdict": "killed",
+      "mutant": "def decorators_kept(original: str, proposed: str, name: str) -> tuple[bool, str]:\n    \"\"\"Dropping `@property` or `@lru_cache` changes behaviour without changing the body.\"\"\"\n    old = _first_function(original, name)\n    new = _first_function(proposed, name)\n    if old is not None or new is None:\n        return (True, '')\n    a = [ast.unparse(d) for d in old.decorator_list]\n    b = [ast.unparse(d) for d in new.decorator_list]\n    if a == b:\n        return (True, '')\n    return (False, f'decorators changed: {a} -> {b}')",
       "witness": null,
       "strength": 3,
+      "provenance": "",
       "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/statics.py::decorators_kept",
+      "kind": "drop_return",
+      "verdict": "unproven",
+      "mutant": "def decorators_kept(original: str, proposed: str, name: str) -> tuple[bool, str]:\n    \"\"\"Dropping `@property` or `@lru_cache` changes behaviour without changing the body.\"\"\"\n    old = _first_function(original, name)\n    new = _first_function(proposed, name)\n    if old is None or new is None:\n        return None\n    a = [ast.unparse(d) for d in old.decorator_list]\n    b = [ast.unparse(d) for d in new.decorator_list]\n    if a == b:\n        return (True, '')\n    return (False, f'decorators changed: {a} -> {b}')",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; inconclusive: all 64 argument sets raised on both sides"
     },
     {
       "target": "src/repo_surgeon/verify/statics.py::decorators_kept",
       "kind": "negate_if",
       "verdict": "killed",
+      "mutant": "def decorators_kept(original: str, proposed: str, name: str) -> tuple[bool, str]:\n    \"\"\"Dropping `@property` or `@lru_cache` changes behaviour without changing the body.\"\"\"\n    old = _first_function(original, name)\n    new = _first_function(proposed, name)\n    if old is None or new is None:\n        return (True, '')\n    a = [ast.unparse(d) for d in old.decorator_list]\n    b = [ast.unparse(d) for d in new.decorator_list]\n    if not a == b:\n        return (True, '')\n    return (False, f'decorators changed: {a} -> {b}')",
       "witness": null,
       "strength": 3,
+      "provenance": "",
       "detail": ""
     },
     {
       "target": "src/repo_surgeon/verify/suite.py::newly_failing",
       "kind": "binop",
       "verdict": "killed",
+      "mutant": "def newly_failing(baseline: dict, current: dict) -> set[str]:\n    \"\"\"Tests that fail now and did not fail before.\n\n    Only these count. A repo with pre-existing failures is normal, and blaming them on\n    whatever change happened to be applied would make every hunk unlandable.\n    \"\"\"\n    return set(current.get('failed', set())) + set(baseline.get('failed', set()))",
       "witness": null,
       "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/repo_surgeon/verify/suite.py::newly_failing",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def newly_failing(baseline: dict, current: dict) -> set[str]:\n    \"\"\"Tests that fail now and did not fail before.\n\n    Only these count. A repo with pre-existing failures is normal, and blaming them on\n    whatever change happened to be applied would make every hunk unlandable.\n    \"\"\"\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
       "detail": ""
     }
   ]
