@@ -26,6 +26,7 @@ import sys
 import textwrap
 import threading
 import time
+from collections import deque
 from collections.abc import Callable
 from concurrent.futures import FIRST_EXCEPTION, ThreadPoolExecutor, wait
 from dataclasses import dataclass, field
@@ -143,17 +144,26 @@ class _Progress:
     t0: float = field(default_factory=time.time)
     lock: threading.Lock = field(default_factory=threading.Lock)
     tty: bool = field(default_factory=lambda: sys.stdout.isatty())
+    stamps: deque = field(default_factory=lambda: deque(maxlen=24))
 
     def eta(self) -> str:
+        """From the recent rate, not the overall one: functions differ wildly in how
+        long their covering tests take, and the average over a fast start promised
+        two minutes that turned out to be ten."""
         if not self.done:
             return "ETA --"
-        rate = (time.time() - self.t0) / self.done
+        if len(self.stamps) >= 2:
+            rate = (self.stamps[-1] - self.stamps[0]) / (len(self.stamps) - 1)
+            rate = max(rate, (time.time() - self.t0) / self.done / 2)
+        else:
+            rate = (time.time() - self.t0) / self.done
         left = rate * (self.total - self.done)
         return f"ETA {_fmt(left)}"
 
     def tick(self, label: str) -> None:
         with self.lock:
             self.done += 1
+            self.stamps.append(time.time())
             if self.enabled and self.tty:
                 line = f"  mutant {self.done}/{self.total}  {self.eta()}  {label}"
                 sys.stdout.write("\r" + line[:110].ljust(110))
@@ -423,7 +433,7 @@ def audit(
             out.seconds = time.time() - t0
             return out
         say(
-            f"\nmutating {len(covered)} function(s): {total} mutants"
+            f"\nmutating {len(plan)} function(s): {total} mutants"
             + (f", {jobs} in parallel" if jobs > 1 else "")
             + "..."
         )

@@ -262,9 +262,11 @@ def build_parser() -> argparse.ArgumentParser:
         "-j",
         "--jobs",
         type=_jobs,
-        default=1,
-        help="mutants to test in parallel, each in its own scratch copy; 'auto' uses up "
-        "to 4 (default 1)",
+        default="auto",
+        help="functions audited in parallel, each worker in its own scratch copy with its "
+        "own pytest basetemp. 'auto' (the default) is half the CPUs, at most 4. Use -j 1 "
+        "if the target's tests share state outside the project (a fixed port, a file in "
+        "the home directory)",
     )
     a.add_argument(
         "--timeout",
