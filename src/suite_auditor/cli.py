@@ -105,7 +105,8 @@ def cmd_coverage(args: argparse.Namespace) -> int:
     if not targets:
         return _err(
             f"no functions found in {repo}. Shipped code is looked for in packages "
-            "(a directory with __init__.py) and in single modules directly under src/."
+            "(a directory with __init__.py), in single modules directly under src/, "
+            "and (when there is no src/ at all) in .py files at the repo root."
         )
     roots = package_roots(repo, [t.path for t in targets])
     trace = build_map(repo, test, python=python, extra_paths=roots)

@@ -365,15 +365,21 @@ def find_targets(repo: Path, include_methods: bool = True) -> list[Target]:
         # Only shipped package code. `examples/` and `docs/` are not the library, and a
         # gap reported in one of them is noise in the report.
         #
-        # Two shapes count as shipped. A file whose directory has __init__.py is part
-        # of a package. A file directly under src/ is a single-module distribution -
-        # `src/drift.py` with no __init__.py anywhere - which the __init__ rule alone
-        # skipped entirely. docstring-drift is exactly that shape, and auditing it
-        # produced 0 mutants and a kill rate of None: indistinguishable in the report
-        # from a library with nothing worth mutating.
+        # Three shapes count as shipped. A file whose directory has __init__.py is
+        # part of a package. A file directly under src/ is a single-module
+        # distribution - `src/drift.py` with no __init__.py anywhere - which the
+        # __init__ rule alone skipped entirely. docstring-drift is exactly that
+        # shape, and auditing it produced 0 mutants and a kill rate of None:
+        # indistinguishable in the report from a library with nothing worth
+        # mutating. A file directly at the repo root, when there is no src/ at all,
+        # is the same situation one level up - a small script or single-file
+        # library with no package around it. It is gated on "no src/ anywhere" so
+        # it never sweeps up a stray demo.py or setup.py sitting next to a real
+        # package that already matched one of the first two shapes.
         in_package = (p.parent / "__init__.py").is_file()
         single_module = p.parent.name == "src" and p.parent.parent == repo
-        if not (in_package or single_module):
+        flat_root_module = p.parent == repo and not (repo / "src").is_dir()
+        if not (in_package or single_module or flat_root_module):
             continue
         try:
             src = p.read_text(encoding="utf-8-sig")

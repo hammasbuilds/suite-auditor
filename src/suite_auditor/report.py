@@ -41,7 +41,8 @@ def summary(audit: Audit, repo_name: str) -> str:
     if audit.no_targets:
         lines.append("  NO FUNCTIONS WERE MUTATED - nothing below is a statement about")
         lines.append("  this suite. Shipped code is looked for in packages (a directory")
-        lines.append("  with __init__.py) and in single modules directly under src/.")
+        lines.append("  with __init__.py), in single modules directly under src/, and")
+        lines.append("  (when there is no src/ at all) in .py files at the repo root.")
         return "\n".join(lines)
     if not scored:
         lines.append("  NOTHING COULD BE SCORED - this is not a result about the suite.")
