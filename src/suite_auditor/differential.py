@@ -21,10 +21,17 @@ false accusation costs the reader more than silence would.
 - **The package is importable.** Without it, a module doing `from . import x` cannot load
   at all, and the result reads "could not verify" when the truth is "nothing put the
   package on the path".
+- **A single call cannot tell a mutant apart from a coin flip.** `random`, `uuid4`,
+  `time.time` and similar disagree with *themselves* from one call to the next on
+  byte-identical code; comparing one call per side reported that as a confident,
+  "unarguable" proven gap, differently on every run. Each disagreement is now checked
+  against a second call to the same side before it is trusted - see `nondeterministic`
+  below.
 """
 
 from __future__ import annotations
 
+import ast
 import json
 import sys
 import tempfile
@@ -32,6 +39,42 @@ from pathlib import Path
 
 from suite_auditor.inputs import OBSERVED, ArgSet, eligible
 from suite_auditor.workspace import Timeout, child_env, run
+
+# Modules and attributes whose result is not a function of their arguments. A call to
+# any of these anywhere in a function's own source is a stronger, source-level
+# guarantee than the runtime repeat check below: it catches a narrow value space
+# (random.randint(1, 6) can coincide with itself by chance) that a repeat cannot rule
+# out with certainty, and it costs nothing extra at audit time.
+_NONDETERMINISTIC_CALLS = {
+    "random", "uuid", "uuid1", "uuid3", "uuid4", "uuid5",
+    "time", "monotonic", "perf_counter", "process_time",
+    "urandom", "token_bytes", "token_hex", "token_urlsafe",
+}  # fmt: skip
+_NONDETERMINISTIC_ATTRS = {"now", "utcnow", "today"}  # datetime.now(), date.today(), ...
+
+
+def _looks_nondeterministic(source: str) -> bool:
+    """Does this function's own source call something whose result is not a function
+    of its arguments (random, uuid, a clock)?
+
+    A name match, not a data-flow analysis: `random` shadowed by a local variable of
+    the same name would false-positive, and a nondeterministic call reached only
+    through another function this one calls would false-negative (the runtime repeat
+    check in RUNNER is what catches that case). Both are the safe direction to be
+    wrong in for a tool whose job is to not claim more than it can prove.
+    """
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return False
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            fn = node.func
+            name = fn.attr if isinstance(fn, ast.Attribute) else getattr(fn, "id", None)
+            if name in _NONDETERMINISTIC_CALLS or name in _NONDETERMINISTIC_ATTRS:
+                return True
+    return False
+
 
 RUNNER = """
 import json, re, sys, types
@@ -139,7 +182,22 @@ for args, kwargs in ARGSETS:
     # the second version an input the first one already changed.
     a, va = _call(OLD_FN, copy.deepcopy(args), copy.deepcopy(kwargs))
     b, vb = _call(NEW_FN, copy.deepcopy(args), copy.deepcopy(kwargs))
-    rows.append({{"old": a, "new": b, "same": a == b or _equal(va, vb)}})
+    same = a == b or _equal(va, vb)
+    # A single call cannot tell "the mutant changed behaviour" apart from "this
+    # function is not deterministic" - random.randint, uuid4, time.time and similar
+    # disagree with THEMSELVES from one call to the next, on byte-identical code, and
+    # a disagreement like that is not proof of anything. Before trusting a
+    # disagreement, call each side twice more: a function narrow enough to coincide
+    # with itself once by chance (random.randint(1, 6) agrees 1 time in 6) is most
+    # unlikely to coincide on both repeats, so this is not a single coin flip.
+    nondeterministic = False
+    if not same:
+        old_repeats = [_call(OLD_FN, copy.deepcopy(args), copy.deepcopy(kwargs)) for _ in range(2)]
+        new_repeats = [_call(NEW_FN, copy.deepcopy(args), copy.deepcopy(kwargs)) for _ in range(2)]
+        old_stable = all(a == a2 or _equal(va, va2) for a2, va2 in old_repeats)
+        new_stable = all(b == b2 or _equal(vb, vb2) for b2, vb2 in new_repeats)
+        nondeterministic = not (old_stable and new_stable)
+    rows.append({{"old": a, "new": b, "same": same, "nondeterministic": nondeterministic}})
 
 print("__SA_JSON__" + json.dumps(rows))
 """
@@ -205,12 +263,23 @@ def compare(
         return {"status": "error", "detail": err[-1][:300] if err else "no output"}
 
     rows = json.loads(out[marker + len("__SA_JSON__") :].strip().splitlines()[0])
+    # A source-level guarantee, stronger than the runtime repeat check inside RUNNER:
+    # a function whose own body calls random/uuid/a clock cannot produce proof no
+    # matter how many repeats happen to agree by chance (random.randint(1, 6) has a
+    # 1-in-6 shot at coinciding with itself twice running).
+    if _looks_nondeterministic(old) or _looks_nondeterministic(new):
+        for row in rows:
+            row["nondeterministic"] = True
     for row, a in zip(rows, sets, strict=False):
         row["args"] = a.display()
         row["provenance"] = a.provenance
         row["old_s"] = f"{row['old'][0]}: {row['old'][1]}"
         row["new_s"] = f"{row['new'][0]}: {row['new'][1]}"
     disagreements = [r for r in rows if not r["same"]]
+    # A disagreement where either side did not even reproduce on its own second call is
+    # not evidence of anything the mutation did - see the nondeterministic check above.
+    unstable = [r for r in disagreements if r.get("nondeterministic")]
+    disagreements = [r for r in disagreements if not r.get("nondeterministic")]
     exercised = [r for r in rows if r["old"][0] == "ok" or r["new"][0] == "ok"]
 
     if not exercised:
@@ -241,6 +310,7 @@ def compare(
             "provenance": w["provenance"],
             "tried": len(rows),
             "exercised": len(exercised),
+            "nondeterministic": len(unstable),
         }
 
     if disagreements:
@@ -252,6 +322,23 @@ def compare(
             ),
             "tried": len(rows),
             "exercised": len(exercised),
+            "nondeterministic": len(unstable),
+        }
+
+    if unstable:
+        # Every disagreement found was against the function's own repeat, not against
+        # the mutant: this function is not deterministic (random/uuid/time and
+        # similar), and nothing here can be reported as agreement OR as a gap.
+        return {
+            "status": "inconclusive",
+            "detail": (
+                f"{len(unstable)} of {len(rows)} inputs disagreed, but only because the "
+                "function did not agree with its own repeat - not deterministic, so "
+                "nothing here can be trusted as proof"
+            ),
+            "tried": len(rows),
+            "exercised": len(exercised),
+            "nondeterministic": len(unstable),
         }
 
     return {
@@ -259,6 +346,7 @@ def compare(
         "detail": f"{len(exercised)} of {len(rows)} inputs exercised it, all agree",
         "tried": len(rows),
         "exercised": len(exercised),
+        "nondeterministic": 0,
     }
 
 

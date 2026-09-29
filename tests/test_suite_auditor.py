@@ -12,7 +12,7 @@ import textwrap
 
 from suite_auditor.audit import patch_file
 from suite_auditor.coverage import tests_for as covering_tests
-from suite_auditor.differential import compare
+from suite_auditor.differential import _looks_nondeterministic, compare
 from suite_auditor.inputs import argument_sets, harvest_for, witness_strength
 from suite_auditor.mutate import OPERATORS, find_targets, mutants
 from suite_auditor.types import Audit, Result, Target, Verdict
@@ -130,6 +130,38 @@ def test_witness_strength_ranks_two_values_above_an_exception():
     assert witness_strength(one_ok) == 1
     assert witness_strength(neither) == 2
     assert witness_strength(None) == 3
+
+
+def test_a_function_that_disagrees_with_its_own_repeat_is_not_a_gap():
+    # random.randint(1, 6) disagreeing with itself between two calls is not the mutant
+    # doing anything - it is what this function always does. Repro from a real audit:
+    # `dice()` reported 2, 3 and 3 "unarguable" proven gaps on three re-runs of
+    # byte-identical code.
+    old = "def dice(n=0):\n    import random\n    return random.randint(1, 6) + n\n"
+    new = "def dice(n=0):\n    import random\n    return random.randint(1, 6) + n + 1\n"
+    r = compare("", old, new, "dice", ["(0,)"] * 20)
+    assert r["status"] != "differs"
+
+
+def test_uuid_and_clock_calls_are_also_recognised_as_nondeterministic():
+    assert _looks_nondeterministic("def f():\n    import uuid\n    return uuid.uuid4()\n")
+    assert _looks_nondeterministic("def f():\n    import time\n    return time.time()\n")
+    assert _looks_nondeterministic(
+        "def f():\n    from datetime import datetime\n    return datetime.now()\n"
+    )
+    assert not _looks_nondeterministic("def f(x):\n    return x * 2\n")
+    # A local variable that merely happens to share a name with one of the flagged
+    # calls (not called as one) must not trip this - it costs sensitivity for nothing.
+    assert not _looks_nondeterministic("def f(time):\n    return time + 1\n")
+
+
+def test_a_genuinely_deterministic_disagreement_is_still_a_gap():
+    # The fix must not make the tool blind to real gaps - only to noise from a
+    # function whose own source calls something nondeterministic.
+    old = "def f(n):\n    return n > 2\n"
+    new = "def f(n):\n    return n >= 2\n"
+    r = compare("", old, new, "f", ["(2,)", "(5,)"])
+    assert r["status"] == "differs"
 
 
 def test_gaps_are_ordered_by_strength():
@@ -429,6 +461,43 @@ def test_a_single_module_library_is_found(tmp_path):
     keys = [t.key for t in find_targets(tmp_path)]
     assert "src/thing.py::double" in keys
     assert not any("examples" in k for k in keys), "examples/ is not the library"
+
+
+def test_a_flat_root_module_with_no_src_at_all_is_found(tmp_path):
+    """A distribution whose whole library is `tool.py` at the true repo root - no
+    `src/` directory anywhere. A common shape for a small script or a single-file
+    library. `suite-auditor coverage .` on exactly this shape reported "no functions
+    found" until this was recognised as a third shipped-code shape alongside a
+    package and a src/-module distribution.
+    """
+    from suite_auditor.mutate import find_targets
+
+    (tmp_path / "tool.py").write_text("def greet(name):\n    return name\n", encoding="utf-8")
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests" / "test_tool.py").write_text(
+        "def test_it():\n    assert True\n", encoding="utf-8"
+    )
+
+    keys = [t.key for t in find_targets(tmp_path)]
+    assert "tool.py::greet" in keys
+
+
+def test_a_root_level_script_beside_a_real_src_package_is_not_swept_in(tmp_path):
+    """The flat-root rule is gated on 'no src/ at all' precisely so it does not treat
+    every stray demo.py or setup.py next to a real package as shipped code.
+    """
+    from suite_auditor.mutate import find_targets
+
+    (tmp_path / "src" / "pkg").mkdir(parents=True)
+    (tmp_path / "src" / "pkg" / "__init__.py").write_text("", encoding="utf-8")
+    (tmp_path / "src" / "pkg" / "m.py").write_text(
+        "def real(n):\n    return n > 0\n", encoding="utf-8"
+    )
+    (tmp_path / "demo.py").write_text("def not_the_library():\n    pass\n", encoding="utf-8")
+
+    keys = [t.key for t in find_targets(tmp_path)]
+    assert "src/pkg/m.py::real" in keys
+    assert not any("demo.py" in k for k in keys), "a root script beside src/ is not the library"
 
 
 def test_an_audit_with_nothing_to_mutate_says_so(tmp_path):
