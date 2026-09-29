@@ -5,7 +5,7 @@
   <a href="https://github.com/hammasbuilds/suite-auditor/actions/workflows/ci.yml"><img src="https://github.com/hammasbuilds/suite-auditor/actions/workflows/ci.yml/badge.svg" alt="ci"></a>
   <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="python">
   <img src="https://img.shields.io/badge/runtime%20deps-0-brightgreen" alt="zero dependencies">
-  <img src="https://img.shields.io/badge/tests-103-brightgreen" alt="tests">
+  <img src="https://img.shields.io/badge/tests-108-brightgreen" alt="tests">
   <a href="https://github.com/hammasbuilds/suite-auditor/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="license"></a>
 </p>
 
@@ -208,7 +208,11 @@ Full detail in [docs/RESULTS.md](https://github.com/hammasbuilds/suite-auditor/b
 ## What this does not do
 
 - **It does not claim a gap it cannot prove.** Survivors without an admissible separating
-  input are reported as unproven and never counted.
+  input are reported as unproven and never counted. A disagreement is also refused as
+  proof when the function does not even agree with its own repeat, or when its source
+  calls `random`, `uuid`, a clock or similar - a coin flip is not evidence of a mutant.
+  The named-call check is exact for those; an unnamed source of nondeterminism is
+  caught by the repeat check, which is very likely but not certain to notice it.
 - **Methods are mutated but never "proven".** A method needs its instance, and calling it
   with `self` faked proves nothing, so a surviving method mutant stays unproven.
 - **It does not mutate what no test reaches.** Those functions are listed instead, and
@@ -238,6 +242,22 @@ Full detail in [docs/RESULTS.md](https://github.com/hammasbuilds/suite-auditor/b
   plugin's output one directory deeper than anyone looked; every function read as
   uncovered and an auditor that sees nothing covered reports no gaps. A clean zero is now
   treated as suspect.
+- **A function that calls `random` disagreed with itself, and got reported as a proven
+  gap.** `dice()` returning `random.randint(1, 6)` was compared once per side; re-running
+  the identical, unmutated audit three times gave 2, then 3, then 3 "unarguable" gaps,
+  a different witness value every time. Comparing once cannot tell "the mutant changed
+  behaviour" apart from "this function does not give the same answer twice." Each
+  disagreement is now checked against the function's own repeat before it is trusted,
+  and a function whose source calls `random`, `uuid`, a clock or similar is excluded
+  from proof outright - a stronger, source-level guarantee that a repeat alone cannot
+  give when the value space is narrow enough to coincide by chance.
+- **A project with no `src/` directory at all read as having no functions to mutate.**
+  Shipped code was recognised in a package (a directory with `__init__.py`) or directly
+  under `src/`, but not at the true repo root - a small script or a single-file library
+  with no `src/` anywhere. `suite-auditor coverage .` said "no functions found" rather
+  than auditing it. Fixed by recognising a third shape, gated on there being no `src/`
+  directory in the repo at all, so it never sweeps up a stray `demo.py` next to a real
+  package.
 - **It mis-graded its own evidence.** A drained generator that raised renders as
   `ok: []...then TypeError`, and the grader read only the `ok`.
 - **Every method was silently skipped.** A method's source is indented, which does not

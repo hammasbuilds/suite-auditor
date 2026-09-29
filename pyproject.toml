@@ -27,6 +27,12 @@ keywords = ["mutation-testing", "test-quality", "differential-testing", "coverag
 # thing to trust than the tests it audits.
 dependencies = []
 
+# Both, deliberately. `uv sync` reads the dependency group; `pip install -e ".[dev]"`
+# reads the extra and only warns if it is missing (or, on pip < 25.1, no-ops silently),
+# so a generic "how do I install for development" step installed nothing without this.
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.16,<0.17"]
+
 [dependency-groups]
 dev = ["pytest>=8", "ruff>=0.16,<0.17"]
 
