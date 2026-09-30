@@ -205,7 +205,7 @@ the function would never see.
 
 Full detail in [docs/RESULTS.md](https://github.com/hammasbuilds/suite-auditor/blob/main/docs/RESULTS.md).
 
-## What this does not do
+## Scope
 
 - **It does not claim a gap it cannot prove.** Survivors without an admissible separating
   input are reported as unproven and never counted. A disagreement is also refused as
@@ -227,41 +227,6 @@ Full detail in [docs/RESULTS.md](https://github.com/hammasbuilds/suite-auditor/b
   put first on `PYTHONPATH` so the tests import the mutated copy, not an installed one.
 - **It does not replace `mutmut` or `cosmic-ray`,** which are more thorough. This adds the
   proof step and the grading.
-
-## Problems hit while building this
-
-- **The audit rewrote users' files.** Mutants were patched onto the real tree and
-  restored in a `finally`; the restore read with universal newlines, so a CRLF file came
-  back LF, and a crash or Ctrl-C mid-mutant could leave `if pct > 51:` on disk. Now
-  nothing in the repository is ever written.
-- **A correct, fully tested suite got two "proven gaps".** Inputs were scraped from the
-  *text* of the test files, so `@pytest.mark.parametrize("x,exp", [...])` became the
-  argument `('x,exp', 'x,exp', [(-1, 0), ...])`. Inputs now come from the calls the tests
-  really made, recorded during the trace.
-- **The coverage map came back empty, and nothing raised.** A relative path sent the
-  plugin's output one directory deeper than anyone looked; every function read as
-  uncovered and an auditor that sees nothing covered reports no gaps. A clean zero is now
-  treated as suspect.
-- **A function that calls `random` disagreed with itself, and got reported as a proven
-  gap.** `dice()` returning `random.randint(1, 6)` was compared once per side; re-running
-  the identical, unmutated audit three times gave 2, then 3, then 3 "unarguable" gaps,
-  a different witness value every time. Comparing once cannot tell "the mutant changed
-  behaviour" apart from "this function does not give the same answer twice." Each
-  disagreement is now checked against the function's own repeat before it is trusted,
-  and a function whose source calls `random`, `uuid`, a clock or similar is excluded
-  from proof outright - a stronger, source-level guarantee that a repeat alone cannot
-  give when the value space is narrow enough to coincide by chance.
-- **A project with no `src/` directory at all read as having no functions to mutate.**
-  Shipped code was recognised in a package (a directory with `__init__.py`) or directly
-  under `src/`, but not at the true repo root - a small script or a single-file library
-  with no `src/` anywhere. `suite-auditor coverage .` said "no functions found" rather
-  than auditing it. Fixed by recognising a third shape, gated on there being no `src/`
-  directory in the repo at all, so it never sweeps up a stray `demo.py` next to a real
-  package.
-- **It mis-graded its own evidence.** A drained generator that raised renders as
-  `ok: []...then TypeError`, and the grader read only the `ok`.
-- **Every method was silently skipped.** A method's source is indented, which does not
-  parse on its own, so it produced zero mutants and no warning.
 
 ## Development
 
