@@ -8,6 +8,9 @@ suite-auditor audit targets/toolz        --test toolz/tests --per-function 5 -j 
 suite-auditor audit targets/repo-surgeon --test tests       --per-function 5 -j 4
 ```
 
+To re-run the toolz column from a clean checkout (pinned commit, its own venv, 10+ minutes):
+`sh scripts/reproduce_toolz.sh`.
+
 Environment: Windows 11, Python 3.14.7, pytest 9.1.1, a laptop shared with other jobs.
 `toolz` at upstream commit `451af60`. Every number below comes out of
 [`docs/audit-toolz.json`](https://github.com/hammasbuilds/suite-auditor/blob/main/docs/audit-toolz.json)

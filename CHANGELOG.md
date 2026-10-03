@@ -18,7 +18,8 @@ First release.
   witness says whether the call is one the tests really made, a recombination of their
   values, or generated.
 - `--python` to run the target's suite with the target's interpreter; otherwise the
-  project's own `.venv`/`venv`/`env`, then an activated venv, then the tool's own.
+  project's own `.venv`/`venv`/`env`, then an activated venv (with a warning when it
+  lives outside the project), then the tool's own.
 - `-j/--jobs` for parallel mutant runs, each in its own scratch copy.
 - Per-function progress with a running mutant count and ETA; a live status line on a
   terminal.

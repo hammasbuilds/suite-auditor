@@ -5,7 +5,7 @@
   <a href="https://github.com/hammasbuilds/suite-auditor/actions/workflows/ci.yml"><img src="https://github.com/hammasbuilds/suite-auditor/actions/workflows/ci.yml/badge.svg" alt="ci"></a>
   <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="python">
   <img src="https://img.shields.io/badge/runtime%20deps-0-brightgreen" alt="zero dependencies">
-  <img src="https://img.shields.io/badge/tests-108-brightgreen" alt="tests">
+  <img src="https://img.shields.io/badge/tests-110-brightgreen" alt="tests">
   <a href="https://github.com/hammasbuilds/suite-auditor/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="license"></a>
 </p>
 
@@ -39,7 +39,9 @@ there - not alongside suite-auditor. The interpreter is picked in this order:
 
 1. `--python PATH` (an interpreter, or a virtual environment directory)
 2. a virtual environment inside the project: `.venv/`, `venv/` or `env/`
-3. the activated virtual environment (`$VIRTUAL_ENV`)
+3. the activated virtual environment (`$VIRTUAL_ENV`) - with a warning on stderr if it
+   lives outside the project, since a shell left activated in another project is the
+   usual way to end up auditing against the wrong dependencies
 4. the interpreter suite-auditor itself runs on
 
 The first line of output says which one was used and why. If it cannot import pytest,

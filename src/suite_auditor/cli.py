@@ -83,6 +83,8 @@ def _prepare(args: argparse.Namespace) -> tuple[Path, str, str] | int:
     except SystemExit as exc:
         print(exc, file=sys.stderr, flush=True)
         return EXIT_ERROR
+    if interp.warning:
+        print(interp.warning, file=sys.stderr, flush=True)
     problem = check_pytest(interp.path)
     if problem:
         return _err(problem)

@@ -6,7 +6,6 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Console",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     # Listed one by one so PyPI can show what is supported. Every version
@@ -20,7 +19,8 @@ classifiers = [
 ]
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 keywords = ["mutation-testing", "test-quality", "differential-testing", "coverage", "pytest", "test-adequacy"]
 # No runtime dependencies. Coverage is ~40 lines of sys.settrace rather than coverage.py,
 # because a tool whose output is a claim about somebody else's tests should be a smaller
@@ -46,7 +46,7 @@ Issues = "https://github.com/hammasbuilds/suite-auditor/issues"
 Changelog = "https://github.com/hammasbuilds/suite-auditor/blob/main/CHANGELOG.md"
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
@@ -64,6 +64,10 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.isort]
+# examples/pricing is linted with the rest of the repo; its package is first-party there.
+known-first-party = ["suite_auditor", "pricing"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

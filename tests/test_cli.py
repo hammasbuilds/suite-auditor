@@ -105,3 +105,21 @@ def test_the_projects_own_venv_is_found(tmp_path):
     found = resolve_python(tmp_path)
     assert Path(found.path).resolve().is_relative_to(v.resolve())
     assert ".venv" in found.why
+
+
+def test_an_activated_venv_from_another_project_is_flagged(tmp_path, monkeypatch):
+    other = tmp_path / "other" / ".venv"
+    venv.create(other, with_pip=False)
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    monkeypatch.setenv("VIRTUAL_ENV", str(other))
+    found = resolve_python(repo)
+    assert Path(found.path).resolve().is_relative_to(other.resolve())
+    assert "outside" in found.warning and "--python" in found.warning
+
+
+def test_an_activated_venv_inside_the_project_is_not_flagged(tmp_path, monkeypatch):
+    inner = tmp_path / "envs" / "dev"
+    venv.create(inner, with_pip=False)
+    monkeypatch.setenv("VIRTUAL_ENV", str(inner))
+    assert resolve_python(tmp_path).warning == ""

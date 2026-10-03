@@ -84,6 +84,15 @@ def _interpreter_in(venv: Path) -> Path | None:
 class Interpreter:
     path: str
     why: str
+    warning: str = ""
+
+
+def _inside(path: Path, root: Path) -> bool:
+    try:
+        path.resolve().relative_to(root.resolve())
+    except (ValueError, OSError):
+        return False
+    return True
 
 
 def resolve_python(repo: Path, given: str = "") -> Interpreter:
@@ -119,7 +128,17 @@ def resolve_python(repo: Path, given: str = "") -> Interpreter:
     if active:
         found = _interpreter_in(Path(active))
         if found:
-            return Interpreter(str(found), "the activated virtual environment")
+            warning = ""
+            if not _inside(Path(active), repo):
+                # The documented order picks it up, but a shell left activated in another
+                # project is the common case, and its missing dependencies would surface as
+                # baffling import errors in the baseline run rather than as this sentence.
+                warning = (
+                    f"warning: the activated virtual environment {active} is outside {repo}.\n"
+                    "  If it belongs to another project, its packages are not this project's\n"
+                    "  dependencies; pass --python path/to/this/project's/venv instead."
+                )
+            return Interpreter(str(found), "the activated virtual environment", warning)
     return Interpreter(sys.executable, "the interpreter suite-auditor is installed in")
 
 

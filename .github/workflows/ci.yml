@@ -25,8 +25,8 @@ jobs:
 
       - name: Lint
         run: |
-          uv run ruff check src tests demo.py
-          uv run ruff format --check src tests demo.py
+          uv run ruff check .
+          uv run ruff format --check .
 
       # No model, no GPU, no network: everything under test is the code that decides
       # whether a survivor is a gap.
