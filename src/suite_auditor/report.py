@@ -88,10 +88,15 @@ def summary(audit: Audit, repo_name: str) -> str:
     # never apart: a suite covering a tenth of the code and killing everything in
     # it scores 100% above and 10% here, and the first number is the quotable one.
     if audit.stopped_early:
+        scored = (
+            f"{len(audit.results)} of {audit.planned_mutants} planned mutants, in "
+            if audit.planned_mutants
+            else ""
+        )
         lines.append(
-            f"  ! PARTIAL: the time budget stopped this after {audit.audited_functions} of "
-            f"{audit.covered_total} covered functions. Every rate below is over what was "
-            "scored, not over the package."
+            f"  ! PARTIAL: the time budget stopped this after {scored}"
+            f"{audit.audited_functions} of {audit.covered_total} covered functions. Every "
+            "rate below is over what was scored, not over the package."
         )
 
     cf, cs = audit.covered_fraction, audit.caught_share

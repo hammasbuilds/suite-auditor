@@ -432,6 +432,7 @@ def audit(
         if not plan:
             out.seconds = time.time() - t0
             return out
+        out.planned_mutants = total
         say(
             f"\nmutating {len(plan)} function(s): {total} mutants"
             + (f", {jobs} in parallel" if jobs > 1 else "")
@@ -525,7 +526,8 @@ def audit(
         if out.stopped_early:
             say(
                 f"  ! stopped after {time.time() - t0:.0f}s of a {max_seconds:.0f}s budget, "
-                f"having audited {len(per_fn)} of {len(plan)} functions. "
+                f"having scored {len(out.results)} of {total} mutants in "
+                f"{len(per_fn)} of {len(plan)} functions. "
                 "Rates below are over what was scored."
             )
 

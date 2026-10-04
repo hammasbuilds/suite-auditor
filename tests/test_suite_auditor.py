@@ -542,3 +542,22 @@ def test_a_complete_audit_does_not_claim_to_be_partial():
         audited_functions=1,
     )
     assert "PARTIAL" not in summary(whole, "somelib")
+
+
+def test_a_partial_audit_counts_mutants_not_just_functions():
+    """With a 1-second budget on examples/pricing, all three functions were started and 3
+    of 17 mutants scored, and the report said "after 3 of 3 covered functions" - which
+    reads as complete. The mutant count is what says how partial it is."""
+    from suite_auditor.report import summary
+    from suite_auditor.types import Audit, Result, Verdict
+
+    partial = Audit(
+        results=[Result("pkg.a", "x + 1", "binop", Verdict.KILLED)] * 3,
+        covered_total=3,
+        audited_functions=3,
+        planned_mutants=17,
+        stopped_early=True,
+    )
+    assert "after 3 of 17 planned mutants, in 3 of 3 covered functions" in summary(
+        partial, "somelib"
+    )

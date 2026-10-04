@@ -114,6 +114,11 @@ class Audit:
     """How many covered functions were actually mutated, which `--limit` and the
     budget can both cut below `covered_total`."""
 
+    planned_mutants: int = 0
+    """Mutants planned before the run. With `--max-seconds` a function can be cut off
+    part-way, so the share of mutants scored is the honest measure of how partial a
+    partial audit is; the function count alone read "3 of 3" after 3 of 17 mutants."""
+
     no_targets: bool = False
     """No function was found to mutate at all.
 

@@ -29,6 +29,8 @@ First release.
 
 ### Fixed before release
 
+- A `--max-seconds` audit cut off part-way said "stopped after 3 of 3 covered functions"
+  when 3 of 17 mutants had been scored. It now gives mutants scored out of planned.
 - The audit wrote mutants onto the user's files and restored them with universal
   newlines, turning CRLF files into LF. The repository is now never written.
 - Inputs were scraped from test source text, so `@pytest.mark.parametrize` arguments were
