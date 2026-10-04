@@ -41,7 +41,7 @@
     "src/repo_surgeon/verify/suite.py::run_suite"
   ],
   "failing_only": [],
-  "seconds": 160.3,
+  "seconds": 116.9,
   "results": [
     {
       "target": "src/repo_surgeon/ledger.py::Ledger.seen",

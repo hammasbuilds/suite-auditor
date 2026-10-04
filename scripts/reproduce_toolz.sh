@@ -1,7 +1,9 @@
 #!/usr/bin/env sh
 # Reproduce the toolz column of docs/RESULTS.md.
 # Clones toolz at the exact commit the published numbers came from, gives it its own
-# venv with pytest, and runs the same audit. Takes 10+ minutes on a laptop.
+# venv with pytest, and runs the same audit. About 3.5 minutes on a quiet 16-core machine,
+# 10+ on a busy laptop. Run with Python 3.12: on 3.14 six mutants come out differently
+# (see docs/RESULTS.md).
 # Usage: sh scripts/reproduce_toolz.sh [output-dir]   (needs git, python >= 3.11, suite-auditor)
 set -eu
 TOOLZ_COMMIT=451af60dec590a6010e2babdbf391ea8f815122f

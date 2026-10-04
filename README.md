@@ -5,7 +5,7 @@
   <a href="https://github.com/hammasbuilds/suite-auditor/actions/workflows/ci.yml"><img src="https://github.com/hammasbuilds/suite-auditor/actions/workflows/ci.yml/badge.svg" alt="ci"></a>
   <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="python">
   <img src="https://img.shields.io/badge/runtime%20deps-0-brightgreen" alt="zero dependencies">
-  <img src="https://img.shields.io/badge/tests-110-brightgreen" alt="tests">
+  <img src="https://img.shields.io/badge/tests-114-brightgreen" alt="tests">
   <a href="https://github.com/hammasbuilds/suite-auditor/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="license"></a>
 </p>
 
@@ -73,16 +73,16 @@ sides of each boundary; `shipping` at one point either side of its boundary; `wi
 by `assert with_tax(10) > 10`; `format_price` not at all. Real output:
 
 ```
-$ suite-auditor audit examples/pricing -j auto
-python: ...\suite-auditor\.venv\Scripts\python.exe  (from --python)
+$ suite-auditor audit examples/pricing --python <this interpreter> -j auto
+python: ...\Scripts\python.exe  (from --python)
 copying the repository to a scratch directory (your files are never modified)...
 tracing which tests cover which functions (one suite run)...
   3 functions traced, 8 tests passed
   3 functions have covering tests, 1 have none
 
 mutating 3 function(s): 17 mutants, 3 in parallel...
-  [1/3] pricing/rules.py::with_tax                   3/5 killed, 1 gap(s)   [14/17 mutants, ETA 0s]
-  [2/3] pricing/rules.py::discount                   6/6 killed, 0 gap(s)   [16/17 mutants, ETA 0s]
+  [1/3] pricing/rules.py::discount                   6/6 killed, 0 gap(s)   [14/17 mutants, ETA 0s]
+  [2/3] pricing/rules.py::with_tax                   3/5 killed, 1 gap(s)   [16/17 mutants, ETA 0s]
   [3/3] pricing/rules.py::shipping                   4/6 killed, 1 gap(s)   [17/17 mutants, ETA 0s]
 
 ==============================================================================
@@ -116,7 +116,7 @@ SUITE AUDIT - pricing
   1 function(s) no test reaches:
     pricing/rules.py::format_price
 
-  took 6s
+  took 4s
 ```
 
 Read the two gaps: the test *made* the call `with_tax(10, 0.2)` and accepted `22.0` as
@@ -124,8 +124,8 @@ readily as `12.0`; and nothing tests `shipping` at 3 kg, where a `<= 2` quietly 
 into `<= 3` goes unnoticed. The thoroughly tested `discount` has every mutant killed. The
 two unproven survivors are equivalent on every input tried (`round(..., 2)` vs
 `round(..., 3)` on these values; `< 2` vs `<= 2` where both branches give 5) and are not
-accused. The whole run took 6 s on an idle 16-thread laptop, and about a minute when the same
-machine was busy with other jobs.
+accused. `python demo.py` (the coverage pass, then this audit) took 5 s on a quiet 16-core
+Windows machine, and about a minute when the same machine was busy with other jobs.
 
 ## How it works
 
@@ -189,18 +189,23 @@ is never exit 0.
 | functions in the package | 157 | 67 |
 | **reached by no test** | 15 | **28 (42%)** |
 | mutants scored | 418 | 154 |
-| **kill rate** | **92.1%** | **60.4%** |
-| caught share (kill rate x covered fraction) | 82.7% | 35.2% |
+| **kill rate** | **92.6%** | **60.4%** |
+| caught share (kill rate x covered fraction) | 83.1% | 35.2% |
 | proven gaps | **0** | **7** (6 on a call the tests really made) |
-| unproven survivors | 33 | 54 |
+| unproven survivors | 31 | 54 |
 
-`toolz` is a functional library maintained since 2013; its suite killed 385 of 418 mutants
+`toolz` is a functional library maintained since 2013; its suite killed 387 of 418 mutants
 and the tool could not prove a single survivor wrong on an admissible input. `repo-surgeon`
 is one of mine, whose README said "47 tests": 42% of its functions are reached by no test,
 and four of its gaps are calls the suite made and then accepted a different answer for,
 e.g. `_looks_like_number('src_path')` returning `True` instead of `False`.
 
-Both audits were re-run on 2026-09-27 with the current engine; the first published numbers
+Both columns were re-run on 2026-10-04 on Python 3.12, toolz at upstream commit `451af60`
+(`sh scripts/reproduce_toolz.sh`) and repo-surgeon at `d69c12d` (command in
+[docs/RESULTS.md](https://github.com/hammasbuilds/suite-auditor/blob/main/docs/RESULTS.md)).
+repo-surgeon gives the same numbers as the 2026-09-27 run; toolz differs in six mutants,
+because toolz itself takes different code paths on Python 3.14, where that run was made
+(its signature registry for builtins, and `annotation_format`). The first published numbers
 (90.6% / 4 gaps and 68.0% / 3 gaps) came from an earlier version with five operators and
 text-scraped inputs, and every one of toolz's four old gaps rested on a generated argument
 the function would never see.
@@ -221,8 +226,9 @@ Full detail in [docs/RESULTS.md](https://github.com/hammasbuilds/suite-auditor/b
   the *caught share* (kill rate x covered fraction) is printed so a high kill rate over a
   small covered fraction cannot pass for a good suite.
 - **It is not fast on big suites.** Every mutant is a pytest start-up. On a loaded
-  Windows laptop that was 1-5 s per mutant (toolz: 418 mutants in 11.5 minutes with 4
-  workers); `--limit`, `--per-function` and `--max-seconds` are the levers. Workers run in
+  Windows machine that was 1-5 s per mutant (toolz: 418 mutants in 11.5 minutes with 4
+  workers; 3.4 minutes when the same machine was quiet); `--limit`, `--per-function` and
+  `--max-seconds` are the levers. Workers run in
   parallel by default; tests that share state outside the project (a fixed port, a file in
   the home directory) could collide - use `-j 1` for those.
 - **Compiled extensions must be built in place.** The copy's own source directories are

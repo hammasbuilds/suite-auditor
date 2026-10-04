@@ -1,18 +1,26 @@
 # Results
 
-Two audits, re-run on 2026-09-27 with the current engine (twelve operators, inputs
+Two audits, re-run on 2026-10-04 with the current engine (twelve operators, inputs
 recorded from the covering tests' real calls, admissibility rules for proof):
 
 ```bash
+git clone https://github.com/pytoolz/toolz targets/toolz && git -C targets/toolz checkout 451af60
+git clone https://github.com/hammasbuilds/repo-surgeon targets/repo-surgeon && git -C targets/repo-surgeon checkout d69c12d
+# each target gets its own venv with pytest: python -m venv targets/<name>/.venv, then pip install pytest
 suite-auditor audit targets/toolz        --test toolz/tests --per-function 5 -j 4
 suite-auditor audit targets/repo-surgeon --test tests       --per-function 5 -j 4
 ```
 
-To re-run the toolz column from a clean checkout (pinned commit, its own venv, 10+ minutes):
-`sh scripts/reproduce_toolz.sh`.
+The toolz column alone, from a clean checkout: `sh scripts/reproduce_toolz.sh`.
 
-Environment: Windows 11, Python 3.14.7, pytest 9.1.1, a laptop shared with other jobs.
-`toolz` at upstream commit `451af60`. Every number below comes out of
+Environment: Windows 11, Python 3.12.14, pytest 9.1.1, a 16-core machine.
+
+**The toolz column depends on the Python version.** The previous run (2026-09-27, Python
+3.14.7) killed 385 and left 33 unproven; on 3.12 it is 387 and 31. The six mutants that
+differ are all in code toolz runs differently by version: three `drop_return` mutants in
+`toolz/_signatures.py` and `functoolz.is_arity` (its registry of builtin signatures), and
+two in `Compose._combined_annotations`, which takes 3.14's `annotation_format`. repo-surgeon
+gives identical numbers on both. Every number below comes out of
 [`docs/audit-toolz.json`](https://github.com/hammasbuilds/suite-auditor/blob/main/docs/audit-toolz.json)
 and [`docs/audit-repo-surgeon.json`](https://github.com/hammasbuilds/suite-auditor/blob/main/docs/audit-repo-surgeon.json).
 No language model is involved anywhere in this tool.
@@ -26,13 +34,13 @@ No language model is involved anywhere in this tool.
 | reached only by a failing test | 1 | 0 |
 | **reached by no test** | 15 | **28 (42%)** |
 | mutants scored | 418 | 154 |
-| killed by the suite | 385 | 93 |
-| **kill rate** | **92.1%** | **60.4%** |
-| **caught share** (kill rate x covered fraction) | 82.7% | 35.2% |
+| killed by the suite | 387 | 93 |
+| **kill rate** | **92.6%** | **60.4%** |
+| **caught share** (kill rate x covered fraction) | 83.1% | 35.2% |
 | proven gaps | **0** | **7** |
 | of those, on a call the tests really made | - | 6 |
-| unproven survivors | 33 | 54 |
-| wall clock | 690 s | 160 s |
+| unproven survivors | 31 | 54 |
+| wall clock | 204 s | 117 s |
 
 `toolz` had one test failing in this environment; it was left out of the run (a failing
 test would "kill" every mutant it meets), and the one function only it reaches is listed
@@ -88,9 +96,10 @@ model client: 28 of 67 functions, in a project whose README said "47 tests".
 
 - **Two repositories**, one of them mine. A kill rate is a property of a suite, and two
   suites are not a survey.
-- **Unproven survivors are not gaps and not non-gaps.** toolz 33, repo-surgeon 54. For
-  toolz: 16 disagreed only on inadmissible inputs, 8 agreed on every input, 6 are methods
-  (never proven: a method needs its instance), 3 could not be loaded in isolation.
+- **Unproven survivors are not gaps and not non-gaps.** toolz 31, repo-surgeon 54. For
+  toolz: 16 disagreed only on inadmissible inputs or raised on every input, 5 agreed on
+  every input, 8 are methods (never proven: a method needs its instance), 2 could not be
+  loaded in isolation.
 - **Uncovered functions are not mutated at all**, so they contribute nothing to the kill
   rate; the caught share is printed next to it for that reason.
 - **Timing is from a loaded laptop** and is only indicative.

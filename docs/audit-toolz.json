@@ -1,12 +1,12 @@
 {
   "counts": {
-    "killed": 385,
-    "unproven": 33
+    "killed": 387,
+    "unproven": 31
   },
-  "kill_rate": 0.9210526315789473,
+  "kill_rate": 0.9258373205741627,
   "covered_total": 141,
   "covered_fraction": 0.8980891719745223,
-  "caught_share": 0.8271873952396915,
+  "caught_share": 0.8314844726175601,
   "proven_gaps": 0,
   "strong_gaps": 0,
   "uncovered": [
@@ -29,7 +29,7 @@
   "failing_only": [
     "toolz/__init__.py::__getattr__"
   ],
-  "seconds": 690.2,
+  "seconds": 204.5,
   "results": [
     {
       "target": "tlz/_build_tlz.py::TlzLoader._load_toolz",
@@ -369,7 +369,7 @@
       "witness": null,
       "strength": 3,
       "provenance": "",
-      "detail": "survived; inconclusive: all 64 argument sets raised on both sides"
+      "detail": "survived; inconclusive: all 61 argument sets raised on both sides"
     },
     {
       "target": "toolz/_signatures.py::check_partial",
@@ -524,12 +524,12 @@
     {
       "target": "toolz/_signatures.py::_is_arity",
       "kind": "drop_return",
-      "verdict": "unproven",
+      "verdict": "killed",
       "mutant": "def _is_arity(n, func):\n    if func not in signatures:\n        return None\n    sigs = signatures[func]\n    checks = [check_arity(n, sig) for sig in sigs]\n    if all(checks):\n        return True\n    elif any(checks):\n        return None\n    return None",
       "witness": null,
       "strength": 3,
       "provenance": "",
-      "detail": "survived; agree: 40 of 43 inputs exercised it, all agree"
+      "detail": ""
     },
     {
       "target": "toolz/_signatures.py::_is_arity",
@@ -564,12 +564,12 @@
     {
       "target": "toolz/_signatures.py::_has_varargs",
       "kind": "drop_return",
-      "verdict": "unproven",
+      "verdict": "killed",
       "mutant": "def _has_varargs(func):\n    if func not in signatures:\n        return None\n    sigs = signatures[func]\n    checks = [check_varargs(sig) for sig in sigs]\n    if all(checks):\n        return None\n    elif any(checks):\n        return None\n    return False",
       "witness": null,
       "strength": 3,
       "provenance": "",
-      "detail": "survived; agree: 14 of 22 inputs exercised it, all agree"
+      "detail": ""
     },
     {
       "target": "toolz/_signatures.py::_has_varargs",
@@ -589,7 +589,7 @@
       "witness": null,
       "strength": 3,
       "provenance": "",
-      "detail": "survived; agree: 14 of 22 inputs exercised it, all agree"
+      "detail": "survived; agree: 13 of 21 inputs exercised it, all agree"
     },
     {
       "target": "toolz/_signatures.py::_has_varargs",
@@ -664,12 +664,12 @@
     {
       "target": "toolz/_signatures.py::_has_keywords",
       "kind": "drop_return",
-      "verdict": "unproven",
+      "verdict": "killed",
       "mutant": "def _has_keywords(func):\n    if func not in signatures:\n        return None\n    sigs = signatures[func]\n    checks = [check_keywords(sig) for sig in sigs]\n    if all(checks):\n        return True\n    elif any(checks):\n        return None\n    return None",
       "witness": null,
       "strength": 3,
       "provenance": "",
-      "detail": "survived; agree: 19 of 22 inputs exercised it, all agree"
+      "detail": ""
     },
     {
       "target": "toolz/_signatures.py::_has_keywords",
@@ -2224,22 +2224,22 @@
     {
       "target": "toolz/functoolz.py::Compose._combined_annotations",
       "kind": "drop_not",
-      "verdict": "killed",
+      "verdict": "unproven",
       "mutant": "def _combined_annotations(self, annotation_format=None):\n    \"\"\" Combined type annotations for the composed callable.\n\n    Parameter annotations come from the first function applied in the\n    composition, and the return annotation comes from the last function\n    applied, as ``inspect.signature`` reports them (so this agrees with\n    ``__signature__``).  Functions without a signature contribute nothing.\n\n    ``annotation_format`` (Python 3.14+) is passed to\n    ``inspect.signature``.  With ``FORWARDREF`` or ``STRING``, which must\n    not raise ``NameError``, a function whose ``__signature__`` evaluates\n    annotations eagerly (e.g. ``curry``) and fails also contributes\n    nothing.\n\n    String annotations are returned as-is; ``typing.get_type_hints``\n    evaluates them in the namespace of the first function.\n    \"\"\"\n    if annotation_format is None:\n        kwargs = {}\n        lazy = False\n    else:\n        kwargs = {'annotation_format': annotation_format}\n        lazy = annotation_format != annotationlib.Format.VALUE\n\n    def annotations_of(func):\n        if isinstance(func, Compose):\n            return func._combined_annotations(annotation_format)\n        try:\n            sig = inspect.signature(func, **kwargs)\n        except (TypeError, ValueError):\n            return {}\n        except NameError:\n            if lazy:\n                raise\n            return {}\n        rv = {name: param.annotation for name, param in sig.parameters.items() if param.annotation is not param.empty}\n        if sig.return_annotation is not sig.empty:\n            rv['return'] = sig.return_annotation\n        return rv\n    annotations = annotations_of(self.first)\n    annotations.pop('return', None)\n    last = self.funcs[-1] if self.funcs else self.first\n    last_annotations = annotations_of(last)\n    if 'return' in last_annotations:\n        annotations['return'] = last_annotations['return']\n    return annotations",
       "witness": null,
       "strength": 3,
       "provenance": "",
-      "detail": ""
+      "detail": "survived; a method cannot be called without its instance, so no separating input was sought"
     },
     {
       "target": "toolz/functoolz.py::Compose._combined_annotations",
       "kind": "drop_raise",
-      "verdict": "killed",
+      "verdict": "unproven",
       "mutant": "def _combined_annotations(self, annotation_format=None):\n    \"\"\" Combined type annotations for the composed callable.\n\n    Parameter annotations come from the first function applied in the\n    composition, and the return annotation comes from the last function\n    applied, as ``inspect.signature`` reports them (so this agrees with\n    ``__signature__``).  Functions without a signature contribute nothing.\n\n    ``annotation_format`` (Python 3.14+) is passed to\n    ``inspect.signature``.  With ``FORWARDREF`` or ``STRING``, which must\n    not raise ``NameError``, a function whose ``__signature__`` evaluates\n    annotations eagerly (e.g. ``curry``) and fails also contributes\n    nothing.\n\n    String annotations are returned as-is; ``typing.get_type_hints``\n    evaluates them in the namespace of the first function.\n    \"\"\"\n    if annotation_format is None:\n        kwargs = {}\n        lazy = False\n    else:\n        kwargs = {'annotation_format': annotation_format}\n        lazy = annotation_format != annotationlib.Format.VALUE\n\n    def annotations_of(func):\n        if isinstance(func, Compose):\n            return func._combined_annotations(annotation_format)\n        try:\n            sig = inspect.signature(func, **kwargs)\n        except (TypeError, ValueError):\n            return {}\n        except NameError:\n            if not lazy:\n                pass\n            return {}\n        rv = {name: param.annotation for name, param in sig.parameters.items() if param.annotation is not param.empty}\n        if sig.return_annotation is not sig.empty:\n            rv['return'] = sig.return_annotation\n        return rv\n    annotations = annotations_of(self.first)\n    annotations.pop('return', None)\n    last = self.funcs[-1] if self.funcs else self.first\n    last_annotations = annotations_of(last)\n    if 'return' in last_annotations:\n        annotations['return'] = last_annotations['return']\n    return annotations",
       "witness": null,
       "strength": 3,
       "provenance": "",
-      "detail": ""
+      "detail": "survived; a method cannot be called without its instance, so no separating input was sought"
     },
     {
       "target": "toolz/functoolz.py::Compose._combined_annotations",
@@ -2864,12 +2864,12 @@
     {
       "target": "toolz/functoolz.py::is_arity",
       "kind": "drop_return",
-      "verdict": "unproven",
+      "verdict": "killed",
       "mutant": "def is_arity(n, func, sigspec=None):\n    \"\"\" Does a function have only n positional arguments?\n\n    This function relies on introspection and does not call the function.\n    Returns None if validity can't be determined.\n\n    >>> def f(x):\n    ...     return x\n    >>> is_arity(1, f)\n    True\n    >>> def g(x, y=1):\n    ...     return x + y\n    >>> is_arity(1, g)\n    False\n    \"\"\"\n    sigspec, rv = _check_sigspec(sigspec, func, _sigs._is_arity, n, func)\n    if sigspec is None:\n        return None\n    num = num_required_args(func, sigspec)\n    if num is not None:\n        num = num == n\n        if not num:\n            return False\n    varargs = has_varargs(func, sigspec)\n    if varargs:\n        return False\n    keywords = has_keywords(func, sigspec)\n    if keywords:\n        return False\n    if num is None or varargs is None or keywords is None:\n        return None\n    return True",
       "witness": null,
       "strength": 3,
       "provenance": "",
-      "detail": "survived; old_uncallable: old: NameError: name '_check_sigspec' is not defined"
+      "detail": ""
     },
     {
       "target": "toolz/functoolz.py::is_arity",
@@ -3119,7 +3119,7 @@
       "witness": null,
       "strength": 3,
       "provenance": "",
-      "detail": "the covering tests did not finish within 64s"
+      "detail": "the covering tests did not finish within 30s"
     },
     {
       "target": "toolz/itertoolz.py::unique",
@@ -4099,7 +4099,7 @@
       "witness": null,
       "strength": 3,
       "provenance": "",
-      "detail": "survived; inconclusive: 13 of 63 inputs disagree, but only where both versions raise or where the original rejects the input - not proof"
+      "detail": "survived; inconclusive: 13 of 63 inputs disagreed, but only because the function did not agree with its own repeat - not deterministic, so nothing here can be trusted as proof"
     },
     {
       "target": "toolz/itertoolz.py::random_sample",
