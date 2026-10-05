@@ -336,18 +336,26 @@ def compare(
     # nothing either way: the two versions never got to return a value to compare. It is
     # not agreement and it is not a gap, and it must not be read as either.
     blocked = [r for r in rows if r["old"][0] == "impure" or r["new"][0] == "impure"]
-    if blocked and not exercised:
+    remaining = [r for r in rows if r not in blocked]
+    # The first version of this only gave up when NOTHING was exercised, and otherwise
+    # dropped the blocked rows. With one argument set, where the original returned a
+    # value and the mutant tried to delete a file, that left no rows at all and the
+    # result came back "agree - 1 of 0 inputs exercised it, all agree". An argument set
+    # whose two sides never both returned cannot support either conclusion, so if
+    # nothing comparable survives, the honest answer is that nothing was established.
+    if blocked and not remaining:
         effects = sorted({r["old"][1] if r["old"][0] == "impure" else r["new"][1]
                           for r in blocked})
         return {
             "status": "inconclusive",
-            "detail": "every call tried to leave the process ("
-                      + ", ".join(effects[:3])
-                      + "); proving this would mean running its side effects",
+            "detail": "every call that could have decided this tried to leave the "
+                      "process (" + ", ".join(effects[:3])
+                      + "); proving it would mean running its side effects",
             "tried": len(rows),
         }
-    rows = [r for r in rows if r not in blocked]
+    rows = remaining
     disagreements = [r for r in disagreements if r not in blocked]
+    exercised = [r for r in rows if r["old"][0] == "ok" or r["new"][0] == "ok"]
 
     if not exercised:
         # Every input raised on both sides: the arguments were wrong for this function

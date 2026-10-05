@@ -55,3 +55,51 @@ def test_proof_step_cannot_touch_the_machine(tmp_path):
     assert probe.exists(), "the guarded calls changed the filesystem"
     assert probe.read_text(encoding="utf-8") == "keep me"
     assert guard[0] is False, "the guard was left on, which would affect the tool's own I/O"
+
+
+def test_a_blocked_call_is_inconclusive_not_agreement(tmp_path):
+    """One blocked argument set must not come back as "all agree".
+
+    The guard was added first and this hole came with it. Blocked rows were dropped from
+    the comparison, and the give-up branch only fired when NOTHING had been exercised.
+    With a single argument set - the original returning a value, the mutant trying to
+    delete a file - that left no rows at all, and compare() answered
+    "agree: 1 of 0 inputs exercised it, all agree".
+
+    Nothing was established there. An argument set whose two sides never both returned
+    cannot support agreement or a gap, and saying "agree" is the clean bill of health
+    this whole module exists to refuse.
+    """
+    from suite_auditor.differential import compare
+
+    canary = tmp_path / "keep.txt"
+    canary.write_text("important", encoding="utf-8")
+
+    old = "\n".join(
+        [
+            "def purge(path, dry_run=True):",
+            "    if dry_run:",
+            '        return "would delete"',
+            "    os.remove(path)",
+            '    return "deleted"',
+            "",
+        ]
+    )
+    # An ordinary mutation operator: negate the condition. Under the unguarded proof
+    # step this became a real os.remove on a real path.
+    mutant = old.replace("    if dry_run:", "    if not dry_run:")
+
+    outcome = compare(
+        header="import os",
+        old=old,
+        new=mutant,
+        func="purge",
+        argsets=[f"({str(canary)!r},)"],
+        timeout=60,
+    )
+
+    assert outcome["status"] == "inconclusive", outcome
+    assert "leave the process" in outcome["detail"]
+    assert "os.remove" in outcome["detail"]
+    assert canary.exists(), "the proof step deleted the file it was asked about"
+    assert canary.read_text(encoding="utf-8") == "important"
