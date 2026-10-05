@@ -151,12 +151,62 @@ def _render(value):
 _NOEQ = object()
 
 
+class _SideEffect(BaseException):
+    # BaseException, not Exception: a function that wraps its own file write in
+    # `except Exception` would otherwise swallow the block and the run would report a
+    # value as if the call had been clean.
+    pass
+
+
+_GUARD = [False]
+
+# Audit events that leave the process: anything that writes, deletes, renames, spawns or
+# connects. Blocking them is the whole point - the proof step only needs a return value,
+# and it has no business changing the machine to get one.
+_BLOCKED = (
+    "os.remove", "os.unlink", "os.rename", "os.replace", "os.rmdir", "os.mkdir",
+    "os.truncate", "os.chmod", "os.chown", "os.link", "os.symlink", "os.system",
+    "os.exec", "os.spawn", "os.posix_spawn", "os.fork", "os.forkpty", "os.kill",
+    "os.putenv", "os.unsetenv", "os.scandir",
+    "shutil.", "subprocess.", "socket.connect", "socket.bind", "socket.sendto",
+    "urllib.Request", "ftplib.", "smtplib.", "webbrowser.open", "sqlite3.connect",
+    "winreg.", "ctypes.dlopen", "ctypes.call_function",
+)
+
+
+def _audit(event, args):
+    if not _GUARD[0]:
+        return
+    if event == "open":
+        # args is (path, mode, flags); reading is fine, writing is not.
+        mode = str(args[1]) if len(args) > 1 and args[1] else ""
+        if any(ch in mode for ch in "wax+"):
+            raise _SideEffect("open(mode=" + mode + ")")
+        return
+    for prefix in _BLOCKED:
+        if event == prefix or event.startswith(prefix):
+            raise _SideEffect(event)
+
+
+sys.addaudithook(_audit)
+
+
 def _call(fn, args, kwargs):
+    # The guard is on ONLY for the call itself. Proving a mutant by running the real
+    # function used to mean running its side effects too: auditing a file tool whose
+    # test passes a real path deleted that path, and the report still said "no provable
+    # gap found" - a clean bill of health and a lost file in the same run. A survivor
+    # that cannot be proven without touching the machine stays unproven instead.
+    _GUARD[0] = True
     try:
         text, value = _render(fn(*args, **kwargs))
         return ("ok", _norm(text)), value
+    except _SideEffect as effect:
+        return ("impure", _norm(str(effect))), _NOEQ
     except Exception as exc:
         return ("raise", _norm(type(exc).__name__ + ": " + str(exc)[:200])), _NOEQ
+    finally:
+        _GUARD[0] = False
 
 
 def _equal(x, y):
@@ -281,6 +331,23 @@ def compare(
     unstable = [r for r in disagreements if r.get("nondeterministic")]
     disagreements = [r for r in disagreements if not r.get("nondeterministic")]
     exercised = [r for r in rows if r["old"][0] == "ok" or r["new"][0] == "ok"]
+
+    # A call blocked for touching the filesystem, the network or another process proves
+    # nothing either way: the two versions never got to return a value to compare. It is
+    # not agreement and it is not a gap, and it must not be read as either.
+    blocked = [r for r in rows if r["old"][0] == "impure" or r["new"][0] == "impure"]
+    if blocked and not exercised:
+        effects = sorted({r["old"][1] if r["old"][0] == "impure" else r["new"][1]
+                          for r in blocked})
+        return {
+            "status": "inconclusive",
+            "detail": "every call tried to leave the process ("
+                      + ", ".join(effects[:3])
+                      + "); proving this would mean running its side effects",
+            "tried": len(rows),
+        }
+    rows = [r for r in rows if r not in blocked]
+    disagreements = [r for r in disagreements if r not in blocked]
 
     if not exercised:
         # Every input raised on both sides: the arguments were wrong for this function
