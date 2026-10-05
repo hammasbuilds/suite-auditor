@@ -29,9 +29,12 @@ It never modifies your files: the audit runs on a scratch copy of the repository
 ## Install
 
 ```bash
-pipx install suite-auditor        # or: uv tool install suite-auditor
-                                  # or: pip install suite-auditor
+pip install git+https://github.com/hammasbuilds/suite-auditor
+# or: pipx install git+https://github.com/hammasbuilds/suite-auditor
 ```
+
+PyPI release coming: `pip install suite-auditor` (or `pipx` / `uv tool install`) will work
+once it is published.
 
 No runtime dependencies. suite-auditor runs **your project's** tests with **your
 project's** interpreter, so pytest and the project's dependencies must be installed
