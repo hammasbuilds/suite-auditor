@@ -7,7 +7,8 @@ and the *gaps* lead, each with the input that proves it.
 Three things are kept apart that a single number would merge:
 
 - **proven gaps** - the suite passed and there is an input on which the mutant differs
-- **unproven survivors** - the suite passed and no separating input was found. Possibly
+- **unproven survivors** - the suite passed and no separating input was found, which has
+  several causes and only one of them is about the suite: see `unproven_by_reason`. Possibly
   equivalent mutants; possibly a failure of the input generator. Either way not evidence.
 - **uncovered functions** - no test reaches them at all. Not a mutation result, and the
   cheapest finding in the report.
@@ -70,7 +71,8 @@ def summary(audit: Audit, repo_name: str) -> str:
         f"  PROVEN GAPS        : {len(audit.gaps)}  "
         f"({len(audit.strong_gaps)} with an unarguable witness)",
         f"  unproven survivors : {counts.get('unproven', 0)}  "
-        "(possibly equivalent mutants; not counted as gaps)",
+        "(not counted as gaps; by reason below)",
+        *_unproven_lines(audit),
         f"  uncovered functions: {len(audit.uncovered)}  (no test reaches them at all)",
     ]
     if audit.failing_only:
@@ -169,6 +171,67 @@ def summary(audit: Audit, repo_name: str) -> str:
     return "\n".join(ln for ln in lines if ln != "")
 
 
+# Why a survivor was not proven. The bucket is mostly the prover's reach rather than a
+# property of the suite, and reporting one total let "possibly equivalent mutants" stand
+# for all of it. Keyed off each result's own `detail`, so nothing new is computed.
+UNPROVEN_REASONS = (
+    ("method", "a method, which cannot be called without its instance"),
+    ("no_input", "no valid input could be built - every argument set raised on both sides"),
+    ("both_raised", "disagreed only where both versions raised, so it is not proof"),
+    ("old_uncallable", "the unmutated function could not be called either"),
+    ("equivalent", "ran on real inputs and agreed - possibly an equivalent mutant"),
+    ("other", "not classified"),
+)
+
+
+def unproven_reason(detail: str) -> str:
+    """Which of UNPROVEN_REASONS this survivor's detail describes."""
+    text = (detail or "").lower()
+    if "a method cannot be called" in text:
+        return "method"
+    if "old_uncallable" in text:
+        return "old_uncallable"
+    if "argument sets raised on both sides" in text:
+        return "no_input"
+    if "only where both versions" in text or "only because the function" in text:
+        return "both_raised"
+    if "all agree" in text:
+        return "equivalent"
+    return "other"
+
+
+def unproven_breakdown(audit) -> dict:
+    """Counts per reason, in UNPROVEN_REASONS order, omitting the empty ones."""
+    tally: dict[str, int] = {}
+    for result in audit.results:
+        if str(getattr(result.verdict, "value", result.verdict)) != "unproven":
+            continue
+        key = unproven_reason(getattr(result, "detail", "") or "")
+        tally[key] = tally.get(key, 0) + 1
+    return {key: tally[key] for key, _ in UNPROVEN_REASONS if key in tally}
+
+
+def _unproven_lines(audit) -> list[str]:
+    """The unproven count broken out by reason, indented under it.
+
+    Most of the bucket is this tool's reach rather than a property of the suite - on toolz
+    5 of 31 ran on a real input and agreed, while 24 are methods or were never validly
+    called - so one total let "possibly equivalent mutants" stand for all of it.
+    """
+    breakdown = unproven_breakdown(audit)
+    if not breakdown:
+        return []
+    labels = dict(UNPROVEN_REASONS)
+    out = [f"      {n:>4}  {labels[key]}" for key, n in breakdown.items()]
+    agreed, total = breakdown.get("equivalent", 0), sum(breakdown.values())
+    if total and agreed != total:
+        out.append(
+            f"      only {agreed} of {total} ran on a real input and agreed; the rest is"
+        )
+        out.append("      this tool's reach, not evidence about the suite")
+    return out
+
+
 def _health_json(health: object) -> dict | None:
     """The baseline suite run, including the two members `asdict` would drop.
 
@@ -216,6 +279,10 @@ def write_json(audit: Audit, path: Path) -> None:
                 "planned_mutants": audit.planned_mutants,
                 "audited_functions": audit.audited_functions,
                 "stray": audit.stray,
+                # Why each survivor was not proven. Without it a consumer sees one
+                # `unproven` count and cannot tell "the suite might not catch this" from
+                # "this tool never managed to call the function".
+                "unproven_by_reason": unproven_breakdown(audit),
                 "suite_health": _health_json(audit.health),
                 "results": [r.as_row() for r in audit.results],
             },
@@ -245,8 +312,10 @@ def write_markdown(audit: Audit, path: Path, repo_name: str) -> None:
         "",
         "A gap is a mutant the suite did not catch **and** for which there is a concrete",
         "input showing it behaves differently from the original. Survivors without such an",
-        "input are listed separately - some are equivalent mutants and no test could catch",
-        "them, so counting them here would inflate the number in a way nobody can check.",
+        "input are listed separately, with the reason for each. Some are equivalent mutants",
+        "no test could catch; most are functions this tool could not validly call, which is",
+        "a fact about the tool and not about the suite. Counting any of them as gaps would",
+        "inflate the number in a way nobody can check.",
         "",
     ]
     if audit.gaps:
@@ -277,6 +346,14 @@ def write_markdown(audit: Audit, path: Path, repo_name: str) -> None:
             "## Survivors with no separating input",
             "",
             f"{len(unproven)} mutants survived the suite and could not be shown to differ.",
-            "Some of these are equivalent to the original. They are not counted as gaps.",
+            "They are not counted as gaps. Only one of the reasons below is about the test",
+            "suite; the rest is how far this tool could reach.",
+            "",
+            "| why it was not proven | mutants |",
+            "|---|---:|",
+            *[
+                f"| {dict(UNPROVEN_REASONS)[key]} | {n} |"
+                for key, n in unproven_breakdown(audit).items()
+            ],
         ]
     path.write_text("\n".join(out) + "\n", encoding="utf-8", newline="")

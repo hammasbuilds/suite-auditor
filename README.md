@@ -5,7 +5,7 @@
   <a href="https://github.com/hammasbuilds/suite-auditor/actions/workflows/ci.yml"><img src="https://github.com/hammasbuilds/suite-auditor/actions/workflows/ci.yml/badge.svg" alt="ci"></a>
   <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="python">
   <img src="https://img.shields.io/badge/runtime%20deps-0-brightgreen" alt="zero dependencies">
-  <img src="https://img.shields.io/badge/tests-116-brightgreen" alt="tests">
+  <img src="https://img.shields.io/badge/tests-117-brightgreen" alt="tests">
   <a href="https://github.com/hammasbuilds/suite-auditor/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="license"></a>
 </p>
 
@@ -94,7 +94,11 @@ SUITE AUDIT - pricing
   mutants scored     : 17
   killed by the suite: 13  (76.5%)
   PROVEN GAPS        : 2  (2 with an unarguable witness)
-  unproven survivors : 2  (possibly equivalent mutants; not counted as gaps)
+  unproven survivors : 2  (not counted as gaps; by reason below)
+         1  disagreed only where both versions raised, so it is not proof
+         1  ran on real inputs and agreed - possibly an equivalent mutant
+      only 1 of 2 ran on a real input and agreed; the rest is
+      this tool's reach, not evidence about the suite
   uncovered functions: 1  (no test reaches them at all)
   covered fraction   : 75.0%  (3 of 4 functions)
   CAUGHT SHARE       : 57.4%  (kill rate x covered fraction - the share of the whole package
@@ -196,12 +200,31 @@ is never exit 0.
 | caught share (kill rate x covered fraction) | 83.1% | 35.2% |
 | proven gaps | **0** | **7** (6 on a call the tests really made) |
 | unproven survivors | 31 | 54 |
+| &nbsp;&nbsp;of those: ran on a real input and agreed | 5 | 12 |
+| &nbsp;&nbsp;a method, which cannot be called without its instance | 8 | 19 |
+| &nbsp;&nbsp;no valid input could be built | 12 | 20 |
+| &nbsp;&nbsp;disagreed only where both versions raised | 4 | 3 |
+| &nbsp;&nbsp;the unmutated function could not be called either | 2 | 0 |
 
-`toolz` is a functional library maintained since 2013; its suite killed 387 of 418 mutants
-and the tool could not prove a single survivor wrong on an admissible input. `repo-surgeon`
-is one of mine, whose README said "47 tests": 42% of its functions are reached by no test,
-and four of its gaps are calls the suite made and then accepted a different answer for,
-e.g. `_looks_like_number('src_path')` returning `True` instead of `False`.
+**Read the unproven rows before the gap rows.** Only the first of them is about the test
+suite. The other three quarters are how far this tool could reach: a function it never
+managed to hand a valid argument is a fact about the tool, and one that ran and refused is
+a fact about the package. So `toolz`'s **0** is not by itself evidence that the suite is
+good - a prover that proved nothing anywhere would also score 0, and 24 of those 31
+survivors were never run on a real input at all. What the 0 does establish is narrower and
+still worth stating: of the 9 toolz survivors this tool did exercise, 5 agreed on every
+input and 4 disagreed only where both versions raised, which is not proof of anything.
+
+`toolz` is a functional library maintained since 2013; its suite killed 387 of 418 mutants.
+`repo-surgeon` is one of mine, whose README said "47 tests": 42% of its functions are
+reached by no test, and four of its gaps are calls the suite made and then accepted a
+different answer for, e.g. `_looks_like_number('src_path')` returning `True` instead of
+`False`.
+
+**What is missing here, and is the honest next step:** no study plants known gaps and
+measures what share of them the prover proves. Without that, the prover's sensitivity is
+unmeasured, and these two columns cannot separate "this suite is thorough" from "this tool
+is quiet". `flake-detective`'s `scripts/inject_and_score.py` is the working template.
 
 Both columns were re-run on 2026-10-04 on Python 3.12, toolz at upstream commit `451af60`
 (`sh scripts/reproduce_toolz.sh`) and repo-surgeon at `d69c12d` (command in

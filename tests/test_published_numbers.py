@@ -73,3 +73,53 @@ def test_the_two_audit_table_is_the_committed_runs(column, name):
     assert cell("unproven survivors") == str(counts.get("unproven", 0))
     assert cell("proven gaps").startswith(str(run["proven_gaps"]))
     assert cell("**reached by no test**").startswith(str(len(run["uncovered"])))
+
+
+def test_the_readme_unproven_breakdown_matches_the_committed_audits():
+    """The README's unproven rows must equal what the audit JSONs actually contain.
+
+    The bucket used to be published as one number labelled "possibly equivalent mutants",
+    which is true of 5 of toolz's 31 and 12 of repo-surgeon's 54 - the rest is how far the
+    prover could reach. Now that the breakdown is in the table, it is a set of numbers a
+    reader can check, so it is checked here: hand-maintained tables drift.
+    """
+    import collections
+    import json
+
+    from suite_auditor.report import unproven_reason
+
+    readme = README.read_text(encoding="utf-8")
+    rows = {
+        "ran on a real input and agreed": "equivalent",
+        "a method, which cannot be called without its instance": "method",
+        "no valid input could be built": "no_input",
+        "disagreed only where both versions raised": "both_raised",
+        "the unmutated function could not be called either": "old_uncallable",
+    }
+    audits = {}
+    for name, path in (
+        ("toolz", "docs/audit-toolz.json"),
+        ("repo-surgeon", "docs/audit-repo-surgeon.json"),
+    ):
+        data = json.loads((README.parent / path).read_text(encoding="utf-8"))
+        audits[name] = collections.Counter(
+            unproven_reason(r.get("detail") or "")
+            for r in data["results"]
+            if r.get("verdict") == "unproven"
+        )
+
+    for label, key in rows.items():
+        line = next((ln for ln in readme.splitlines() if label in ln and ln.startswith("|")), None)
+        assert line is not None, f"the README has no row for {label!r}"
+        cells = [c.strip() for c in line.strip("|").split("|")]
+        claimed = [int(c) for c in cells[1:3]]
+        actual = [audits["toolz"][key], audits["repo-surgeon"][key]]
+        assert claimed == actual, f"{label}: README says {claimed}, audits say {actual}"
+
+    # And the parts must still add up to the total the table publishes.
+    for name, column in (("toolz", 1), ("repo-surgeon", 2)):
+        total_line = next(
+            ln for ln in readme.splitlines() if ln.startswith("| unproven survivors |")
+        )
+        total = int([c.strip() for c in total_line.strip("|").split("|")][column])
+        assert total == sum(audits[name].values()), f"{name}: total {total} != parts"
