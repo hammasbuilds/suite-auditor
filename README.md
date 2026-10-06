@@ -5,7 +5,7 @@
   <a href="https://github.com/hammasbuilds/suite-auditor/actions/workflows/ci.yml"><img src="https://github.com/hammasbuilds/suite-auditor/actions/workflows/ci.yml/badge.svg" alt="ci"></a>
   <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="python">
   <img src="https://img.shields.io/badge/runtime%20deps-0-brightgreen" alt="zero dependencies">
-  <img src="https://img.shields.io/badge/tests-120-brightgreen" alt="tests">
+  <img src="https://img.shields.io/badge/tests-121-brightgreen" alt="tests">
   <a href="https://github.com/hammasbuilds/suite-auditor/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="license"></a>
 </p>
 
@@ -189,22 +189,23 @@ Exit status: **0** finished; **1** `--fail-on-gap` and a gap was proven; **2** c
 audit - bad path, pytest missing, or nothing could be traced or scored. "Nothing scored"
 is never exit 0.
 
-## Two real audits
+## Three real audits
 
-| | [`toolz`](https://github.com/pytoolz/toolz) | [`repo-surgeon`](https://github.com/hammasbuilds/repo-surgeon) |
-|---|---:|---:|
-| functions in the package | 157 | 67 |
-| **reached by no test** | 15 | **28 (42%)** |
-| mutants scored | 418 | 154 |
-| **kill rate** | **92.6%** | **60.4%** |
-| caught share (kill rate x covered fraction) | 83.1% | 35.2% |
-| proven gaps | **0** | **7** (6 on a call the tests really made) |
-| unproven survivors | 31 | 54 |
-| &nbsp;&nbsp;of those: ran on a real input and agreed | 5 | 12 |
-| &nbsp;&nbsp;a method, which cannot be called without its instance | 8 | 19 |
-| &nbsp;&nbsp;no valid input could be built | 12 | 20 |
-| &nbsp;&nbsp;disagreed only where both versions raised | 4 | 3 |
-| &nbsp;&nbsp;the unmutated function could not be called either | 2 | 0 |
+| | [`toolz`](https://github.com/pytoolz/toolz) | [`tomli`](https://github.com/hukkin/tomli) | [`repo-surgeon`](https://github.com/hammasbuilds/repo-surgeon) |
+|---|---:|---:|---:|
+| third-party? | yes | yes | **no — mine** |
+| functions in the package | 157 | 39 | 67 |
+| **reached by no test** | 15 | **0** | **28 (42%)** |
+| mutants scored | 418 | 154 | 154 |
+| **kill rate** | **92.6%** | **97.4%** | **60.4%** |
+| caught share (kill rate x covered fraction) | 83.1% | **97.4%** | 35.2% |
+| proven gaps | **0** | **0** | **7** (6 on a call the tests really made) |
+| unproven survivors | 31 | 4 | 54 |
+| &nbsp;&nbsp;of those: ran on a real input and agreed | 5 | 1 | 12 |
+| &nbsp;&nbsp;a method, which cannot be called without its instance | 8 | 1 | 19 |
+| &nbsp;&nbsp;no valid input could be built | 12 | 2 | 20 |
+| &nbsp;&nbsp;disagreed only where both versions raised | 4 | 0 | 3 |
+| &nbsp;&nbsp;the unmutated function could not be called either | 2 | 0 | 0 |
 
 **Read the unproven rows before the gap rows.** Only the first of them is about the test
 suite. The other three quarters are how far this tool could reach: a function it never
@@ -216,10 +217,19 @@ still worth stating: of the 9 toolz survivors this tool did exercise, 5 agreed o
 input and 4 disagreed only where both versions raised, which is not proof of anything.
 
 `toolz` is a functional library maintained since 2013; its suite killed 387 of 418 mutants.
-`repo-surgeon` is one of mine, whose README said "47 tests": 42% of its functions are
-reached by no test, and four of its gaps are calls the suite made and then accepted a
-different answer for, e.g. `_looks_like_number('src_path')` returning `True` instead of
-`False`.
+`tomli` is a TOML parser whose suite reaches **every** function and kills 97.4% of mutants -
+the highest here, and the cleanest sheet this tool has produced. `repo-surgeon` is one of
+mine, whose README said "47 tests": 42% of its functions are reached by no test, and four of
+its gaps are calls the suite made and then accepted a different answer for, e.g.
+`_looks_like_number('src_path')` returning `True` instead of `False`.
+
+**Two third-party nulls and one self-audit full of gaps is the shape to be suspicious of**,
+and it is why the sensitivity study below exists: *every* positive finding here is in my own
+repository, so the two zeroes have to be shown to be the suite's doing and not the prover's
+silence. [`docs/SENSITIVITY.md`](docs/SENSITIVITY.md) plants gaps in `toolz`'s own tests and
+measures what share the prover proves - **0 of 2 before a fix it found, 2 of 2 after.** So
+the zeroes mean something: the prover demonstrably proves a planted gap in the same module
+where it reports none.
 
 **How often does the prover prove a gap that is really there?** That question is what
 makes the `0` above mean anything, and it is now measured:

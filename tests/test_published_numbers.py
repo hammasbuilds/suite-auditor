@@ -59,8 +59,13 @@ def _row(label: str) -> str:
     return next(line for line in text.splitlines() if line.startswith(f"| {label}"))
 
 
-@pytest.mark.parametrize("column, name", [(0, "toolz"), (1, "repo-surgeon")])
-def test_the_two_audit_table_is_the_committed_runs(column, name):
+# Column order in the README table. Parametrised rather than hardcoded per test,
+# because adding `tomli` as a third target shifted repo-surgeon from 1 to 2 and the
+# indices were the only thing that noticed.
+@pytest.mark.parametrize(
+    "column, name", [(0, "toolz"), (1, "tomli"), (2, "repo-surgeon")]
+)
+def test_the_audit_table_is_the_committed_runs(column, name):
     run = json.loads((ROOT / "docs" / f"audit-{name}.json").read_text(encoding="utf-8"))
     counts = run["counts"]
 
@@ -99,6 +104,7 @@ def test_the_readme_unproven_breakdown_matches_the_committed_audits():
     audits = {}
     for name, path in (
         ("toolz", "docs/audit-toolz.json"),
+        ("tomli", "docs/audit-tomli.json"),
         ("repo-surgeon", "docs/audit-repo-surgeon.json"),
     ):
         data = json.loads((README.parent / path).read_text(encoding="utf-8"))
@@ -112,12 +118,12 @@ def test_the_readme_unproven_breakdown_matches_the_committed_audits():
         line = next((ln for ln in readme.splitlines() if label in ln and ln.startswith("|")), None)
         assert line is not None, f"the README has no row for {label!r}"
         cells = [c.strip() for c in line.strip("|").split("|")]
-        claimed = [int(c) for c in cells[1:3]]
-        actual = [audits["toolz"][key], audits["repo-surgeon"][key]]
+        claimed = [int(c) for c in cells[1:4]]
+        actual = [audits[n][key] for n in ("toolz", "tomli", "repo-surgeon")]
         assert claimed == actual, f"{label}: README says {claimed}, audits say {actual}"
 
     # And the parts must still add up to the total the table publishes.
-    for name, column in (("toolz", 1), ("repo-surgeon", 2)):
+    for name, column in (("toolz", 1), ("tomli", 2), ("repo-surgeon", 3)):
         total_line = next(
             ln for ln in readme.splitlines() if ln.startswith("| unproven survivors |")
         )

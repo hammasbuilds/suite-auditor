@@ -1,0 +1,1578 @@
+{
+  "counts": {
+    "killed": 150,
+    "unproven": 4
+  },
+  "kill_rate": 0.974025974025974,
+  "covered_total": 39,
+  "covered_fraction": 1.0,
+  "caught_share": 0.974025974025974,
+  "proven_gaps": 0,
+  "strong_gaps": 0,
+  "uncovered": [],
+  "failing_only": [],
+  "seconds": 99.2,
+  "no_targets": false,
+  "scored": 154,
+  "stopped_early": false,
+  "planned_mutants": 154,
+  "audited_functions": 34,
+  "stray": [],
+  "unproven_by_reason": {
+    "method": 1,
+    "no_input": 2,
+    "equivalent": 1
+  },
+  "suite_health": {
+    "ran": true,
+    "exit_code": 0,
+    "passed": 17,
+    "failed": 0,
+    "errors": 0,
+    "collected_nothing": false,
+    "clean": true,
+    "caveat": ""
+  },
+  "results": [
+    {
+      "target": "src/tomli/_parser.py::TOMLDecodeError.__init__",
+      "kind": "boolop",
+      "verdict": "killed",
+      "mutant": "def __init__(self, msg: str | type[DEPRECATED_DEFAULT]=DEPRECATED_DEFAULT, doc: str | type[DEPRECATED_DEFAULT]=DEPRECATED_DEFAULT, pos: Pos | type[DEPRECATED_DEFAULT]=DEPRECATED_DEFAULT, *args: Any):\n    if args and (not isinstance(msg, str)) and (not isinstance(doc, str)) and (not isinstance(pos, int)):\n        import warnings\n        warnings.warn(\"Free-form arguments for TOMLDecodeError are deprecated. Please set 'msg' (str), 'doc' (str) and 'pos' (int) arguments only.\", DeprecationWarning, stacklevel=2)\n        if pos is not DEPRECATED_DEFAULT:\n            args = (pos, *args)\n        if doc is not DEPRECATED_DEFAULT:\n            args = (doc, *args)\n        if msg is not DEPRECATED_DEFAULT:\n            args = (msg, *args)\n        ValueError.__init__(self, *args)\n        return\n    lineno = doc.count('\\n', 0, pos) + 1\n    if lineno == 1:\n        colno = pos + 1\n    else:\n        colno = pos - doc.rindex('\\n', 0, pos)\n    if pos >= len(doc):\n        coord_repr = 'end of document'\n    else:\n        coord_repr = f'line {lineno}, column {colno}'\n    errmsg = f'{msg} (at {coord_repr})'\n    ValueError.__init__(self, errmsg)\n    self.msg = msg\n    self.doc = doc\n    self.pos = pos\n    self.lineno = lineno\n    self.colno = colno",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::TOMLDecodeError.__init__",
+      "kind": "binop",
+      "verdict": "killed",
+      "mutant": "def __init__(self, msg: str | type[DEPRECATED_DEFAULT]=DEPRECATED_DEFAULT, doc: str | type[DEPRECATED_DEFAULT]=DEPRECATED_DEFAULT, pos: Pos | type[DEPRECATED_DEFAULT]=DEPRECATED_DEFAULT, *args: Any):\n    if args or not isinstance(msg, str) or (not isinstance(doc, str)) or (not isinstance(pos, int)):\n        import warnings\n        warnings.warn(\"Free-form arguments for TOMLDecodeError are deprecated. Please set 'msg' (str), 'doc' (str) and 'pos' (int) arguments only.\", DeprecationWarning, stacklevel=2)\n        if pos is not DEPRECATED_DEFAULT:\n            args = (pos, *args)\n        if doc is not DEPRECATED_DEFAULT:\n            args = (doc, *args)\n        if msg is not DEPRECATED_DEFAULT:\n            args = (msg, *args)\n        ValueError.__init__(self, *args)\n        return\n    lineno = doc.count('\\n', 0, pos) - 1\n    if lineno == 1:\n        colno = pos + 1\n    else:\n        colno = pos - doc.rindex('\\n', 0, pos)\n    if pos >= len(doc):\n        coord_repr = 'end of document'\n    else:\n        coord_repr = f'line {lineno}, column {colno}'\n    errmsg = f'{msg} (at {coord_repr})'\n    ValueError.__init__(self, errmsg)\n    self.msg = msg\n    self.doc = doc\n    self.pos = pos\n    self.lineno = lineno\n    self.colno = colno",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::TOMLDecodeError.__init__",
+      "kind": "drop_not",
+      "verdict": "killed",
+      "mutant": "def __init__(self, msg: str | type[DEPRECATED_DEFAULT]=DEPRECATED_DEFAULT, doc: str | type[DEPRECATED_DEFAULT]=DEPRECATED_DEFAULT, pos: Pos | type[DEPRECATED_DEFAULT]=DEPRECATED_DEFAULT, *args: Any):\n    if args or isinstance(msg, str) or (not isinstance(doc, str)) or (not isinstance(pos, int)):\n        import warnings\n        warnings.warn(\"Free-form arguments for TOMLDecodeError are deprecated. Please set 'msg' (str), 'doc' (str) and 'pos' (int) arguments only.\", DeprecationWarning, stacklevel=2)\n        if pos is not DEPRECATED_DEFAULT:\n            args = (pos, *args)\n        if doc is not DEPRECATED_DEFAULT:\n            args = (doc, *args)\n        if msg is not DEPRECATED_DEFAULT:\n            args = (msg, *args)\n        ValueError.__init__(self, *args)\n        return\n    lineno = doc.count('\\n', 0, pos) + 1\n    if lineno == 1:\n        colno = pos + 1\n    else:\n        colno = pos - doc.rindex('\\n', 0, pos)\n    if pos >= len(doc):\n        coord_repr = 'end of document'\n    else:\n        coord_repr = f'line {lineno}, column {colno}'\n    errmsg = f'{msg} (at {coord_repr})'\n    ValueError.__init__(self, errmsg)\n    self.msg = msg\n    self.doc = doc\n    self.pos = pos\n    self.lineno = lineno\n    self.colno = colno",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::TOMLDecodeError.__init__",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def __init__(self, msg: str | type[DEPRECATED_DEFAULT]=DEPRECATED_DEFAULT, doc: str | type[DEPRECATED_DEFAULT]=DEPRECATED_DEFAULT, pos: Pos | type[DEPRECATED_DEFAULT]=DEPRECATED_DEFAULT, *args: Any):\n    if args or not isinstance(msg, str) or (not isinstance(doc, str)) or (not isinstance(pos, int)):\n        import warnings\n        warnings.warn(\"Free-form arguments for TOMLDecodeError are deprecated. Please set 'msg' (str), 'doc' (str) and 'pos' (int) arguments only.\", DeprecationWarning, stacklevel=2)\n        if pos is DEPRECATED_DEFAULT:\n            args = (pos, *args)\n        if doc is not DEPRECATED_DEFAULT:\n            args = (doc, *args)\n        if msg is not DEPRECATED_DEFAULT:\n            args = (msg, *args)\n        ValueError.__init__(self, *args)\n        return\n    lineno = doc.count('\\n', 0, pos) + 1\n    if lineno == 1:\n        colno = pos + 1\n    else:\n        colno = pos - doc.rindex('\\n', 0, pos)\n    if pos >= len(doc):\n        coord_repr = 'end of document'\n    else:\n        coord_repr = f'line {lineno}, column {colno}'\n    errmsg = f'{msg} (at {coord_repr})'\n    ValueError.__init__(self, errmsg)\n    self.msg = msg\n    self.doc = doc\n    self.pos = pos\n    self.lineno = lineno\n    self.colno = colno",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::TOMLDecodeError.__init__",
+      "kind": "const",
+      "verdict": "unproven",
+      "mutant": "def __init__(self, msg: str | type[DEPRECATED_DEFAULT]=DEPRECATED_DEFAULT, doc: str | type[DEPRECATED_DEFAULT]=DEPRECATED_DEFAULT, pos: Pos | type[DEPRECATED_DEFAULT]=DEPRECATED_DEFAULT, *args: Any):\n    if args or not isinstance(msg, str) or (not isinstance(doc, str)) or (not isinstance(pos, int)):\n        import warnings\n        warnings.warn(\"Free-form arguments for TOMLDecodeError are deprecated. Please set 'msg' (str), 'doc' (str) and 'pos' (int) arguments only.\", DeprecationWarning, stacklevel=3)\n        if pos is not DEPRECATED_DEFAULT:\n            args = (pos, *args)\n        if doc is not DEPRECATED_DEFAULT:\n            args = (doc, *args)\n        if msg is not DEPRECATED_DEFAULT:\n            args = (msg, *args)\n        ValueError.__init__(self, *args)\n        return\n    lineno = doc.count('\\n', 0, pos) + 1\n    if lineno == 1:\n        colno = pos + 1\n    else:\n        colno = pos - doc.rindex('\\n', 0, pos)\n    if pos >= len(doc):\n        coord_repr = 'end of document'\n    else:\n        coord_repr = f'line {lineno}, column {colno}'\n    errmsg = f'{msg} (at {coord_repr})'\n    ValueError.__init__(self, errmsg)\n    self.msg = msg\n    self.doc = doc\n    self.pos = pos\n    self.lineno = lineno\n    self.colno = colno",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; a method cannot be called without its instance, so no separating input was sought"
+    },
+    {
+      "target": "src/tomli/_parser.py::load",
+      "kind": "drop_raise",
+      "verdict": "killed",
+      "mutant": "def load(__fp: IO[bytes], *, parse_float: ParseFloat=float) -> dict[str, Any]:\n    \"\"\"Parse TOML from a binary file object.\"\"\"\n    b = __fp.read()\n    try:\n        s = b.decode()\n    except AttributeError:\n        pass\n    return loads(s, parse_float=parse_float)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::load",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def load(__fp: IO[bytes], *, parse_float: ParseFloat=float) -> dict[str, Any]:\n    \"\"\"Parse TOML from a binary file object.\"\"\"\n    b = __fp.read()\n    try:\n        s = b.decode()\n    except AttributeError:\n        raise TypeError(\"File must be opened in binary mode, e.g. use `open('foo.toml', 'rb')`\") from None\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::loads",
+      "kind": "binop",
+      "verdict": "killed",
+      "mutant": "def loads(__s: str, *, parse_float: ParseFloat=float) -> dict[str, Any]:\n    \"\"\"Parse TOML from a string.\"\"\"\n    try:\n        src = __s.replace('\\r\\n', '\\n')\n    except (AttributeError, TypeError):\n        raise TypeError(f\"Expected str object, not '{type(__s).__qualname__}'\") from None\n    pos = 0\n    out = Output()\n    header: Key = ()\n    parse_float = make_safe_parse_float(parse_float)\n    while True:\n        pos = skip_chars(src, pos, TOML_WS)\n        try:\n            char = src[pos]\n        except IndexError:\n            break\n        if char == '\\n':\n            pos += 1\n            continue\n        if char in KEY_INITIAL_CHARS:\n            pos = key_value_rule(src, pos, out, header, parse_float)\n            pos = skip_chars(src, pos, TOML_WS)\n        elif char == '[':\n            try:\n                second_char: str | None = src[pos - 1]\n            except IndexError:\n                second_char = None\n            out.flags.finalize_pending()\n            if second_char == '[':\n                pos, header = create_list_rule(src, pos, out)\n            else:\n                pos, header = create_dict_rule(src, pos, out)\n            pos = skip_chars(src, pos, TOML_WS)\n        elif char != '#':\n            raise TOMLDecodeError('Invalid statement', src, pos)\n        pos = skip_comment(src, pos)\n        try:\n            char = src[pos]\n        except IndexError:\n            break\n        if char != '\\n':\n            raise TOMLDecodeError('Expected newline or end of document after a statement', src, pos)\n        pos += 1\n    return out.data.dict",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::loads",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def loads(__s: str, *, parse_float: ParseFloat=float) -> dict[str, Any]:\n    \"\"\"Parse TOML from a string.\"\"\"\n    try:\n        src = __s.replace('\\r\\n', '\\n')\n    except (AttributeError, TypeError):\n        raise TypeError(f\"Expected str object, not '{type(__s).__qualname__}'\") from None\n    pos = 0\n    out = Output()\n    header: Key = ()\n    parse_float = make_safe_parse_float(parse_float)\n    while True:\n        pos = skip_chars(src, pos, TOML_WS)\n        try:\n            char = src[pos]\n        except IndexError:\n            break\n        if char == '\\n':\n            pos += 1\n            continue\n        if char in KEY_INITIAL_CHARS:\n            pos = key_value_rule(src, pos, out, header, parse_float)\n            pos = skip_chars(src, pos, TOML_WS)\n        elif char == '[':\n            try:\n                second_char: str | None = src[pos + 1]\n            except IndexError:\n                second_char = None\n            out.flags.finalize_pending()\n            if second_char == '[':\n                pos, header = create_list_rule(src, pos, out)\n            else:\n                pos, header = create_dict_rule(src, pos, out)\n            pos = skip_chars(src, pos, TOML_WS)\n        elif char != '#':\n            raise TOMLDecodeError('Invalid statement', src, pos)\n        pos = skip_comment(src, pos)\n        try:\n            char = src[pos]\n        except IndexError:\n            break\n        if char != '\\n':\n            raise TOMLDecodeError('Expected newline or end of document after a statement', src, pos)\n        pos += 1\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::loads",
+      "kind": "drop_raise",
+      "verdict": "killed",
+      "mutant": "def loads(__s: str, *, parse_float: ParseFloat=float) -> dict[str, Any]:\n    \"\"\"Parse TOML from a string.\"\"\"\n    try:\n        src = __s.replace('\\r\\n', '\\n')\n    except (AttributeError, TypeError):\n        pass\n    pos = 0\n    out = Output()\n    header: Key = ()\n    parse_float = make_safe_parse_float(parse_float)\n    while True:\n        pos = skip_chars(src, pos, TOML_WS)\n        try:\n            char = src[pos]\n        except IndexError:\n            break\n        if char == '\\n':\n            pos += 1\n            continue\n        if char in KEY_INITIAL_CHARS:\n            pos = key_value_rule(src, pos, out, header, parse_float)\n            pos = skip_chars(src, pos, TOML_WS)\n        elif char == '[':\n            try:\n                second_char: str | None = src[pos + 1]\n            except IndexError:\n                second_char = None\n            out.flags.finalize_pending()\n            if second_char == '[':\n                pos, header = create_list_rule(src, pos, out)\n            else:\n                pos, header = create_dict_rule(src, pos, out)\n            pos = skip_chars(src, pos, TOML_WS)\n        elif char != '#':\n            raise TOMLDecodeError('Invalid statement', src, pos)\n        pos = skip_comment(src, pos)\n        try:\n            char = src[pos]\n        except IndexError:\n            break\n        if char != '\\n':\n            raise TOMLDecodeError('Expected newline or end of document after a statement', src, pos)\n        pos += 1\n    return out.data.dict",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::loads",
+      "kind": "swallow_except",
+      "verdict": "killed",
+      "mutant": "def loads(__s: str, *, parse_float: ParseFloat=float) -> dict[str, Any]:\n    \"\"\"Parse TOML from a string.\"\"\"\n    try:\n        src = __s.replace('\\r\\n', '\\n')\n    except (AttributeError, TypeError):\n        raise TypeError(f\"Expected str object, not '{type(__s).__qualname__}'\") from None\n    pos = 0\n    out = Output()\n    header: Key = ()\n    parse_float = make_safe_parse_float(parse_float)\n    while True:\n        pos = skip_chars(src, pos, TOML_WS)\n        try:\n            char = src[pos]\n        except IndexError:\n            pass\n        if char == '\\n':\n            pos += 1\n            continue\n        if char in KEY_INITIAL_CHARS:\n            pos = key_value_rule(src, pos, out, header, parse_float)\n            pos = skip_chars(src, pos, TOML_WS)\n        elif char == '[':\n            try:\n                second_char: str | None = src[pos + 1]\n            except IndexError:\n                second_char = None\n            out.flags.finalize_pending()\n            if second_char == '[':\n                pos, header = create_list_rule(src, pos, out)\n            else:\n                pos, header = create_dict_rule(src, pos, out)\n            pos = skip_chars(src, pos, TOML_WS)\n        elif char != '#':\n            raise TOMLDecodeError('Invalid statement', src, pos)\n        pos = skip_comment(src, pos)\n        try:\n            char = src[pos]\n        except IndexError:\n            break\n        if char != '\\n':\n            raise TOMLDecodeError('Expected newline or end of document after a statement', src, pos)\n        pos += 1\n    return out.data.dict",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "the covering tests did not finish within 32s"
+    },
+    {
+      "target": "src/tomli/_parser.py::loads",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def loads(__s: str, *, parse_float: ParseFloat=float) -> dict[str, Any]:\n    \"\"\"Parse TOML from a string.\"\"\"\n    try:\n        src = __s.replace('\\r\\n', '\\n')\n    except (AttributeError, TypeError):\n        raise TypeError(f\"Expected str object, not '{type(__s).__qualname__}'\") from None\n    pos = 1\n    out = Output()\n    header: Key = ()\n    parse_float = make_safe_parse_float(parse_float)\n    while True:\n        pos = skip_chars(src, pos, TOML_WS)\n        try:\n            char = src[pos]\n        except IndexError:\n            break\n        if char == '\\n':\n            pos += 1\n            continue\n        if char in KEY_INITIAL_CHARS:\n            pos = key_value_rule(src, pos, out, header, parse_float)\n            pos = skip_chars(src, pos, TOML_WS)\n        elif char == '[':\n            try:\n                second_char: str | None = src[pos + 1]\n            except IndexError:\n                second_char = None\n            out.flags.finalize_pending()\n            if second_char == '[':\n                pos, header = create_list_rule(src, pos, out)\n            else:\n                pos, header = create_dict_rule(src, pos, out)\n            pos = skip_chars(src, pos, TOML_WS)\n        elif char != '#':\n            raise TOMLDecodeError('Invalid statement', src, pos)\n        pos = skip_comment(src, pos)\n        try:\n            char = src[pos]\n        except IndexError:\n            break\n        if char != '\\n':\n            raise TOMLDecodeError('Expected newline or end of document after a statement', src, pos)\n        pos += 1\n    return out.data.dict",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::Flags.unset_all",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def unset_all(self, key: Key) -> None:\n    cont = self._flags\n    for k in key[:-2]:\n        if k not in cont:\n            return\n        cont = cont[k]['nested']\n    cont.pop(key[-1], None)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::Flags.unset_all",
+      "kind": "slice_upper",
+      "verdict": "killed",
+      "mutant": "def unset_all(self, key: Key) -> None:\n    cont = self._flags\n    for k in key[:-1 - 1]:\n        if k not in cont:\n            return\n        cont = cont[k]['nested']\n    cont.pop(key[-1], None)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::Flags.unset_all",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def unset_all(self, key: Key) -> None:\n    cont = self._flags\n    for k in key[:-1]:\n        if k in cont:\n            return\n        cont = cont[k]['nested']\n    cont.pop(key[-1], None)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::Flags.unset_all",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "mutant": "def unset_all(self, key: Key) -> None:\n    cont = self._flags\n    for k in key[:-1]:\n        if not k not in cont:\n            return\n        cont = cont[k]['nested']\n    cont.pop(key[-1], None)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::Flags.unset_all",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def unset_all(self, key: Key) -> None:\n    cont = self._flags\n    for k in key[:-1]:\n        if k not in cont:\n            return\n        cont = cont[k]['nested']\n    cont.pop(key[-2], None)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::Flags.set",
+      "kind": "slice_upper",
+      "verdict": "killed",
+      "mutant": "def set(self, key: Key, flag: int, *, recursive: bool) -> None:\n    cont = self._flags\n    key_parent, key_stem = (key[:-1 - 1], key[-1])\n    for k in key_parent:\n        if k not in cont:\n            cont[k] = {'flags': set(), 'recursive_flags': set(), 'nested': {}}\n        cont = cont[k]['nested']\n    if key_stem not in cont:\n        cont[key_stem] = {'flags': set(), 'recursive_flags': set(), 'nested': {}}\n    cont[key_stem]['recursive_flags' if recursive else 'flags'].add(flag)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::Flags.set",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def set(self, key: Key, flag: int, *, recursive: bool) -> None:\n    cont = self._flags\n    key_parent, key_stem = (key[:-1], key[-1])\n    for k in key_parent:\n        if k in cont:\n            cont[k] = {'flags': set(), 'recursive_flags': set(), 'nested': {}}\n        cont = cont[k]['nested']\n    if key_stem not in cont:\n        cont[key_stem] = {'flags': set(), 'recursive_flags': set(), 'nested': {}}\n    cont[key_stem]['recursive_flags' if recursive else 'flags'].add(flag)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::Flags.set",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def set(self, key: Key, flag: int, *, recursive: bool) -> None:\n    cont = self._flags\n    key_parent, key_stem = (key[:-2], key[-1])\n    for k in key_parent:\n        if k not in cont:\n            cont[k] = {'flags': set(), 'recursive_flags': set(), 'nested': {}}\n        cont = cont[k]['nested']\n    if key_stem not in cont:\n        cont[key_stem] = {'flags': set(), 'recursive_flags': set(), 'nested': {}}\n    cont[key_stem]['recursive_flags' if recursive else 'flags'].add(flag)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::Flags.set",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "mutant": "def set(self, key: Key, flag: int, *, recursive: bool) -> None:\n    cont = self._flags\n    key_parent, key_stem = (key[:-1], key[-1])\n    for k in key_parent:\n        if not k not in cont:\n            cont[k] = {'flags': set(), 'recursive_flags': set(), 'nested': {}}\n        cont = cont[k]['nested']\n    if key_stem not in cont:\n        cont[key_stem] = {'flags': set(), 'recursive_flags': set(), 'nested': {}}\n    cont[key_stem]['recursive_flags' if recursive else 'flags'].add(flag)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::Flags.set",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def set(self, key: Key, flag: int, *, recursive: bool) -> None:\n    cont = self._flags\n    key_parent, key_stem = (key[:-1], key[-1])\n    for k in key_parent:\n        if k not in cont:\n            cont[k] = {'flags': set(), 'recursive_flags': set(), 'nested': {}}\n        cont = cont[k]['nested']\n    if key_stem in cont:\n        cont[key_stem] = {'flags': set(), 'recursive_flags': set(), 'nested': {}}\n    cont[key_stem]['recursive_flags' if recursive else 'flags'].add(flag)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::Flags.is_",
+      "kind": "boolop",
+      "verdict": "killed",
+      "mutant": "def is_(self, key: Key, flag: int) -> bool:\n    if not key:\n        return False\n    cont = self._flags\n    for k in key[:-1]:\n        if k not in cont:\n            return False\n        inner_cont = cont[k]\n        if flag in inner_cont['recursive_flags']:\n            return True\n        cont = inner_cont['nested']\n    key_stem = key[-1]\n    if key_stem in cont:\n        inner_cont = cont[key_stem]\n        return flag in inner_cont['flags'] and flag in inner_cont['recursive_flags']\n    return False",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::Flags.is_",
+      "kind": "drop_not",
+      "verdict": "killed",
+      "mutant": "def is_(self, key: Key, flag: int) -> bool:\n    if key:\n        return False\n    cont = self._flags\n    for k in key[:-1]:\n        if k not in cont:\n            return False\n        inner_cont = cont[k]\n        if flag in inner_cont['recursive_flags']:\n            return True\n        cont = inner_cont['nested']\n    key_stem = key[-1]\n    if key_stem in cont:\n        inner_cont = cont[key_stem]\n        return flag in inner_cont['flags'] or flag in inner_cont['recursive_flags']\n    return False",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::Flags.is_",
+      "kind": "slice_upper",
+      "verdict": "killed",
+      "mutant": "def is_(self, key: Key, flag: int) -> bool:\n    if not key:\n        return False\n    cont = self._flags\n    for k in key[:-1 - 1]:\n        if k not in cont:\n            return False\n        inner_cont = cont[k]\n        if flag in inner_cont['recursive_flags']:\n            return True\n        cont = inner_cont['nested']\n    key_stem = key[-1]\n    if key_stem in cont:\n        inner_cont = cont[key_stem]\n        return flag in inner_cont['flags'] or flag in inner_cont['recursive_flags']\n    return False",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::Flags.is_",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def is_(self, key: Key, flag: int) -> bool:\n    if not key:\n        return False\n    cont = self._flags\n    for k in key[:-2]:\n        if k not in cont:\n            return False\n        inner_cont = cont[k]\n        if flag in inner_cont['recursive_flags']:\n            return True\n        cont = inner_cont['nested']\n    key_stem = key[-1]\n    if key_stem in cont:\n        inner_cont = cont[key_stem]\n        return flag in inner_cont['flags'] or flag in inner_cont['recursive_flags']\n    return False",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::Flags.is_",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "mutant": "def is_(self, key: Key, flag: int) -> bool:\n    if not not key:\n        return False\n    cont = self._flags\n    for k in key[:-1]:\n        if k not in cont:\n            return False\n        inner_cont = cont[k]\n        if flag in inner_cont['recursive_flags']:\n            return True\n        cont = inner_cont['nested']\n    key_stem = key[-1]\n    if key_stem in cont:\n        inner_cont = cont[key_stem]\n        return flag in inner_cont['flags'] or flag in inner_cont['recursive_flags']\n    return False",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::NestedDict.get_or_create_nest",
+      "kind": "boolop",
+      "verdict": "killed",
+      "mutant": "def get_or_create_nest(self, key: Key, *, access_lists: bool=True) -> dict[str, Any]:\n    cont: Any = self.dict\n    for k in key:\n        if k not in cont:\n            cont[k] = {}\n        cont = cont[k]\n        if access_lists or isinstance(cont, list):\n            cont = cont[-1]\n        if not isinstance(cont, dict):\n            raise KeyError('There is no nest behind this key')\n    return cont",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::NestedDict.get_or_create_nest",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def get_or_create_nest(self, key: Key, *, access_lists: bool=True) -> dict[str, Any]:\n    cont: Any = self.dict\n    for k in key:\n        if k in cont:\n            cont[k] = {}\n        cont = cont[k]\n        if access_lists and isinstance(cont, list):\n            cont = cont[-1]\n        if not isinstance(cont, dict):\n            raise KeyError('There is no nest behind this key')\n    return cont",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::NestedDict.get_or_create_nest",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def get_or_create_nest(self, key: Key, *, access_lists: bool=True) -> dict[str, Any]:\n    cont: Any = self.dict\n    for k in key:\n        if k not in cont:\n            cont[k] = {}\n        cont = cont[k]\n        if access_lists and isinstance(cont, list):\n            cont = cont[-2]\n        if not isinstance(cont, dict):\n            raise KeyError('There is no nest behind this key')\n    return cont",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::NestedDict.get_or_create_nest",
+      "kind": "drop_not",
+      "verdict": "killed",
+      "mutant": "def get_or_create_nest(self, key: Key, *, access_lists: bool=True) -> dict[str, Any]:\n    cont: Any = self.dict\n    for k in key:\n        if k not in cont:\n            cont[k] = {}\n        cont = cont[k]\n        if access_lists and isinstance(cont, list):\n            cont = cont[-1]\n        if isinstance(cont, dict):\n            raise KeyError('There is no nest behind this key')\n    return cont",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::NestedDict.get_or_create_nest",
+      "kind": "drop_raise",
+      "verdict": "killed",
+      "mutant": "def get_or_create_nest(self, key: Key, *, access_lists: bool=True) -> dict[str, Any]:\n    cont: Any = self.dict\n    for k in key:\n        if k not in cont:\n            cont[k] = {}\n        cont = cont[k]\n        if access_lists and isinstance(cont, list):\n            cont = cont[-1]\n        if not isinstance(cont, dict):\n            pass\n    return cont",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::NestedDict.append_nest_to_list",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def append_nest_to_list(self, key: Key) -> None:\n    cont = self.get_or_create_nest(key[:-1])\n    last_key = key[-1]\n    if last_key not in cont:\n        list_ = cont[last_key]\n        if not isinstance(list_, list):\n            raise KeyError('An object other than list found behind this key')\n        list_.append({})\n    else:\n        cont[last_key] = [{}]",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::NestedDict.append_nest_to_list",
+      "kind": "drop_not",
+      "verdict": "killed",
+      "mutant": "def append_nest_to_list(self, key: Key) -> None:\n    cont = self.get_or_create_nest(key[:-1])\n    last_key = key[-1]\n    if last_key in cont:\n        list_ = cont[last_key]\n        if isinstance(list_, list):\n            raise KeyError('An object other than list found behind this key')\n        list_.append({})\n    else:\n        cont[last_key] = [{}]",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::NestedDict.append_nest_to_list",
+      "kind": "drop_raise",
+      "verdict": "killed",
+      "mutant": "def append_nest_to_list(self, key: Key) -> None:\n    cont = self.get_or_create_nest(key[:-1])\n    last_key = key[-1]\n    if last_key in cont:\n        list_ = cont[last_key]\n        if not isinstance(list_, list):\n            pass\n        list_.append({})\n    else:\n        cont[last_key] = [{}]",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::NestedDict.append_nest_to_list",
+      "kind": "slice_upper",
+      "verdict": "killed",
+      "mutant": "def append_nest_to_list(self, key: Key) -> None:\n    cont = self.get_or_create_nest(key[:-1 - 1])\n    last_key = key[-1]\n    if last_key in cont:\n        list_ = cont[last_key]\n        if not isinstance(list_, list):\n            raise KeyError('An object other than list found behind this key')\n        list_.append({})\n    else:\n        cont[last_key] = [{}]",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::NestedDict.append_nest_to_list",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def append_nest_to_list(self, key: Key) -> None:\n    cont = self.get_or_create_nest(key[:-2])\n    last_key = key[-1]\n    if last_key in cont:\n        list_ = cont[last_key]\n        if not isinstance(list_, list):\n            raise KeyError('An object other than list found behind this key')\n        list_.append({})\n    else:\n        cont[last_key] = [{}]",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::skip_chars",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def skip_chars(src: str, pos: Pos, chars: Iterable[str]) -> Pos:\n    try:\n        while src[pos] not in chars:\n            pos += 1\n    except IndexError:\n        pass\n    return pos",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::skip_chars",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def skip_chars(src: str, pos: Pos, chars: Iterable[str]) -> Pos:\n    try:\n        while src[pos] in chars:\n            pos += 2\n    except IndexError:\n        pass\n    return pos",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::skip_chars",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def skip_chars(src: str, pos: Pos, chars: Iterable[str]) -> Pos:\n    try:\n        while src[pos] in chars:\n            pos += 1\n    except IndexError:\n        pass\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::skip_until",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def skip_until(src: str, pos: Pos, expect: str, *, error_on: frozenset[str], error_on_eof: bool) -> Pos:\n    try:\n        new_pos = src.index(expect, pos)\n    except ValueError:\n        new_pos = len(src)\n        if error_on_eof:\n            raise TOMLDecodeError(f'Expected {expect!r}', src, new_pos) from None\n    if not error_on.isdisjoint(src[pos:new_pos]):\n        while src[pos] in error_on:\n            pos += 1\n        raise TOMLDecodeError(f'Found invalid character {src[pos]!r}', src, pos)\n    return new_pos",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::skip_until",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def skip_until(src: str, pos: Pos, expect: str, *, error_on: frozenset[str], error_on_eof: bool) -> Pos:\n    try:\n        new_pos = src.index(expect, pos)\n    except ValueError:\n        new_pos = len(src)\n        if error_on_eof:\n            raise TOMLDecodeError(f'Expected {expect!r}', src, new_pos) from None\n    if not error_on.isdisjoint(src[pos:new_pos]):\n        while src[pos] not in error_on:\n            pos += 2\n        raise TOMLDecodeError(f'Found invalid character {src[pos]!r}', src, pos)\n    return new_pos",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::skip_until",
+      "kind": "drop_not",
+      "verdict": "killed",
+      "mutant": "def skip_until(src: str, pos: Pos, expect: str, *, error_on: frozenset[str], error_on_eof: bool) -> Pos:\n    try:\n        new_pos = src.index(expect, pos)\n    except ValueError:\n        new_pos = len(src)\n        if error_on_eof:\n            raise TOMLDecodeError(f'Expected {expect!r}', src, new_pos) from None\n    if error_on.isdisjoint(src[pos:new_pos]):\n        while src[pos] not in error_on:\n            pos += 1\n        raise TOMLDecodeError(f'Found invalid character {src[pos]!r}', src, pos)\n    return new_pos",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::skip_until",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def skip_until(src: str, pos: Pos, expect: str, *, error_on: frozenset[str], error_on_eof: bool) -> Pos:\n    try:\n        new_pos = src.index(expect, pos)\n    except ValueError:\n        new_pos = len(src)\n        if error_on_eof:\n            raise TOMLDecodeError(f'Expected {expect!r}', src, new_pos) from None\n    if not error_on.isdisjoint(src[pos:new_pos]):\n        while src[pos] not in error_on:\n            pos += 1\n        raise TOMLDecodeError(f'Found invalid character {src[pos]!r}', src, pos)\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::skip_until",
+      "kind": "slice_lower",
+      "verdict": "killed",
+      "mutant": "def skip_until(src: str, pos: Pos, expect: str, *, error_on: frozenset[str], error_on_eof: bool) -> Pos:\n    try:\n        new_pos = src.index(expect, pos)\n    except ValueError:\n        new_pos = len(src)\n        if error_on_eof:\n            raise TOMLDecodeError(f'Expected {expect!r}', src, new_pos) from None\n    if not error_on.isdisjoint(src[pos + 1:new_pos]):\n        while src[pos] not in error_on:\n            pos += 1\n        raise TOMLDecodeError(f'Found invalid character {src[pos]!r}', src, pos)\n    return new_pos",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::skip_comment",
+      "kind": "binop",
+      "verdict": "killed",
+      "mutant": "def skip_comment(src: str, pos: Pos) -> Pos:\n    try:\n        char: str | None = src[pos]\n    except IndexError:\n        char = None\n    if char == '#':\n        return skip_until(src, pos - 1, '\\n', error_on=ILLEGAL_COMMENT_CHARS, error_on_eof=False)\n    return pos",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "the covering tests did not finish within 30s"
+    },
+    {
+      "target": "src/tomli/_parser.py::skip_comment",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def skip_comment(src: str, pos: Pos) -> Pos:\n    try:\n        char: str | None = src[pos]\n    except IndexError:\n        char = None\n    if char != '#':\n        return skip_until(src, pos + 1, '\\n', error_on=ILLEGAL_COMMENT_CHARS, error_on_eof=False)\n    return pos",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::skip_comment",
+      "kind": "const",
+      "verdict": "unproven",
+      "mutant": "def skip_comment(src: str, pos: Pos) -> Pos:\n    try:\n        char: str | None = src[pos]\n    except IndexError:\n        char = None\n    if char == '#':\n        return skip_until(src, pos + 2, '\\n', error_on=ILLEGAL_COMMENT_CHARS, error_on_eof=False)\n    return pos",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; agree: 52 of 64 inputs exercised it, all agree"
+    },
+    {
+      "target": "src/tomli/_parser.py::skip_comment",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "mutant": "def skip_comment(src: str, pos: Pos) -> Pos:\n    try:\n        char: str | None = src[pos]\n    except IndexError:\n        char = None\n    if not char == '#':\n        return skip_until(src, pos + 1, '\\n', error_on=ILLEGAL_COMMENT_CHARS, error_on_eof=False)\n    return pos",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::skip_comment",
+      "kind": "swallow_except",
+      "verdict": "killed",
+      "mutant": "def skip_comment(src: str, pos: Pos) -> Pos:\n    try:\n        char: str | None = src[pos]\n    except IndexError:\n        pass\n    if char == '#':\n        return skip_until(src, pos + 1, '\\n', error_on=ILLEGAL_COMMENT_CHARS, error_on_eof=False)\n    return pos",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::skip_comments_and_array_ws",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def skip_comments_and_array_ws(src: str, pos: Pos) -> Pos:\n    while True:\n        pos_before_skip = pos\n        pos = skip_chars(src, pos, TOML_WS_AND_NEWLINE)\n        pos = skip_comment(src, pos)\n        if pos != pos_before_skip:\n            return pos",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "the covering tests did not finish within 30s"
+    },
+    {
+      "target": "src/tomli/_parser.py::skip_comments_and_array_ws",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def skip_comments_and_array_ws(src: str, pos: Pos) -> Pos:\n    while True:\n        pos_before_skip = pos\n        pos = skip_chars(src, pos, TOML_WS_AND_NEWLINE)\n        pos = skip_comment(src, pos)\n        if pos == pos_before_skip:\n            return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::skip_comments_and_array_ws",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "mutant": "def skip_comments_and_array_ws(src: str, pos: Pos) -> Pos:\n    while True:\n        pos_before_skip = pos\n        pos = skip_chars(src, pos, TOML_WS_AND_NEWLINE)\n        pos = skip_comment(src, pos)\n        if not pos == pos_before_skip:\n            return pos",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "the covering tests did not finish within 30s"
+    },
+    {
+      "target": "src/tomli/_parser.py::create_dict_rule",
+      "kind": "binop",
+      "verdict": "killed",
+      "mutant": "def create_dict_rule(src: str, pos: Pos, out: Output) -> tuple[Pos, Key]:\n    pos += 1\n    pos = skip_chars(src, pos, TOML_WS)\n    pos, key = parse_key(src, pos)\n    if out.flags.is_(key, Flags.EXPLICIT_NEST) or out.flags.is_(key, Flags.FROZEN):\n        raise TOMLDecodeError(f'Cannot declare {key} twice', src, pos)\n    out.flags.set(key, Flags.EXPLICIT_NEST, recursive=False)\n    try:\n        out.data.get_or_create_nest(key)\n    except KeyError:\n        raise TOMLDecodeError('Cannot overwrite a value', src, pos) from None\n    if not src.startswith(']', pos):\n        raise TOMLDecodeError(\"Expected ']' at the end of a table declaration\", src, pos)\n    return (pos - 1, key)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::create_dict_rule",
+      "kind": "boolop",
+      "verdict": "killed",
+      "mutant": "def create_dict_rule(src: str, pos: Pos, out: Output) -> tuple[Pos, Key]:\n    pos += 1\n    pos = skip_chars(src, pos, TOML_WS)\n    pos, key = parse_key(src, pos)\n    if out.flags.is_(key, Flags.EXPLICIT_NEST) and out.flags.is_(key, Flags.FROZEN):\n        raise TOMLDecodeError(f'Cannot declare {key} twice', src, pos)\n    out.flags.set(key, Flags.EXPLICIT_NEST, recursive=False)\n    try:\n        out.data.get_or_create_nest(key)\n    except KeyError:\n        raise TOMLDecodeError('Cannot overwrite a value', src, pos) from None\n    if not src.startswith(']', pos):\n        raise TOMLDecodeError(\"Expected ']' at the end of a table declaration\", src, pos)\n    return (pos + 1, key)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::create_dict_rule",
+      "kind": "drop_not",
+      "verdict": "killed",
+      "mutant": "def create_dict_rule(src: str, pos: Pos, out: Output) -> tuple[Pos, Key]:\n    pos += 1\n    pos = skip_chars(src, pos, TOML_WS)\n    pos, key = parse_key(src, pos)\n    if out.flags.is_(key, Flags.EXPLICIT_NEST) or out.flags.is_(key, Flags.FROZEN):\n        raise TOMLDecodeError(f'Cannot declare {key} twice', src, pos)\n    out.flags.set(key, Flags.EXPLICIT_NEST, recursive=False)\n    try:\n        out.data.get_or_create_nest(key)\n    except KeyError:\n        raise TOMLDecodeError('Cannot overwrite a value', src, pos) from None\n    if src.startswith(']', pos):\n        raise TOMLDecodeError(\"Expected ']' at the end of a table declaration\", src, pos)\n    return (pos + 1, key)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::create_dict_rule",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def create_dict_rule(src: str, pos: Pos, out: Output) -> tuple[Pos, Key]:\n    pos += 1\n    pos = skip_chars(src, pos, TOML_WS)\n    pos, key = parse_key(src, pos)\n    if out.flags.is_(key, Flags.EXPLICIT_NEST) or out.flags.is_(key, Flags.FROZEN):\n        raise TOMLDecodeError(f'Cannot declare {key} twice', src, pos)\n    out.flags.set(key, Flags.EXPLICIT_NEST, recursive=False)\n    try:\n        out.data.get_or_create_nest(key)\n    except KeyError:\n        raise TOMLDecodeError('Cannot overwrite a value', src, pos) from None\n    if not src.startswith(']', pos):\n        raise TOMLDecodeError(\"Expected ']' at the end of a table declaration\", src, pos)\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::create_dict_rule",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def create_dict_rule(src: str, pos: Pos, out: Output) -> tuple[Pos, Key]:\n    pos += 2\n    pos = skip_chars(src, pos, TOML_WS)\n    pos, key = parse_key(src, pos)\n    if out.flags.is_(key, Flags.EXPLICIT_NEST) or out.flags.is_(key, Flags.FROZEN):\n        raise TOMLDecodeError(f'Cannot declare {key} twice', src, pos)\n    out.flags.set(key, Flags.EXPLICIT_NEST, recursive=False)\n    try:\n        out.data.get_or_create_nest(key)\n    except KeyError:\n        raise TOMLDecodeError('Cannot overwrite a value', src, pos) from None\n    if not src.startswith(']', pos):\n        raise TOMLDecodeError(\"Expected ']' at the end of a table declaration\", src, pos)\n    return (pos + 1, key)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::create_list_rule",
+      "kind": "binop",
+      "verdict": "killed",
+      "mutant": "def create_list_rule(src: str, pos: Pos, out: Output) -> tuple[Pos, Key]:\n    pos += 2\n    pos = skip_chars(src, pos, TOML_WS)\n    pos, key = parse_key(src, pos)\n    if out.flags.is_(key, Flags.FROZEN):\n        raise TOMLDecodeError(f'Cannot mutate immutable namespace {key}', src, pos)\n    out.flags.unset_all(key)\n    out.flags.set(key, Flags.EXPLICIT_NEST, recursive=False)\n    try:\n        out.data.append_nest_to_list(key)\n    except KeyError:\n        raise TOMLDecodeError('Cannot overwrite a value', src, pos) from None\n    if not src.startswith(']]', pos):\n        raise TOMLDecodeError(\"Expected ']]' at the end of an array declaration\", src, pos)\n    return (pos - 2, key)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::create_list_rule",
+      "kind": "drop_not",
+      "verdict": "killed",
+      "mutant": "def create_list_rule(src: str, pos: Pos, out: Output) -> tuple[Pos, Key]:\n    pos += 2\n    pos = skip_chars(src, pos, TOML_WS)\n    pos, key = parse_key(src, pos)\n    if out.flags.is_(key, Flags.FROZEN):\n        raise TOMLDecodeError(f'Cannot mutate immutable namespace {key}', src, pos)\n    out.flags.unset_all(key)\n    out.flags.set(key, Flags.EXPLICIT_NEST, recursive=False)\n    try:\n        out.data.append_nest_to_list(key)\n    except KeyError:\n        raise TOMLDecodeError('Cannot overwrite a value', src, pos) from None\n    if src.startswith(']]', pos):\n        raise TOMLDecodeError(\"Expected ']]' at the end of an array declaration\", src, pos)\n    return (pos + 2, key)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::create_list_rule",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def create_list_rule(src: str, pos: Pos, out: Output) -> tuple[Pos, Key]:\n    pos += 2\n    pos = skip_chars(src, pos, TOML_WS)\n    pos, key = parse_key(src, pos)\n    if out.flags.is_(key, Flags.FROZEN):\n        raise TOMLDecodeError(f'Cannot mutate immutable namespace {key}', src, pos)\n    out.flags.unset_all(key)\n    out.flags.set(key, Flags.EXPLICIT_NEST, recursive=False)\n    try:\n        out.data.append_nest_to_list(key)\n    except KeyError:\n        raise TOMLDecodeError('Cannot overwrite a value', src, pos) from None\n    if not src.startswith(']]', pos):\n        raise TOMLDecodeError(\"Expected ']]' at the end of an array declaration\", src, pos)\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::create_list_rule",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def create_list_rule(src: str, pos: Pos, out: Output) -> tuple[Pos, Key]:\n    pos += 3\n    pos = skip_chars(src, pos, TOML_WS)\n    pos, key = parse_key(src, pos)\n    if out.flags.is_(key, Flags.FROZEN):\n        raise TOMLDecodeError(f'Cannot mutate immutable namespace {key}', src, pos)\n    out.flags.unset_all(key)\n    out.flags.set(key, Flags.EXPLICIT_NEST, recursive=False)\n    try:\n        out.data.append_nest_to_list(key)\n    except KeyError:\n        raise TOMLDecodeError('Cannot overwrite a value', src, pos) from None\n    if not src.startswith(']]', pos):\n        raise TOMLDecodeError(\"Expected ']]' at the end of an array declaration\", src, pos)\n    return (pos + 2, key)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::create_list_rule",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "mutant": "def create_list_rule(src: str, pos: Pos, out: Output) -> tuple[Pos, Key]:\n    pos += 2\n    pos = skip_chars(src, pos, TOML_WS)\n    pos, key = parse_key(src, pos)\n    if not out.flags.is_(key, Flags.FROZEN):\n        raise TOMLDecodeError(f'Cannot mutate immutable namespace {key}', src, pos)\n    out.flags.unset_all(key)\n    out.flags.set(key, Flags.EXPLICIT_NEST, recursive=False)\n    try:\n        out.data.append_nest_to_list(key)\n    except KeyError:\n        raise TOMLDecodeError('Cannot overwrite a value', src, pos) from None\n    if not src.startswith(']]', pos):\n        raise TOMLDecodeError(\"Expected ']]' at the end of an array declaration\", src, pos)\n    return (pos + 2, key)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::key_value_rule",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def key_value_rule(src: str, pos: Pos, out: Output, header: Key, parse_float: ParseFloat) -> Pos:\n    pos, key, value = parse_key_value_pair(src, pos, parse_float, nest_lvl=0)\n    key_parent, key_stem = (key[:-1], key[-1])\n    abs_key_parent = header + key_parent\n    relative_path_cont_keys = (header + key[:i] for i in range(1, len(key)))\n    for cont_key in relative_path_cont_keys:\n        if out.flags.is_(cont_key, Flags.EXPLICIT_NEST):\n            raise TOMLDecodeError(f'Cannot redefine namespace {cont_key}', src, pos)\n        out.flags.add_pending(cont_key, Flags.EXPLICIT_NEST)\n    if out.flags.is_(abs_key_parent, Flags.FROZEN):\n        raise TOMLDecodeError(f'Cannot mutate immutable namespace {abs_key_parent}', src, pos)\n    try:\n        nest = out.data.get_or_create_nest(abs_key_parent)\n    except KeyError:\n        raise TOMLDecodeError('Cannot overwrite a value', src, pos) from None\n    if key_stem not in nest:\n        raise TOMLDecodeError('Cannot overwrite a value', src, pos)\n    if isinstance(value, (dict, list)):\n        out.flags.set(header + key, Flags.FROZEN, recursive=True)\n    nest[key_stem] = value\n    return pos",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::key_value_rule",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def key_value_rule(src: str, pos: Pos, out: Output, header: Key, parse_float: ParseFloat) -> Pos:\n    pos, key, value = parse_key_value_pair(src, pos, parse_float, nest_lvl=0)\n    key_parent, key_stem = (key[:-1], key[-1])\n    abs_key_parent = header + key_parent\n    relative_path_cont_keys = (header + key[:i] for i in range(1, len(key)))\n    for cont_key in relative_path_cont_keys:\n        if out.flags.is_(cont_key, Flags.EXPLICIT_NEST):\n            raise TOMLDecodeError(f'Cannot redefine namespace {cont_key}', src, pos)\n        out.flags.add_pending(cont_key, Flags.EXPLICIT_NEST)\n    if out.flags.is_(abs_key_parent, Flags.FROZEN):\n        raise TOMLDecodeError(f'Cannot mutate immutable namespace {abs_key_parent}', src, pos)\n    try:\n        nest = out.data.get_or_create_nest(abs_key_parent)\n    except KeyError:\n        raise TOMLDecodeError('Cannot overwrite a value', src, pos) from None\n    if key_stem in nest:\n        raise TOMLDecodeError('Cannot overwrite a value', src, pos)\n    if isinstance(value, (dict, list)):\n        out.flags.set(header + key, Flags.FROZEN, recursive=True)\n    nest[key_stem] = value\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::key_value_rule",
+      "kind": "slice_upper",
+      "verdict": "killed",
+      "mutant": "def key_value_rule(src: str, pos: Pos, out: Output, header: Key, parse_float: ParseFloat) -> Pos:\n    pos, key, value = parse_key_value_pair(src, pos, parse_float, nest_lvl=0)\n    key_parent, key_stem = (key[:-1 - 1], key[-1])\n    abs_key_parent = header + key_parent\n    relative_path_cont_keys = (header + key[:i] for i in range(1, len(key)))\n    for cont_key in relative_path_cont_keys:\n        if out.flags.is_(cont_key, Flags.EXPLICIT_NEST):\n            raise TOMLDecodeError(f'Cannot redefine namespace {cont_key}', src, pos)\n        out.flags.add_pending(cont_key, Flags.EXPLICIT_NEST)\n    if out.flags.is_(abs_key_parent, Flags.FROZEN):\n        raise TOMLDecodeError(f'Cannot mutate immutable namespace {abs_key_parent}', src, pos)\n    try:\n        nest = out.data.get_or_create_nest(abs_key_parent)\n    except KeyError:\n        raise TOMLDecodeError('Cannot overwrite a value', src, pos) from None\n    if key_stem in nest:\n        raise TOMLDecodeError('Cannot overwrite a value', src, pos)\n    if isinstance(value, (dict, list)):\n        out.flags.set(header + key, Flags.FROZEN, recursive=True)\n    nest[key_stem] = value\n    return pos",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::key_value_rule",
+      "kind": "binop",
+      "verdict": "killed",
+      "mutant": "def key_value_rule(src: str, pos: Pos, out: Output, header: Key, parse_float: ParseFloat) -> Pos:\n    pos, key, value = parse_key_value_pair(src, pos, parse_float, nest_lvl=0)\n    key_parent, key_stem = (key[:-1], key[-1])\n    abs_key_parent = header - key_parent\n    relative_path_cont_keys = (header + key[:i] for i in range(1, len(key)))\n    for cont_key in relative_path_cont_keys:\n        if out.flags.is_(cont_key, Flags.EXPLICIT_NEST):\n            raise TOMLDecodeError(f'Cannot redefine namespace {cont_key}', src, pos)\n        out.flags.add_pending(cont_key, Flags.EXPLICIT_NEST)\n    if out.flags.is_(abs_key_parent, Flags.FROZEN):\n        raise TOMLDecodeError(f'Cannot mutate immutable namespace {abs_key_parent}', src, pos)\n    try:\n        nest = out.data.get_or_create_nest(abs_key_parent)\n    except KeyError:\n        raise TOMLDecodeError('Cannot overwrite a value', src, pos) from None\n    if key_stem in nest:\n        raise TOMLDecodeError('Cannot overwrite a value', src, pos)\n    if isinstance(value, (dict, list)):\n        out.flags.set(header + key, Flags.FROZEN, recursive=True)\n    nest[key_stem] = value\n    return pos",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::key_value_rule",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def key_value_rule(src: str, pos: Pos, out: Output, header: Key, parse_float: ParseFloat) -> Pos:\n    pos, key, value = parse_key_value_pair(src, pos, parse_float, nest_lvl=1)\n    key_parent, key_stem = (key[:-1], key[-1])\n    abs_key_parent = header + key_parent\n    relative_path_cont_keys = (header + key[:i] for i in range(1, len(key)))\n    for cont_key in relative_path_cont_keys:\n        if out.flags.is_(cont_key, Flags.EXPLICIT_NEST):\n            raise TOMLDecodeError(f'Cannot redefine namespace {cont_key}', src, pos)\n        out.flags.add_pending(cont_key, Flags.EXPLICIT_NEST)\n    if out.flags.is_(abs_key_parent, Flags.FROZEN):\n        raise TOMLDecodeError(f'Cannot mutate immutable namespace {abs_key_parent}', src, pos)\n    try:\n        nest = out.data.get_or_create_nest(abs_key_parent)\n    except KeyError:\n        raise TOMLDecodeError('Cannot overwrite a value', src, pos) from None\n    if key_stem in nest:\n        raise TOMLDecodeError('Cannot overwrite a value', src, pos)\n    if isinstance(value, (dict, list)):\n        out.flags.set(header + key, Flags.FROZEN, recursive=True)\n    nest[key_stem] = value\n    return pos",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_key_value_pair",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def parse_key_value_pair(src: str, pos: Pos, parse_float: ParseFloat, nest_lvl: int) -> tuple[Pos, Key, Any]:\n    pos, key = parse_key(src, pos)\n    try:\n        char: str | None = src[pos]\n    except IndexError:\n        char = None\n    if char == '=':\n        raise TOMLDecodeError(\"Expected '=' after a key in a key/value pair\", src, pos)\n    pos += 1\n    pos = skip_chars(src, pos, TOML_WS)\n    pos, value = parse_value(src, pos, parse_float, nest_lvl)\n    return (pos, key, value)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_key_value_pair",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def parse_key_value_pair(src: str, pos: Pos, parse_float: ParseFloat, nest_lvl: int) -> tuple[Pos, Key, Any]:\n    pos, key = parse_key(src, pos)\n    try:\n        char: str | None = src[pos]\n    except IndexError:\n        char = None\n    if char != '=':\n        raise TOMLDecodeError(\"Expected '=' after a key in a key/value pair\", src, pos)\n    pos += 2\n    pos = skip_chars(src, pos, TOML_WS)\n    pos, value = parse_value(src, pos, parse_float, nest_lvl)\n    return (pos, key, value)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_key_value_pair",
+      "kind": "drop_raise",
+      "verdict": "unproven",
+      "mutant": "def parse_key_value_pair(src: str, pos: Pos, parse_float: ParseFloat, nest_lvl: int) -> tuple[Pos, Key, Any]:\n    pos, key = parse_key(src, pos)\n    try:\n        char: str | None = src[pos]\n    except IndexError:\n        char = None\n    if char != '=':\n        pass\n    pos += 1\n    pos = skip_chars(src, pos, TOML_WS)\n    pos, value = parse_value(src, pos, parse_float, nest_lvl)\n    return (pos, key, value)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; inconclusive: all 64 argument sets raised on both sides"
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_key_value_pair",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def parse_key_value_pair(src: str, pos: Pos, parse_float: ParseFloat, nest_lvl: int) -> tuple[Pos, Key, Any]:\n    pos, key = parse_key(src, pos)\n    try:\n        char: str | None = src[pos]\n    except IndexError:\n        char = None\n    if char != '=':\n        raise TOMLDecodeError(\"Expected '=' after a key in a key/value pair\", src, pos)\n    pos += 1\n    pos = skip_chars(src, pos, TOML_WS)\n    pos, value = parse_value(src, pos, parse_float, nest_lvl)\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_key_value_pair",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "mutant": "def parse_key_value_pair(src: str, pos: Pos, parse_float: ParseFloat, nest_lvl: int) -> tuple[Pos, Key, Any]:\n    pos, key = parse_key(src, pos)\n    try:\n        char: str | None = src[pos]\n    except IndexError:\n        char = None\n    if not char != '=':\n        raise TOMLDecodeError(\"Expected '=' after a key in a key/value pair\", src, pos)\n    pos += 1\n    pos = skip_chars(src, pos, TOML_WS)\n    pos, value = parse_value(src, pos, parse_float, nest_lvl)\n    return (pos, key, value)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_key",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def parse_key(src: str, pos: Pos) -> tuple[Pos, Key]:\n    pos, key_part = parse_key_part(src, pos)\n    key: Key = (key_part,)\n    pos = skip_chars(src, pos, TOML_WS)\n    while True:\n        try:\n            char: str | None = src[pos]\n        except IndexError:\n            char = None\n        if char != '.':\n            return (pos, key)\n        pos += 2\n        pos = skip_chars(src, pos, TOML_WS)\n        pos, key_part = parse_key_part(src, pos)\n        key += (key_part,)\n        if len(key) > MAX_KEY_PARTS:\n            raise RecursionError(f'TOML key has more than the allowed {MAX_KEY_PARTS} parts')\n        pos = skip_chars(src, pos, TOML_WS)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_key",
+      "kind": "drop_raise",
+      "verdict": "killed",
+      "mutant": "def parse_key(src: str, pos: Pos) -> tuple[Pos, Key]:\n    pos, key_part = parse_key_part(src, pos)\n    key: Key = (key_part,)\n    pos = skip_chars(src, pos, TOML_WS)\n    while True:\n        try:\n            char: str | None = src[pos]\n        except IndexError:\n            char = None\n        if char != '.':\n            return (pos, key)\n        pos += 1\n        pos = skip_chars(src, pos, TOML_WS)\n        pos, key_part = parse_key_part(src, pos)\n        key += (key_part,)\n        if len(key) > MAX_KEY_PARTS:\n            pass\n        pos = skip_chars(src, pos, TOML_WS)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_key",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def parse_key(src: str, pos: Pos) -> tuple[Pos, Key]:\n    pos, key_part = parse_key_part(src, pos)\n    key: Key = (key_part,)\n    pos = skip_chars(src, pos, TOML_WS)\n    while True:\n        try:\n            char: str | None = src[pos]\n        except IndexError:\n            char = None\n        if char != '.':\n            return None\n        pos += 1\n        pos = skip_chars(src, pos, TOML_WS)\n        pos, key_part = parse_key_part(src, pos)\n        key += (key_part,)\n        if len(key) > MAX_KEY_PARTS:\n            raise RecursionError(f'TOML key has more than the allowed {MAX_KEY_PARTS} parts')\n        pos = skip_chars(src, pos, TOML_WS)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_key",
+      "kind": "swallow_except",
+      "verdict": "unproven",
+      "mutant": "def parse_key(src: str, pos: Pos) -> tuple[Pos, Key]:\n    pos, key_part = parse_key_part(src, pos)\n    key: Key = (key_part,)\n    pos = skip_chars(src, pos, TOML_WS)\n    while True:\n        try:\n            char: str | None = src[pos]\n        except IndexError:\n            pass\n        if char != '.':\n            return (pos, key)\n        pos += 1\n        pos = skip_chars(src, pos, TOML_WS)\n        pos, key_part = parse_key_part(src, pos)\n        key += (key_part,)\n        if len(key) > MAX_KEY_PARTS:\n            raise RecursionError(f'TOML key has more than the allowed {MAX_KEY_PARTS} parts')\n        pos = skip_chars(src, pos, TOML_WS)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "survived; inconclusive: all 64 argument sets raised on both sides"
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_key",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def parse_key(src: str, pos: Pos) -> tuple[Pos, Key]:\n    pos, key_part = parse_key_part(src, pos)\n    key: Key = (key_part,)\n    pos = skip_chars(src, pos, TOML_WS)\n    while True:\n        try:\n            char: str | None = src[pos]\n        except IndexError:\n            char = None\n        if char == '.':\n            return (pos, key)\n        pos += 1\n        pos = skip_chars(src, pos, TOML_WS)\n        pos, key_part = parse_key_part(src, pos)\n        key += (key_part,)\n        if len(key) > MAX_KEY_PARTS:\n            raise RecursionError(f'TOML key has more than the allowed {MAX_KEY_PARTS} parts')\n        pos = skip_chars(src, pos, TOML_WS)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_key_part",
+      "kind": "drop_raise",
+      "verdict": "killed",
+      "mutant": "def parse_key_part(src: str, pos: Pos) -> tuple[Pos, str]:\n    try:\n        char: str | None = src[pos]\n    except IndexError:\n        char = None\n    if char in BARE_KEY_CHARS:\n        start_pos = pos\n        pos = skip_chars(src, pos, BARE_KEY_CHARS)\n        return (pos, src[start_pos:pos])\n    if char == \"'\":\n        return parse_literal_str(src, pos)\n    if char == '\"':\n        return parse_one_line_basic_str(src, pos)\n    pass",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_key_part",
+      "kind": "slice_lower",
+      "verdict": "killed",
+      "mutant": "def parse_key_part(src: str, pos: Pos) -> tuple[Pos, str]:\n    try:\n        char: str | None = src[pos]\n    except IndexError:\n        char = None\n    if char in BARE_KEY_CHARS:\n        start_pos = pos\n        pos = skip_chars(src, pos, BARE_KEY_CHARS)\n        return (pos, src[start_pos + 1:pos])\n    if char == \"'\":\n        return parse_literal_str(src, pos)\n    if char == '\"':\n        return parse_one_line_basic_str(src, pos)\n    raise TOMLDecodeError('Invalid initial character for a key part', src, pos)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_key_part",
+      "kind": "slice_upper",
+      "verdict": "killed",
+      "mutant": "def parse_key_part(src: str, pos: Pos) -> tuple[Pos, str]:\n    try:\n        char: str | None = src[pos]\n    except IndexError:\n        char = None\n    if char in BARE_KEY_CHARS:\n        start_pos = pos\n        pos = skip_chars(src, pos, BARE_KEY_CHARS)\n        return (pos, src[start_pos:pos - 1])\n    if char == \"'\":\n        return parse_literal_str(src, pos)\n    if char == '\"':\n        return parse_one_line_basic_str(src, pos)\n    raise TOMLDecodeError('Invalid initial character for a key part', src, pos)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_key_part",
+      "kind": "swallow_except",
+      "verdict": "killed",
+      "mutant": "def parse_key_part(src: str, pos: Pos) -> tuple[Pos, str]:\n    try:\n        char: str | None = src[pos]\n    except IndexError:\n        pass\n    if char in BARE_KEY_CHARS:\n        start_pos = pos\n        pos = skip_chars(src, pos, BARE_KEY_CHARS)\n        return (pos, src[start_pos:pos])\n    if char == \"'\":\n        return parse_literal_str(src, pos)\n    if char == '\"':\n        return parse_one_line_basic_str(src, pos)\n    raise TOMLDecodeError('Invalid initial character for a key part', src, pos)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_key_part",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def parse_key_part(src: str, pos: Pos) -> tuple[Pos, str]:\n    try:\n        char: str | None = src[pos]\n    except IndexError:\n        char = None\n    if char not in BARE_KEY_CHARS:\n        start_pos = pos\n        pos = skip_chars(src, pos, BARE_KEY_CHARS)\n        return (pos, src[start_pos:pos])\n    if char == \"'\":\n        return parse_literal_str(src, pos)\n    if char == '\"':\n        return parse_one_line_basic_str(src, pos)\n    raise TOMLDecodeError('Invalid initial character for a key part', src, pos)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_one_line_basic_str",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def parse_one_line_basic_str(src: str, pos: Pos) -> tuple[Pos, str]:\n    pos += 2\n    return parse_basic_str(src, pos, multiline=False)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_one_line_basic_str",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def parse_one_line_basic_str(src: str, pos: Pos) -> tuple[Pos, str]:\n    pos += 1\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_array",
+      "kind": "drop_raise",
+      "verdict": "killed",
+      "mutant": "def parse_array(src: str, pos: Pos, parse_float: ParseFloat, nest_lvl: int) -> tuple[Pos, list[Any]]:\n    pos += 1\n    array: list[Any] = []\n    pos = skip_comments_and_array_ws(src, pos)\n    if src.startswith(']', pos):\n        return (pos + 1, array)\n    while True:\n        pos, val = parse_value(src, pos, parse_float, nest_lvl)\n        array.append(val)\n        pos = skip_comments_and_array_ws(src, pos)\n        c = src[pos:pos + 1]\n        if c == ']':\n            return (pos + 1, array)\n        if c != ',':\n            pass\n        pos += 1\n        pos = skip_comments_and_array_ws(src, pos)\n        if src.startswith(']', pos):\n            return (pos + 1, array)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_array",
+      "kind": "slice_lower",
+      "verdict": "killed",
+      "mutant": "def parse_array(src: str, pos: Pos, parse_float: ParseFloat, nest_lvl: int) -> tuple[Pos, list[Any]]:\n    pos += 1\n    array: list[Any] = []\n    pos = skip_comments_and_array_ws(src, pos)\n    if src.startswith(']', pos):\n        return (pos + 1, array)\n    while True:\n        pos, val = parse_value(src, pos, parse_float, nest_lvl)\n        array.append(val)\n        pos = skip_comments_and_array_ws(src, pos)\n        c = src[pos + 1:pos + 1]\n        if c == ']':\n            return (pos + 1, array)\n        if c != ',':\n            raise TOMLDecodeError('Unclosed array', src, pos)\n        pos += 1\n        pos = skip_comments_and_array_ws(src, pos)\n        if src.startswith(']', pos):\n            return (pos + 1, array)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_array",
+      "kind": "slice_upper",
+      "verdict": "killed",
+      "mutant": "def parse_array(src: str, pos: Pos, parse_float: ParseFloat, nest_lvl: int) -> tuple[Pos, list[Any]]:\n    pos += 1\n    array: list[Any] = []\n    pos = skip_comments_and_array_ws(src, pos)\n    if src.startswith(']', pos):\n        return (pos + 1, array)\n    while True:\n        pos, val = parse_value(src, pos, parse_float, nest_lvl)\n        array.append(val)\n        pos = skip_comments_and_array_ws(src, pos)\n        c = src[pos:pos + 1 - 1]\n        if c == ']':\n            return (pos + 1, array)\n        if c != ',':\n            raise TOMLDecodeError('Unclosed array', src, pos)\n        pos += 1\n        pos = skip_comments_and_array_ws(src, pos)\n        if src.startswith(']', pos):\n            return (pos + 1, array)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_array",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def parse_array(src: str, pos: Pos, parse_float: ParseFloat, nest_lvl: int) -> tuple[Pos, list[Any]]:\n    pos += 1\n    array: list[Any] = []\n    pos = skip_comments_and_array_ws(src, pos)\n    if src.startswith(']', pos):\n        return (pos + 1, array)\n    while True:\n        pos, val = parse_value(src, pos, parse_float, nest_lvl)\n        array.append(val)\n        pos = skip_comments_and_array_ws(src, pos)\n        c = src[pos:pos + 1]\n        if c != ']':\n            return (pos + 1, array)\n        if c != ',':\n            raise TOMLDecodeError('Unclosed array', src, pos)\n        pos += 1\n        pos = skip_comments_and_array_ws(src, pos)\n        if src.startswith(']', pos):\n            return (pos + 1, array)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_array",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def parse_array(src: str, pos: Pos, parse_float: ParseFloat, nest_lvl: int) -> tuple[Pos, list[Any]]:\n    pos += 1\n    array: list[Any] = []\n    pos = skip_comments_and_array_ws(src, pos)\n    if src.startswith(']', pos):\n        return None\n    while True:\n        pos, val = parse_value(src, pos, parse_float, nest_lvl)\n        array.append(val)\n        pos = skip_comments_and_array_ws(src, pos)\n        c = src[pos:pos + 1]\n        if c == ']':\n            return (pos + 1, array)\n        if c != ',':\n            raise TOMLDecodeError('Unclosed array', src, pos)\n        pos += 1\n        pos = skip_comments_and_array_ws(src, pos)\n        if src.startswith(']', pos):\n            return (pos + 1, array)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_inline_table",
+      "kind": "slice_lower",
+      "verdict": "killed",
+      "mutant": "def parse_inline_table(src: str, pos: Pos, parse_float: ParseFloat, nest_lvl: int) -> tuple[Pos, dict[str, Any]]:\n    pos += 1\n    nested_dict = NestedDict()\n    flags = Flags()\n    pos = skip_comments_and_array_ws(src, pos)\n    if src.startswith('}', pos):\n        return (pos + 1, nested_dict.dict)\n    while True:\n        pos, key, value = parse_key_value_pair(src, pos, parse_float, nest_lvl)\n        key_parent, key_stem = (key[:-1], key[-1])\n        if flags.is_(key, Flags.FROZEN):\n            raise TOMLDecodeError(f'Cannot mutate immutable namespace {key}', src, pos)\n        try:\n            nest = nested_dict.get_or_create_nest(key_parent, access_lists=False)\n        except KeyError:\n            raise TOMLDecodeError('Cannot overwrite a value', src, pos) from None\n        if key_stem in nest:\n            raise TOMLDecodeError(f'Duplicate inline table key {key_stem!r}', src, pos)\n        nest[key_stem] = value\n        pos = skip_comments_and_array_ws(src, pos)\n        c = src[pos + 1:pos + 1]\n        if c == '}':\n            return (pos + 1, nested_dict.dict)\n        if c != ',':\n            raise TOMLDecodeError('Unclosed inline table', src, pos)\n        pos += 1\n        pos = skip_comments_and_array_ws(src, pos)\n        if src.startswith('}', pos):\n            return (pos + 1, nested_dict.dict)\n        if isinstance(value, (dict, list)):\n            flags.set(key, Flags.FROZEN, recursive=True)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_inline_table",
+      "kind": "slice_upper",
+      "verdict": "killed",
+      "mutant": "def parse_inline_table(src: str, pos: Pos, parse_float: ParseFloat, nest_lvl: int) -> tuple[Pos, dict[str, Any]]:\n    pos += 1\n    nested_dict = NestedDict()\n    flags = Flags()\n    pos = skip_comments_and_array_ws(src, pos)\n    if src.startswith('}', pos):\n        return (pos + 1, nested_dict.dict)\n    while True:\n        pos, key, value = parse_key_value_pair(src, pos, parse_float, nest_lvl)\n        key_parent, key_stem = (key[:-1 - 1], key[-1])\n        if flags.is_(key, Flags.FROZEN):\n            raise TOMLDecodeError(f'Cannot mutate immutable namespace {key}', src, pos)\n        try:\n            nest = nested_dict.get_or_create_nest(key_parent, access_lists=False)\n        except KeyError:\n            raise TOMLDecodeError('Cannot overwrite a value', src, pos) from None\n        if key_stem in nest:\n            raise TOMLDecodeError(f'Duplicate inline table key {key_stem!r}', src, pos)\n        nest[key_stem] = value\n        pos = skip_comments_and_array_ws(src, pos)\n        c = src[pos:pos + 1]\n        if c == '}':\n            return (pos + 1, nested_dict.dict)\n        if c != ',':\n            raise TOMLDecodeError('Unclosed inline table', src, pos)\n        pos += 1\n        pos = skip_comments_and_array_ws(src, pos)\n        if src.startswith('}', pos):\n            return (pos + 1, nested_dict.dict)\n        if isinstance(value, (dict, list)):\n            flags.set(key, Flags.FROZEN, recursive=True)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_inline_table",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def parse_inline_table(src: str, pos: Pos, parse_float: ParseFloat, nest_lvl: int) -> tuple[Pos, dict[str, Any]]:\n    pos += 1\n    nested_dict = NestedDict()\n    flags = Flags()\n    pos = skip_comments_and_array_ws(src, pos)\n    if src.startswith('}', pos):\n        return (pos + 1, nested_dict.dict)\n    while True:\n        pos, key, value = parse_key_value_pair(src, pos, parse_float, nest_lvl)\n        key_parent, key_stem = (key[:-1], key[-1])\n        if flags.is_(key, Flags.FROZEN):\n            raise TOMLDecodeError(f'Cannot mutate immutable namespace {key}', src, pos)\n        try:\n            nest = nested_dict.get_or_create_nest(key_parent, access_lists=False)\n        except KeyError:\n            raise TOMLDecodeError('Cannot overwrite a value', src, pos) from None\n        if key_stem not in nest:\n            raise TOMLDecodeError(f'Duplicate inline table key {key_stem!r}', src, pos)\n        nest[key_stem] = value\n        pos = skip_comments_and_array_ws(src, pos)\n        c = src[pos:pos + 1]\n        if c == '}':\n            return (pos + 1, nested_dict.dict)\n        if c != ',':\n            raise TOMLDecodeError('Unclosed inline table', src, pos)\n        pos += 1\n        pos = skip_comments_and_array_ws(src, pos)\n        if src.startswith('}', pos):\n            return (pos + 1, nested_dict.dict)\n        if isinstance(value, (dict, list)):\n            flags.set(key, Flags.FROZEN, recursive=True)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_inline_table",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def parse_inline_table(src: str, pos: Pos, parse_float: ParseFloat, nest_lvl: int) -> tuple[Pos, dict[str, Any]]:\n    pos += 1\n    nested_dict = NestedDict()\n    flags = Flags()\n    pos = skip_comments_and_array_ws(src, pos)\n    if src.startswith('}', pos):\n        return None\n    while True:\n        pos, key, value = parse_key_value_pair(src, pos, parse_float, nest_lvl)\n        key_parent, key_stem = (key[:-1], key[-1])\n        if flags.is_(key, Flags.FROZEN):\n            raise TOMLDecodeError(f'Cannot mutate immutable namespace {key}', src, pos)\n        try:\n            nest = nested_dict.get_or_create_nest(key_parent, access_lists=False)\n        except KeyError:\n            raise TOMLDecodeError('Cannot overwrite a value', src, pos) from None\n        if key_stem in nest:\n            raise TOMLDecodeError(f'Duplicate inline table key {key_stem!r}', src, pos)\n        nest[key_stem] = value\n        pos = skip_comments_and_array_ws(src, pos)\n        c = src[pos:pos + 1]\n        if c == '}':\n            return (pos + 1, nested_dict.dict)\n        if c != ',':\n            raise TOMLDecodeError('Unclosed inline table', src, pos)\n        pos += 1\n        pos = skip_comments_and_array_ws(src, pos)\n        if src.startswith('}', pos):\n            return (pos + 1, nested_dict.dict)\n        if isinstance(value, (dict, list)):\n            flags.set(key, Flags.FROZEN, recursive=True)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_inline_table",
+      "kind": "binop",
+      "verdict": "killed",
+      "mutant": "def parse_inline_table(src: str, pos: Pos, parse_float: ParseFloat, nest_lvl: int) -> tuple[Pos, dict[str, Any]]:\n    pos += 1\n    nested_dict = NestedDict()\n    flags = Flags()\n    pos = skip_comments_and_array_ws(src, pos)\n    if src.startswith('}', pos):\n        return (pos - 1, nested_dict.dict)\n    while True:\n        pos, key, value = parse_key_value_pair(src, pos, parse_float, nest_lvl)\n        key_parent, key_stem = (key[:-1], key[-1])\n        if flags.is_(key, Flags.FROZEN):\n            raise TOMLDecodeError(f'Cannot mutate immutable namespace {key}', src, pos)\n        try:\n            nest = nested_dict.get_or_create_nest(key_parent, access_lists=False)\n        except KeyError:\n            raise TOMLDecodeError('Cannot overwrite a value', src, pos) from None\n        if key_stem in nest:\n            raise TOMLDecodeError(f'Duplicate inline table key {key_stem!r}', src, pos)\n        nest[key_stem] = value\n        pos = skip_comments_and_array_ws(src, pos)\n        c = src[pos:pos + 1]\n        if c == '}':\n            return (pos + 1, nested_dict.dict)\n        if c != ',':\n            raise TOMLDecodeError('Unclosed inline table', src, pos)\n        pos += 1\n        pos = skip_comments_and_array_ws(src, pos)\n        if src.startswith('}', pos):\n            return (pos + 1, nested_dict.dict)\n        if isinstance(value, (dict, list)):\n            flags.set(key, Flags.FROZEN, recursive=True)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_basic_str_escape",
+      "kind": "binop",
+      "verdict": "killed",
+      "mutant": "def parse_basic_str_escape(src: str, pos: Pos, *, multiline: bool=False) -> tuple[Pos, str]:\n    escape_id = src[pos:pos - 2]\n    pos += 2\n    if multiline and escape_id in {'\\\\ ', '\\\\\\t', '\\\\\\n'}:\n        if escape_id != '\\\\\\n':\n            pos = skip_chars(src, pos, TOML_WS)\n            try:\n                char = src[pos]\n            except IndexError:\n                return (pos, '')\n            if char != '\\n':\n                raise TOMLDecodeError(\"Unescaped '\\\\' in a string\", src, pos)\n            pos += 1\n        pos = skip_chars(src, pos, TOML_WS_AND_NEWLINE)\n        return (pos, '')\n    if escape_id == '\\\\x':\n        return parse_hex_char(src, pos, 2)\n    if escape_id == '\\\\u':\n        return parse_hex_char(src, pos, 4)\n    if escape_id == '\\\\U':\n        return parse_hex_char(src, pos, 8)\n    try:\n        return (pos, BASIC_STR_ESCAPE_REPLACEMENTS[escape_id])\n    except KeyError:\n        raise TOMLDecodeError(\"Unescaped '\\\\' in a string\", src, pos) from None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_basic_str_escape",
+      "kind": "boolop",
+      "verdict": "killed",
+      "mutant": "def parse_basic_str_escape(src: str, pos: Pos, *, multiline: bool=False) -> tuple[Pos, str]:\n    escape_id = src[pos:pos + 2]\n    pos += 2\n    if multiline or escape_id in {'\\\\ ', '\\\\\\t', '\\\\\\n'}:\n        if escape_id != '\\\\\\n':\n            pos = skip_chars(src, pos, TOML_WS)\n            try:\n                char = src[pos]\n            except IndexError:\n                return (pos, '')\n            if char != '\\n':\n                raise TOMLDecodeError(\"Unescaped '\\\\' in a string\", src, pos)\n            pos += 1\n        pos = skip_chars(src, pos, TOML_WS_AND_NEWLINE)\n        return (pos, '')\n    if escape_id == '\\\\x':\n        return parse_hex_char(src, pos, 2)\n    if escape_id == '\\\\u':\n        return parse_hex_char(src, pos, 4)\n    if escape_id == '\\\\U':\n        return parse_hex_char(src, pos, 8)\n    try:\n        return (pos, BASIC_STR_ESCAPE_REPLACEMENTS[escape_id])\n    except KeyError:\n        raise TOMLDecodeError(\"Unescaped '\\\\' in a string\", src, pos) from None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_basic_str_escape",
+      "kind": "slice_lower",
+      "verdict": "killed",
+      "mutant": "def parse_basic_str_escape(src: str, pos: Pos, *, multiline: bool=False) -> tuple[Pos, str]:\n    escape_id = src[pos + 1:pos + 2]\n    pos += 2\n    if multiline and escape_id in {'\\\\ ', '\\\\\\t', '\\\\\\n'}:\n        if escape_id != '\\\\\\n':\n            pos = skip_chars(src, pos, TOML_WS)\n            try:\n                char = src[pos]\n            except IndexError:\n                return (pos, '')\n            if char != '\\n':\n                raise TOMLDecodeError(\"Unescaped '\\\\' in a string\", src, pos)\n            pos += 1\n        pos = skip_chars(src, pos, TOML_WS_AND_NEWLINE)\n        return (pos, '')\n    if escape_id == '\\\\x':\n        return parse_hex_char(src, pos, 2)\n    if escape_id == '\\\\u':\n        return parse_hex_char(src, pos, 4)\n    if escape_id == '\\\\U':\n        return parse_hex_char(src, pos, 8)\n    try:\n        return (pos, BASIC_STR_ESCAPE_REPLACEMENTS[escape_id])\n    except KeyError:\n        raise TOMLDecodeError(\"Unescaped '\\\\' in a string\", src, pos) from None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_basic_str_escape",
+      "kind": "slice_upper",
+      "verdict": "killed",
+      "mutant": "def parse_basic_str_escape(src: str, pos: Pos, *, multiline: bool=False) -> tuple[Pos, str]:\n    escape_id = src[pos:pos + 2 - 1]\n    pos += 2\n    if multiline and escape_id in {'\\\\ ', '\\\\\\t', '\\\\\\n'}:\n        if escape_id != '\\\\\\n':\n            pos = skip_chars(src, pos, TOML_WS)\n            try:\n                char = src[pos]\n            except IndexError:\n                return (pos, '')\n            if char != '\\n':\n                raise TOMLDecodeError(\"Unescaped '\\\\' in a string\", src, pos)\n            pos += 1\n        pos = skip_chars(src, pos, TOML_WS_AND_NEWLINE)\n        return (pos, '')\n    if escape_id == '\\\\x':\n        return parse_hex_char(src, pos, 2)\n    if escape_id == '\\\\u':\n        return parse_hex_char(src, pos, 4)\n    if escape_id == '\\\\U':\n        return parse_hex_char(src, pos, 8)\n    try:\n        return (pos, BASIC_STR_ESCAPE_REPLACEMENTS[escape_id])\n    except KeyError:\n        raise TOMLDecodeError(\"Unescaped '\\\\' in a string\", src, pos) from None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_basic_str_escape",
+      "kind": "swallow_except",
+      "verdict": "killed",
+      "mutant": "def parse_basic_str_escape(src: str, pos: Pos, *, multiline: bool=False) -> tuple[Pos, str]:\n    escape_id = src[pos:pos + 2]\n    pos += 2\n    if multiline and escape_id in {'\\\\ ', '\\\\\\t', '\\\\\\n'}:\n        if escape_id != '\\\\\\n':\n            pos = skip_chars(src, pos, TOML_WS)\n            try:\n                char = src[pos]\n            except IndexError:\n                pass\n            if char != '\\n':\n                raise TOMLDecodeError(\"Unescaped '\\\\' in a string\", src, pos)\n            pos += 1\n        pos = skip_chars(src, pos, TOML_WS_AND_NEWLINE)\n        return (pos, '')\n    if escape_id == '\\\\x':\n        return parse_hex_char(src, pos, 2)\n    if escape_id == '\\\\u':\n        return parse_hex_char(src, pos, 4)\n    if escape_id == '\\\\U':\n        return parse_hex_char(src, pos, 8)\n    try:\n        return (pos, BASIC_STR_ESCAPE_REPLACEMENTS[escape_id])\n    except KeyError:\n        raise TOMLDecodeError(\"Unescaped '\\\\' in a string\", src, pos) from None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_basic_str_escape_multiline",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def parse_basic_str_escape_multiline(src: str, pos: Pos) -> tuple[Pos, str]:\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_hex_char",
+      "kind": "binop",
+      "verdict": "killed",
+      "mutant": "def parse_hex_char(src: str, pos: Pos, hex_len: int) -> tuple[Pos, str]:\n    hex_str = src[pos:pos - hex_len]\n    if len(hex_str) != hex_len or not HEXDIGIT_CHARS.issuperset(hex_str):\n        raise TOMLDecodeError('Invalid hex value', src, pos)\n    pos += hex_len\n    hex_int = int(hex_str, 16)\n    if not is_unicode_scalar_value(hex_int):\n        raise TOMLDecodeError('Escaped character is not a Unicode scalar value', src, pos)\n    return (pos, chr(hex_int))",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_hex_char",
+      "kind": "boolop",
+      "verdict": "killed",
+      "mutant": "def parse_hex_char(src: str, pos: Pos, hex_len: int) -> tuple[Pos, str]:\n    hex_str = src[pos:pos + hex_len]\n    if len(hex_str) != hex_len and (not HEXDIGIT_CHARS.issuperset(hex_str)):\n        raise TOMLDecodeError('Invalid hex value', src, pos)\n    pos += hex_len\n    hex_int = int(hex_str, 16)\n    if not is_unicode_scalar_value(hex_int):\n        raise TOMLDecodeError('Escaped character is not a Unicode scalar value', src, pos)\n    return (pos, chr(hex_int))",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_hex_char",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def parse_hex_char(src: str, pos: Pos, hex_len: int) -> tuple[Pos, str]:\n    hex_str = src[pos:pos + hex_len]\n    if len(hex_str) == hex_len or not HEXDIGIT_CHARS.issuperset(hex_str):\n        raise TOMLDecodeError('Invalid hex value', src, pos)\n    pos += hex_len\n    hex_int = int(hex_str, 16)\n    if not is_unicode_scalar_value(hex_int):\n        raise TOMLDecodeError('Escaped character is not a Unicode scalar value', src, pos)\n    return (pos, chr(hex_int))",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_hex_char",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def parse_hex_char(src: str, pos: Pos, hex_len: int) -> tuple[Pos, str]:\n    hex_str = src[pos:pos + hex_len]\n    if len(hex_str) != hex_len or not HEXDIGIT_CHARS.issuperset(hex_str):\n        raise TOMLDecodeError('Invalid hex value', src, pos)\n    pos += hex_len\n    hex_int = int(hex_str, 17)\n    if not is_unicode_scalar_value(hex_int):\n        raise TOMLDecodeError('Escaped character is not a Unicode scalar value', src, pos)\n    return (pos, chr(hex_int))",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_hex_char",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def parse_hex_char(src: str, pos: Pos, hex_len: int) -> tuple[Pos, str]:\n    hex_str = src[pos:pos + hex_len]\n    if len(hex_str) != hex_len or not HEXDIGIT_CHARS.issuperset(hex_str):\n        raise TOMLDecodeError('Invalid hex value', src, pos)\n    pos += hex_len\n    hex_int = int(hex_str, 16)\n    if not is_unicode_scalar_value(hex_int):\n        raise TOMLDecodeError('Escaped character is not a Unicode scalar value', src, pos)\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_literal_str",
+      "kind": "binop",
+      "verdict": "killed",
+      "mutant": "def parse_literal_str(src: str, pos: Pos) -> tuple[Pos, str]:\n    pos += 1\n    start_pos = pos\n    pos = skip_until(src, pos, \"'\", error_on=ILLEGAL_LITERAL_STR_CHARS, error_on_eof=True)\n    return (pos - 1, src[start_pos:pos])",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_literal_str",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def parse_literal_str(src: str, pos: Pos) -> tuple[Pos, str]:\n    pos += 1\n    start_pos = pos\n    pos = skip_until(src, pos, \"'\", error_on=ILLEGAL_LITERAL_STR_CHARS, error_on_eof=True)\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_literal_str",
+      "kind": "slice_lower",
+      "verdict": "killed",
+      "mutant": "def parse_literal_str(src: str, pos: Pos) -> tuple[Pos, str]:\n    pos += 1\n    start_pos = pos\n    pos = skip_until(src, pos, \"'\", error_on=ILLEGAL_LITERAL_STR_CHARS, error_on_eof=True)\n    return (pos + 1, src[start_pos + 1:pos])",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_literal_str",
+      "kind": "slice_upper",
+      "verdict": "killed",
+      "mutant": "def parse_literal_str(src: str, pos: Pos) -> tuple[Pos, str]:\n    pos += 1\n    start_pos = pos\n    pos = skip_until(src, pos, \"'\", error_on=ILLEGAL_LITERAL_STR_CHARS, error_on_eof=True)\n    return (pos + 1, src[start_pos:pos - 1])",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_literal_str",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def parse_literal_str(src: str, pos: Pos) -> tuple[Pos, str]:\n    pos += 2\n    start_pos = pos\n    pos = skip_until(src, pos, \"'\", error_on=ILLEGAL_LITERAL_STR_CHARS, error_on_eof=True)\n    return (pos + 1, src[start_pos:pos])",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_multiline_str",
+      "kind": "slice_lower",
+      "verdict": "killed",
+      "mutant": "def parse_multiline_str(src: str, pos: Pos, *, literal: bool) -> tuple[Pos, str]:\n    pos += 3\n    if src.startswith('\\n', pos):\n        pos += 1\n    if literal:\n        delim = \"'\"\n        end_pos = skip_until(src, pos, \"'''\", error_on=ILLEGAL_MULTILINE_LITERAL_STR_CHARS, error_on_eof=True)\n        result = src[pos + 1:end_pos]\n        pos = end_pos + 3\n    else:\n        delim = '\"'\n        pos, result = parse_basic_str(src, pos, multiline=True)\n    if not src.startswith(delim, pos):\n        return (pos, result)\n    pos += 1\n    if not src.startswith(delim, pos):\n        return (pos, result + delim)\n    pos += 1\n    return (pos, result + delim * 2)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_multiline_str",
+      "kind": "slice_upper",
+      "verdict": "killed",
+      "mutant": "def parse_multiline_str(src: str, pos: Pos, *, literal: bool) -> tuple[Pos, str]:\n    pos += 3\n    if src.startswith('\\n', pos):\n        pos += 1\n    if literal:\n        delim = \"'\"\n        end_pos = skip_until(src, pos, \"'''\", error_on=ILLEGAL_MULTILINE_LITERAL_STR_CHARS, error_on_eof=True)\n        result = src[pos:end_pos - 1]\n        pos = end_pos + 3\n    else:\n        delim = '\"'\n        pos, result = parse_basic_str(src, pos, multiline=True)\n    if not src.startswith(delim, pos):\n        return (pos, result)\n    pos += 1\n    if not src.startswith(delim, pos):\n        return (pos, result + delim)\n    pos += 1\n    return (pos, result + delim * 2)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_multiline_str",
+      "kind": "drop_not",
+      "verdict": "killed",
+      "mutant": "def parse_multiline_str(src: str, pos: Pos, *, literal: bool) -> tuple[Pos, str]:\n    pos += 3\n    if src.startswith('\\n', pos):\n        pos += 1\n    if literal:\n        delim = \"'\"\n        end_pos = skip_until(src, pos, \"'''\", error_on=ILLEGAL_MULTILINE_LITERAL_STR_CHARS, error_on_eof=True)\n        result = src[pos:end_pos]\n        pos = end_pos + 3\n    else:\n        delim = '\"'\n        pos, result = parse_basic_str(src, pos, multiline=True)\n    if src.startswith(delim, pos):\n        return (pos, result)\n    pos += 1\n    if not src.startswith(delim, pos):\n        return (pos, result + delim)\n    pos += 1\n    return (pos, result + delim * 2)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_multiline_str",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def parse_multiline_str(src: str, pos: Pos, *, literal: bool) -> tuple[Pos, str]:\n    pos += 3\n    if src.startswith('\\n', pos):\n        pos += 1\n    if literal:\n        delim = \"'\"\n        end_pos = skip_until(src, pos, \"'''\", error_on=ILLEGAL_MULTILINE_LITERAL_STR_CHARS, error_on_eof=True)\n        result = src[pos:end_pos]\n        pos = end_pos + 3\n    else:\n        delim = '\"'\n        pos, result = parse_basic_str(src, pos, multiline=True)\n    if not src.startswith(delim, pos):\n        return None\n    pos += 1\n    if not src.startswith(delim, pos):\n        return (pos, result + delim)\n    pos += 1\n    return (pos, result + delim * 2)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_multiline_str",
+      "kind": "binop",
+      "verdict": "killed",
+      "mutant": "def parse_multiline_str(src: str, pos: Pos, *, literal: bool) -> tuple[Pos, str]:\n    pos += 3\n    if src.startswith('\\n', pos):\n        pos += 1\n    if literal:\n        delim = \"'\"\n        end_pos = skip_until(src, pos, \"'''\", error_on=ILLEGAL_MULTILINE_LITERAL_STR_CHARS, error_on_eof=True)\n        result = src[pos:end_pos]\n        pos = end_pos - 3\n    else:\n        delim = '\"'\n        pos, result = parse_basic_str(src, pos, multiline=True)\n    if not src.startswith(delim, pos):\n        return (pos, result)\n    pos += 1\n    if not src.startswith(delim, pos):\n        return (pos, result + delim)\n    pos += 1\n    return (pos, result + delim * 2)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_basic_str",
+      "kind": "drop_not",
+      "verdict": "killed",
+      "mutant": "def parse_basic_str(src: str, pos: Pos, *, multiline: bool) -> tuple[Pos, str]:\n    if multiline:\n        error_on = ILLEGAL_MULTILINE_BASIC_STR_CHARS\n        parse_escapes = parse_basic_str_escape_multiline\n    else:\n        error_on = ILLEGAL_BASIC_STR_CHARS\n        parse_escapes = parse_basic_str_escape\n    result = ''\n    start_pos = pos\n    while True:\n        try:\n            char = src[pos]\n        except IndexError:\n            raise TOMLDecodeError('Unterminated string', src, pos) from None\n        if char == '\"':\n            if multiline:\n                return (pos + 1, result + src[start_pos:pos])\n            if src.startswith('\"\"\"', pos):\n                return (pos + 3, result + src[start_pos:pos])\n            pos += 1\n            continue\n        if char == '\\\\':\n            result += src[start_pos:pos]\n            pos, parsed_escape = parse_escapes(src, pos)\n            result += parsed_escape\n            start_pos = pos\n            continue\n        if char in error_on:\n            raise TOMLDecodeError(f'Illegal character {char!r}', src, pos)\n        pos += 1",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_basic_str",
+      "kind": "drop_raise",
+      "verdict": "killed",
+      "mutant": "def parse_basic_str(src: str, pos: Pos, *, multiline: bool) -> tuple[Pos, str]:\n    if multiline:\n        error_on = ILLEGAL_MULTILINE_BASIC_STR_CHARS\n        parse_escapes = parse_basic_str_escape_multiline\n    else:\n        error_on = ILLEGAL_BASIC_STR_CHARS\n        parse_escapes = parse_basic_str_escape\n    result = ''\n    start_pos = pos\n    while True:\n        try:\n            char = src[pos]\n        except IndexError:\n            pass\n        if char == '\"':\n            if not multiline:\n                return (pos + 1, result + src[start_pos:pos])\n            if src.startswith('\"\"\"', pos):\n                return (pos + 3, result + src[start_pos:pos])\n            pos += 1\n            continue\n        if char == '\\\\':\n            result += src[start_pos:pos]\n            pos, parsed_escape = parse_escapes(src, pos)\n            result += parsed_escape\n            start_pos = pos\n            continue\n        if char in error_on:\n            raise TOMLDecodeError(f'Illegal character {char!r}', src, pos)\n        pos += 1",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": "the covering tests did not finish within 30s"
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_basic_str",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def parse_basic_str(src: str, pos: Pos, *, multiline: bool) -> tuple[Pos, str]:\n    if multiline:\n        error_on = ILLEGAL_MULTILINE_BASIC_STR_CHARS\n        parse_escapes = parse_basic_str_escape_multiline\n    else:\n        error_on = ILLEGAL_BASIC_STR_CHARS\n        parse_escapes = parse_basic_str_escape\n    result = ''\n    start_pos = pos\n    while True:\n        try:\n            char = src[pos]\n        except IndexError:\n            raise TOMLDecodeError('Unterminated string', src, pos) from None\n        if char == '\"':\n            if not multiline:\n                return None\n            if src.startswith('\"\"\"', pos):\n                return (pos + 3, result + src[start_pos:pos])\n            pos += 1\n            continue\n        if char == '\\\\':\n            result += src[start_pos:pos]\n            pos, parsed_escape = parse_escapes(src, pos)\n            result += parsed_escape\n            start_pos = pos\n            continue\n        if char in error_on:\n            raise TOMLDecodeError(f'Illegal character {char!r}', src, pos)\n        pos += 1",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_basic_str",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def parse_basic_str(src: str, pos: Pos, *, multiline: bool) -> tuple[Pos, str]:\n    if multiline:\n        error_on = ILLEGAL_MULTILINE_BASIC_STR_CHARS\n        parse_escapes = parse_basic_str_escape_multiline\n    else:\n        error_on = ILLEGAL_BASIC_STR_CHARS\n        parse_escapes = parse_basic_str_escape\n    result = ''\n    start_pos = pos\n    while True:\n        try:\n            char = src[pos]\n        except IndexError:\n            raise TOMLDecodeError('Unterminated string', src, pos) from None\n        if char != '\"':\n            if not multiline:\n                return (pos + 1, result + src[start_pos:pos])\n            if src.startswith('\"\"\"', pos):\n                return (pos + 3, result + src[start_pos:pos])\n            pos += 1\n            continue\n        if char == '\\\\':\n            result += src[start_pos:pos]\n            pos, parsed_escape = parse_escapes(src, pos)\n            result += parsed_escape\n            start_pos = pos\n            continue\n        if char in error_on:\n            raise TOMLDecodeError(f'Illegal character {char!r}', src, pos)\n        pos += 1",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_basic_str",
+      "kind": "slice_lower",
+      "verdict": "killed",
+      "mutant": "def parse_basic_str(src: str, pos: Pos, *, multiline: bool) -> tuple[Pos, str]:\n    if multiline:\n        error_on = ILLEGAL_MULTILINE_BASIC_STR_CHARS\n        parse_escapes = parse_basic_str_escape_multiline\n    else:\n        error_on = ILLEGAL_BASIC_STR_CHARS\n        parse_escapes = parse_basic_str_escape\n    result = ''\n    start_pos = pos\n    while True:\n        try:\n            char = src[pos]\n        except IndexError:\n            raise TOMLDecodeError('Unterminated string', src, pos) from None\n        if char == '\"':\n            if not multiline:\n                return (pos + 1, result + src[start_pos + 1:pos])\n            if src.startswith('\"\"\"', pos):\n                return (pos + 3, result + src[start_pos:pos])\n            pos += 1\n            continue\n        if char == '\\\\':\n            result += src[start_pos:pos]\n            pos, parsed_escape = parse_escapes(src, pos)\n            result += parsed_escape\n            start_pos = pos\n            continue\n        if char in error_on:\n            raise TOMLDecodeError(f'Illegal character {char!r}', src, pos)\n        pos += 1",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_value",
+      "kind": "swallow_except",
+      "verdict": "killed",
+      "mutant": "def parse_value(src: str, pos: Pos, parse_float: ParseFloat, nest_lvl: int) -> tuple[Pos, Any]:\n    if nest_lvl > MAX_INLINE_NESTING:\n        raise RecursionError(f'TOML inline arrays/tables are nested more than the allowed {MAX_INLINE_NESTING} levels')\n    try:\n        char: str | None = src[pos]\n    except IndexError:\n        pass\n    if char == '\"':\n        if src.startswith('\"\"\"', pos):\n            return parse_multiline_str(src, pos, literal=False)\n        return parse_one_line_basic_str(src, pos)\n    if char == \"'\":\n        if src.startswith(\"'''\", pos):\n            return parse_multiline_str(src, pos, literal=True)\n        return parse_literal_str(src, pos)\n    if char == 't':\n        if src.startswith('true', pos):\n            return (pos + 4, True)\n    if char == 'f':\n        if src.startswith('false', pos):\n            return (pos + 5, False)\n    if char == '[':\n        return parse_array(src, pos, parse_float, nest_lvl + 1)\n    if char == '{':\n        return parse_inline_table(src, pos, parse_float, nest_lvl + 1)\n    datetime_match = RE_DATETIME.match(src, pos)\n    if datetime_match:\n        try:\n            datetime_obj = match_to_datetime(datetime_match)\n        except ValueError as e:\n            raise TOMLDecodeError('Invalid date or datetime', src, pos) from e\n        return (datetime_match.end(), datetime_obj)\n    localtime_match = RE_LOCALTIME.match(src, pos)\n    if localtime_match:\n        return (localtime_match.end(), match_to_localtime(localtime_match))\n    number_match = RE_NUMBER.match(src, pos)\n    if number_match:\n        return (number_match.end(), match_to_number(number_match, parse_float))\n    first_three = src[pos:pos + 3]\n    if first_three in {'inf', 'nan'}:\n        return (pos + 3, parse_float(first_three))\n    first_four = src[pos:pos + 4]\n    if first_four in {'-inf', '+inf', '-nan', '+nan'}:\n        return (pos + 4, parse_float(first_four))\n    raise TOMLDecodeError('Invalid value', src, pos)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_value",
+      "kind": "slice_lower",
+      "verdict": "killed",
+      "mutant": "def parse_value(src: str, pos: Pos, parse_float: ParseFloat, nest_lvl: int) -> tuple[Pos, Any]:\n    if nest_lvl > MAX_INLINE_NESTING:\n        raise RecursionError(f'TOML inline arrays/tables are nested more than the allowed {MAX_INLINE_NESTING} levels')\n    try:\n        char: str | None = src[pos]\n    except IndexError:\n        char = None\n    if char == '\"':\n        if src.startswith('\"\"\"', pos):\n            return parse_multiline_str(src, pos, literal=False)\n        return parse_one_line_basic_str(src, pos)\n    if char == \"'\":\n        if src.startswith(\"'''\", pos):\n            return parse_multiline_str(src, pos, literal=True)\n        return parse_literal_str(src, pos)\n    if char == 't':\n        if src.startswith('true', pos):\n            return (pos + 4, True)\n    if char == 'f':\n        if src.startswith('false', pos):\n            return (pos + 5, False)\n    if char == '[':\n        return parse_array(src, pos, parse_float, nest_lvl + 1)\n    if char == '{':\n        return parse_inline_table(src, pos, parse_float, nest_lvl + 1)\n    datetime_match = RE_DATETIME.match(src, pos)\n    if datetime_match:\n        try:\n            datetime_obj = match_to_datetime(datetime_match)\n        except ValueError as e:\n            raise TOMLDecodeError('Invalid date or datetime', src, pos) from e\n        return (datetime_match.end(), datetime_obj)\n    localtime_match = RE_LOCALTIME.match(src, pos)\n    if localtime_match:\n        return (localtime_match.end(), match_to_localtime(localtime_match))\n    number_match = RE_NUMBER.match(src, pos)\n    if number_match:\n        return (number_match.end(), match_to_number(number_match, parse_float))\n    first_three = src[pos + 1:pos + 3]\n    if first_three in {'inf', 'nan'}:\n        return (pos + 3, parse_float(first_three))\n    first_four = src[pos:pos + 4]\n    if first_four in {'-inf', '+inf', '-nan', '+nan'}:\n        return (pos + 4, parse_float(first_four))\n    raise TOMLDecodeError('Invalid value', src, pos)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_value",
+      "kind": "slice_upper",
+      "verdict": "killed",
+      "mutant": "def parse_value(src: str, pos: Pos, parse_float: ParseFloat, nest_lvl: int) -> tuple[Pos, Any]:\n    if nest_lvl > MAX_INLINE_NESTING:\n        raise RecursionError(f'TOML inline arrays/tables are nested more than the allowed {MAX_INLINE_NESTING} levels')\n    try:\n        char: str | None = src[pos]\n    except IndexError:\n        char = None\n    if char == '\"':\n        if src.startswith('\"\"\"', pos):\n            return parse_multiline_str(src, pos, literal=False)\n        return parse_one_line_basic_str(src, pos)\n    if char == \"'\":\n        if src.startswith(\"'''\", pos):\n            return parse_multiline_str(src, pos, literal=True)\n        return parse_literal_str(src, pos)\n    if char == 't':\n        if src.startswith('true', pos):\n            return (pos + 4, True)\n    if char == 'f':\n        if src.startswith('false', pos):\n            return (pos + 5, False)\n    if char == '[':\n        return parse_array(src, pos, parse_float, nest_lvl + 1)\n    if char == '{':\n        return parse_inline_table(src, pos, parse_float, nest_lvl + 1)\n    datetime_match = RE_DATETIME.match(src, pos)\n    if datetime_match:\n        try:\n            datetime_obj = match_to_datetime(datetime_match)\n        except ValueError as e:\n            raise TOMLDecodeError('Invalid date or datetime', src, pos) from e\n        return (datetime_match.end(), datetime_obj)\n    localtime_match = RE_LOCALTIME.match(src, pos)\n    if localtime_match:\n        return (localtime_match.end(), match_to_localtime(localtime_match))\n    number_match = RE_NUMBER.match(src, pos)\n    if number_match:\n        return (number_match.end(), match_to_number(number_match, parse_float))\n    first_three = src[pos:pos + 3 - 1]\n    if first_three in {'inf', 'nan'}:\n        return (pos + 3, parse_float(first_three))\n    first_four = src[pos:pos + 4]\n    if first_four in {'-inf', '+inf', '-nan', '+nan'}:\n        return (pos + 4, parse_float(first_four))\n    raise TOMLDecodeError('Invalid value', src, pos)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_value",
+      "kind": "drop_raise",
+      "verdict": "killed",
+      "mutant": "def parse_value(src: str, pos: Pos, parse_float: ParseFloat, nest_lvl: int) -> tuple[Pos, Any]:\n    if nest_lvl > MAX_INLINE_NESTING:\n        pass\n    try:\n        char: str | None = src[pos]\n    except IndexError:\n        char = None\n    if char == '\"':\n        if src.startswith('\"\"\"', pos):\n            return parse_multiline_str(src, pos, literal=False)\n        return parse_one_line_basic_str(src, pos)\n    if char == \"'\":\n        if src.startswith(\"'''\", pos):\n            return parse_multiline_str(src, pos, literal=True)\n        return parse_literal_str(src, pos)\n    if char == 't':\n        if src.startswith('true', pos):\n            return (pos + 4, True)\n    if char == 'f':\n        if src.startswith('false', pos):\n            return (pos + 5, False)\n    if char == '[':\n        return parse_array(src, pos, parse_float, nest_lvl + 1)\n    if char == '{':\n        return parse_inline_table(src, pos, parse_float, nest_lvl + 1)\n    datetime_match = RE_DATETIME.match(src, pos)\n    if datetime_match:\n        try:\n            datetime_obj = match_to_datetime(datetime_match)\n        except ValueError as e:\n            raise TOMLDecodeError('Invalid date or datetime', src, pos) from e\n        return (datetime_match.end(), datetime_obj)\n    localtime_match = RE_LOCALTIME.match(src, pos)\n    if localtime_match:\n        return (localtime_match.end(), match_to_localtime(localtime_match))\n    number_match = RE_NUMBER.match(src, pos)\n    if number_match:\n        return (number_match.end(), match_to_number(number_match, parse_float))\n    first_three = src[pos:pos + 3]\n    if first_three in {'inf', 'nan'}:\n        return (pos + 3, parse_float(first_three))\n    first_four = src[pos:pos + 4]\n    if first_four in {'-inf', '+inf', '-nan', '+nan'}:\n        return (pos + 4, parse_float(first_four))\n    raise TOMLDecodeError('Invalid value', src, pos)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::parse_value",
+      "kind": "binop",
+      "verdict": "killed",
+      "mutant": "def parse_value(src: str, pos: Pos, parse_float: ParseFloat, nest_lvl: int) -> tuple[Pos, Any]:\n    if nest_lvl > MAX_INLINE_NESTING:\n        raise RecursionError(f'TOML inline arrays/tables are nested more than the allowed {MAX_INLINE_NESTING} levels')\n    try:\n        char: str | None = src[pos]\n    except IndexError:\n        char = None\n    if char == '\"':\n        if src.startswith('\"\"\"', pos):\n            return parse_multiline_str(src, pos, literal=False)\n        return parse_one_line_basic_str(src, pos)\n    if char == \"'\":\n        if src.startswith(\"'''\", pos):\n            return parse_multiline_str(src, pos, literal=True)\n        return parse_literal_str(src, pos)\n    if char == 't':\n        if src.startswith('true', pos):\n            return (pos - 4, True)\n    if char == 'f':\n        if src.startswith('false', pos):\n            return (pos + 5, False)\n    if char == '[':\n        return parse_array(src, pos, parse_float, nest_lvl + 1)\n    if char == '{':\n        return parse_inline_table(src, pos, parse_float, nest_lvl + 1)\n    datetime_match = RE_DATETIME.match(src, pos)\n    if datetime_match:\n        try:\n            datetime_obj = match_to_datetime(datetime_match)\n        except ValueError as e:\n            raise TOMLDecodeError('Invalid date or datetime', src, pos) from e\n        return (datetime_match.end(), datetime_obj)\n    localtime_match = RE_LOCALTIME.match(src, pos)\n    if localtime_match:\n        return (localtime_match.end(), match_to_localtime(localtime_match))\n    number_match = RE_NUMBER.match(src, pos)\n    if number_match:\n        return (number_match.end(), match_to_number(number_match, parse_float))\n    first_three = src[pos:pos + 3]\n    if first_three in {'inf', 'nan'}:\n        return (pos + 3, parse_float(first_three))\n    first_four = src[pos:pos + 4]\n    if first_four in {'-inf', '+inf', '-nan', '+nan'}:\n        return (pos + 4, parse_float(first_four))\n    raise TOMLDecodeError('Invalid value', src, pos)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::is_unicode_scalar_value",
+      "kind": "boolop",
+      "verdict": "killed",
+      "mutant": "def is_unicode_scalar_value(codepoint: int) -> bool:\n    return 0 <= codepoint <= 55295 and 57344 <= codepoint <= 1114111",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::is_unicode_scalar_value",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def is_unicode_scalar_value(codepoint: int) -> bool:\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::is_unicode_scalar_value",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def is_unicode_scalar_value(codepoint: int) -> bool:\n    return 0 < codepoint <= 55295 or 57344 <= codepoint <= 1114111",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::is_unicode_scalar_value",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def is_unicode_scalar_value(codepoint: int) -> bool:\n    return 1 <= codepoint <= 55295 or 57344 <= codepoint <= 1114111",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::is_unicode_scalar_value",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def is_unicode_scalar_value(codepoint: int) -> bool:\n    return 0 <= codepoint <= 55295 or 57344 < codepoint <= 1114111",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::make_safe_parse_float",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def make_safe_parse_float(parse_float: ParseFloat) -> ParseFloat:\n    \"\"\"A decorator to make `parse_float` safe.\n\n    `parse_float` must not return dicts or lists, because these types\n    would be mixed with parsed TOML tables and arrays, thus confusing\n    the parser. The returned decorated callable raises `ValueError`\n    instead of returning illegal types.\n    \"\"\"\n    if parse_float is not float:\n        return float\n\n    def safe_parse_float(float_str: str) -> Any:\n        float_value = parse_float(float_str)\n        if isinstance(float_value, (dict, list)):\n            raise ValueError('parse_float must not return dicts or lists')\n        return float_value\n    return safe_parse_float",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::make_safe_parse_float",
+      "kind": "drop_raise",
+      "verdict": "killed",
+      "mutant": "def make_safe_parse_float(parse_float: ParseFloat) -> ParseFloat:\n    \"\"\"A decorator to make `parse_float` safe.\n\n    `parse_float` must not return dicts or lists, because these types\n    would be mixed with parsed TOML tables and arrays, thus confusing\n    the parser. The returned decorated callable raises `ValueError`\n    instead of returning illegal types.\n    \"\"\"\n    if parse_float is float:\n        return float\n\n    def safe_parse_float(float_str: str) -> Any:\n        float_value = parse_float(float_str)\n        if isinstance(float_value, (dict, list)):\n            pass\n        return float_value\n    return safe_parse_float",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::make_safe_parse_float",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "mutant": "def make_safe_parse_float(parse_float: ParseFloat) -> ParseFloat:\n    \"\"\"A decorator to make `parse_float` safe.\n\n    `parse_float` must not return dicts or lists, because these types\n    would be mixed with parsed TOML tables and arrays, thus confusing\n    the parser. The returned decorated callable raises `ValueError`\n    instead of returning illegal types.\n    \"\"\"\n    if not parse_float is float:\n        return float\n\n    def safe_parse_float(float_str: str) -> Any:\n        float_value = parse_float(float_str)\n        if isinstance(float_value, (dict, list)):\n            raise ValueError('parse_float must not return dicts or lists')\n        return float_value\n    return safe_parse_float",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::make_safe_parse_float",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def make_safe_parse_float(parse_float: ParseFloat) -> ParseFloat:\n    \"\"\"A decorator to make `parse_float` safe.\n\n    `parse_float` must not return dicts or lists, because these types\n    would be mixed with parsed TOML tables and arrays, thus confusing\n    the parser. The returned decorated callable raises `ValueError`\n    instead of returning illegal types.\n    \"\"\"\n    if parse_float is float:\n        return None\n\n    def safe_parse_float(float_str: str) -> Any:\n        float_value = parse_float(float_str)\n        if isinstance(float_value, (dict, list)):\n            raise ValueError('parse_float must not return dicts or lists')\n        return float_value\n    return safe_parse_float",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_parser.py::make_safe_parse_float",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "mutant": "def make_safe_parse_float(parse_float: ParseFloat) -> ParseFloat:\n    \"\"\"A decorator to make `parse_float` safe.\n\n    `parse_float` must not return dicts or lists, because these types\n    would be mixed with parsed TOML tables and arrays, thus confusing\n    the parser. The returned decorated callable raises `ValueError`\n    instead of returning illegal types.\n    \"\"\"\n    if parse_float is float:\n        return float\n\n    def safe_parse_float(float_str: str) -> Any:\n        float_value = parse_float(float_str)\n        if not isinstance(float_value, (dict, list)):\n            raise ValueError('parse_float must not return dicts or lists')\n        return float_value\n    return safe_parse_float",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_re.py::match_to_datetime",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "def match_to_datetime(match: re.Match[str]) -> datetime | date:\n    \"\"\"Convert a `RE_DATETIME` match to `datetime.datetime` or `datetime.date`.\n\n    Raises ValueError if the match does not correspond to a valid date\n    or datetime.\n    \"\"\"\n    year_str, month_str, day_str, hour_str, minute_str, sec_str, micros_str, zulu_time, offset_sign_str, offset_hour_str, offset_minute_str = match.groups()\n    year, month, day = (int(year_str), int(month_str), int(day_str))\n    if hour_str is not None:\n        return date(year, month, day)\n    hour, minute = (int(hour_str), int(minute_str))\n    sec = int(sec_str) if sec_str else 0\n    micros = int(micros_str.ljust(6, '0')) if micros_str else 0\n    if offset_sign_str:\n        tz: tzinfo | None = cached_tz(offset_hour_str, offset_minute_str, offset_sign_str)\n    elif zulu_time:\n        tz = timezone.utc\n    else:\n        tz = None\n    return datetime(year, month, day, hour, minute, sec, micros, tzinfo=tz)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_re.py::match_to_datetime",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def match_to_datetime(match: re.Match[str]) -> datetime | date:\n    \"\"\"Convert a `RE_DATETIME` match to `datetime.datetime` or `datetime.date`.\n\n    Raises ValueError if the match does not correspond to a valid date\n    or datetime.\n    \"\"\"\n    year_str, month_str, day_str, hour_str, minute_str, sec_str, micros_str, zulu_time, offset_sign_str, offset_hour_str, offset_minute_str = match.groups()\n    year, month, day = (int(year_str), int(month_str), int(day_str))\n    if hour_str is None:\n        return None\n    hour, minute = (int(hour_str), int(minute_str))\n    sec = int(sec_str) if sec_str else 0\n    micros = int(micros_str.ljust(6, '0')) if micros_str else 0\n    if offset_sign_str:\n        tz: tzinfo | None = cached_tz(offset_hour_str, offset_minute_str, offset_sign_str)\n    elif zulu_time:\n        tz = timezone.utc\n    else:\n        tz = None\n    return datetime(year, month, day, hour, minute, sec, micros, tzinfo=tz)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_re.py::match_to_datetime",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def match_to_datetime(match: re.Match[str]) -> datetime | date:\n    \"\"\"Convert a `RE_DATETIME` match to `datetime.datetime` or `datetime.date`.\n\n    Raises ValueError if the match does not correspond to a valid date\n    or datetime.\n    \"\"\"\n    year_str, month_str, day_str, hour_str, minute_str, sec_str, micros_str, zulu_time, offset_sign_str, offset_hour_str, offset_minute_str = match.groups()\n    year, month, day = (int(year_str), int(month_str), int(day_str))\n    if hour_str is None:\n        return date(year, month, day)\n    hour, minute = (int(hour_str), int(minute_str))\n    sec = int(sec_str) if sec_str else 1\n    micros = int(micros_str.ljust(6, '0')) if micros_str else 0\n    if offset_sign_str:\n        tz: tzinfo | None = cached_tz(offset_hour_str, offset_minute_str, offset_sign_str)\n    elif zulu_time:\n        tz = timezone.utc\n    else:\n        tz = None\n    return datetime(year, month, day, hour, minute, sec, micros, tzinfo=tz)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_re.py::match_to_datetime",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "mutant": "def match_to_datetime(match: re.Match[str]) -> datetime | date:\n    \"\"\"Convert a `RE_DATETIME` match to `datetime.datetime` or `datetime.date`.\n\n    Raises ValueError if the match does not correspond to a valid date\n    or datetime.\n    \"\"\"\n    year_str, month_str, day_str, hour_str, minute_str, sec_str, micros_str, zulu_time, offset_sign_str, offset_hour_str, offset_minute_str = match.groups()\n    year, month, day = (int(year_str), int(month_str), int(day_str))\n    if not hour_str is None:\n        return date(year, month, day)\n    hour, minute = (int(hour_str), int(minute_str))\n    sec = int(sec_str) if sec_str else 0\n    micros = int(micros_str.ljust(6, '0')) if micros_str else 0\n    if offset_sign_str:\n        tz: tzinfo | None = cached_tz(offset_hour_str, offset_minute_str, offset_sign_str)\n    elif zulu_time:\n        tz = timezone.utc\n    else:\n        tz = None\n    return datetime(year, month, day, hour, minute, sec, micros, tzinfo=tz)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_re.py::match_to_datetime",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def match_to_datetime(match: re.Match[str]) -> datetime | date:\n    \"\"\"Convert a `RE_DATETIME` match to `datetime.datetime` or `datetime.date`.\n\n    Raises ValueError if the match does not correspond to a valid date\n    or datetime.\n    \"\"\"\n    year_str, month_str, day_str, hour_str, minute_str, sec_str, micros_str, zulu_time, offset_sign_str, offset_hour_str, offset_minute_str = match.groups()\n    year, month, day = (int(year_str), int(month_str), int(day_str))\n    if hour_str is None:\n        return date(year, month, day)\n    hour, minute = (int(hour_str), int(minute_str))\n    sec = int(sec_str) if sec_str else 0\n    micros = int(micros_str.ljust(6, '0')) if micros_str else 0\n    if offset_sign_str:\n        tz: tzinfo | None = cached_tz(offset_hour_str, offset_minute_str, offset_sign_str)\n    elif zulu_time:\n        tz = timezone.utc\n    else:\n        tz = None\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_re.py::cached_tz",
+      "kind": "compare",
+      "verdict": "killed",
+      "mutant": "@lru_cache(maxsize=None)\ndef cached_tz(hour_str: str, minute_str: str, sign_str: str) -> timezone:\n    sign = 1 if sign_str != '+' else -1\n    return timezone(timedelta(hours=sign * int(hour_str), minutes=sign * int(minute_str)))",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_re.py::cached_tz",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "@lru_cache(maxsize=None)\ndef cached_tz(hour_str: str, minute_str: str, sign_str: str) -> timezone:\n    sign = 1 if sign_str == '+' else -1\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_re.py::cached_tz",
+      "kind": "binop",
+      "verdict": "killed",
+      "mutant": "@lru_cache(maxsize=None)\ndef cached_tz(hour_str: str, minute_str: str, sign_str: str) -> timezone:\n    sign = 1 if sign_str == '+' else -1\n    return timezone(timedelta(hours=sign // int(hour_str), minutes=sign * int(minute_str)))",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_re.py::cached_tz",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "@lru_cache(maxsize=None)\ndef cached_tz(hour_str: str, minute_str: str, sign_str: str) -> timezone:\n    sign = 2 if sign_str == '+' else -1\n    return timezone(timedelta(hours=sign * int(hour_str), minutes=sign * int(minute_str)))",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_re.py::cached_tz",
+      "kind": "binop",
+      "verdict": "killed",
+      "mutant": "@lru_cache(maxsize=None)\ndef cached_tz(hour_str: str, minute_str: str, sign_str: str) -> timezone:\n    sign = 1 if sign_str == '+' else -1\n    return timezone(timedelta(hours=sign * int(hour_str), minutes=sign // int(minute_str)))",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_re.py::match_to_localtime",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def match_to_localtime(match: re.Match[str]) -> time:\n    hour_str, minute_str, sec_str, micros_str = match.groups()\n    sec = int(sec_str) if sec_str else 1\n    micros = int(micros_str.ljust(6, '0')) if micros_str else 0\n    return time(int(hour_str), int(minute_str), sec, micros)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_re.py::match_to_localtime",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def match_to_localtime(match: re.Match[str]) -> time:\n    hour_str, minute_str, sec_str, micros_str = match.groups()\n    sec = int(sec_str) if sec_str else 0\n    micros = int(micros_str.ljust(7, '0')) if micros_str else 0\n    return time(int(hour_str), int(minute_str), sec, micros)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_re.py::match_to_localtime",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def match_to_localtime(match: re.Match[str]) -> time:\n    hour_str, minute_str, sec_str, micros_str = match.groups()\n    sec = int(sec_str) if sec_str else 0\n    micros = int(micros_str.ljust(6, '0')) if micros_str else 1\n    return time(int(hour_str), int(minute_str), sec, micros)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_re.py::match_to_localtime",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def match_to_localtime(match: re.Match[str]) -> time:\n    hour_str, minute_str, sec_str, micros_str = match.groups()\n    sec = int(sec_str) if sec_str else 0\n    micros = int(micros_str.ljust(6, '0')) if micros_str else 0\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_re.py::match_to_number",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def match_to_number(match: re.Match[str], parse_float: ParseFloat) -> Any:\n    if match.group('floatpart'):\n        return None\n    return int(match.group(), 0)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_re.py::match_to_number",
+      "kind": "negate_if",
+      "verdict": "killed",
+      "mutant": "def match_to_number(match: re.Match[str], parse_float: ParseFloat) -> Any:\n    if not match.group('floatpart'):\n        return parse_float(match.group())\n    return int(match.group(), 0)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_re.py::match_to_number",
+      "kind": "const",
+      "verdict": "killed",
+      "mutant": "def match_to_number(match: re.Match[str], parse_float: ParseFloat) -> Any:\n    if match.group('floatpart'):\n        return parse_float(match.group())\n    return int(match.group(), 1)",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    },
+    {
+      "target": "src/tomli/_re.py::match_to_number",
+      "kind": "drop_return",
+      "verdict": "killed",
+      "mutant": "def match_to_number(match: re.Match[str], parse_float: ParseFloat) -> Any:\n    if match.group('floatpart'):\n        return parse_float(match.group())\n    return None",
+      "witness": null,
+      "strength": 3,
+      "provenance": "",
+      "detail": ""
+    }
+  ]
+}
