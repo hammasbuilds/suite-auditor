@@ -77,7 +77,7 @@ def _looks_nondeterministic(source: str) -> bool:
 
 
 RUNNER = """
-import json, re, sys, types
+import json, os, re, sys, types
 
 SYS_PATH = {sys_path!r}
 PACKAGE = {package!r}
@@ -160,6 +160,12 @@ class _SideEffect(BaseException):
 
 _GUARD = [False]
 
+# The os.open flag bits that mean "this call will change the file". O_RDONLY is 0, so a
+# read through os.open still passes.
+_WRITE_FLAGS = 0
+for _flag_name in ("O_WRONLY", "O_RDWR", "O_CREAT", "O_APPEND", "O_TRUNC"):
+    _WRITE_FLAGS = _WRITE_FLAGS | getattr(os, _flag_name, 0)
+
 # Audit events that leave the process: anything that writes, deletes, renames, spawns or
 # connects. Blocking them is the whole point - the proof step only needs a return value,
 # and it has no business changing the machine to get one.
@@ -178,10 +184,22 @@ def _audit(event, args):
     if not _GUARD[0]:
         return
     if event == "open":
-        # args is (path, mode, flags); reading is fine, writing is not.
-        mode = str(args[1]) if len(args) > 1 and args[1] else ""
-        if any(ch in mode for ch in "wax+"):
-            raise _SideEffect("open(mode=" + mode + ")")
+        # ONE event, two different calls. builtins.open and io.open pass a mode STRING as
+        # args[1]; os.open passes None there and an integer flag set as args[2]. Reading
+        # args[1] as the mode found "" for every os.open and returned early, so
+        # os.open(path, O_WRONLY | O_CREAT) plus os.write wrote a real file and O_TRUNC
+        # emptied an existing one - while the run still reported a verdict it had obtained
+        # by doing exactly that. os.write raises no audit event, so the descriptor is the
+        # only place this can be stopped.
+        mode = args[1] if len(args) > 1 else None
+        if mode is None:
+            flags = args[2] if len(args) > 2 and isinstance(args[2], int) else 0
+            if flags & _WRITE_FLAGS:
+                raise _SideEffect("os.open with write flags")
+            return
+        text = str(mode)
+        if any(ch in text for ch in "wax+"):
+            raise _SideEffect("open(mode=" + text + ")")
         return
     for prefix in _BLOCKED:
         if event == prefix or event.startswith(prefix):

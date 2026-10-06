@@ -21,7 +21,14 @@ def test_proof_step_cannot_touch_the_machine(tmp_path):
     module = Path(__file__).parent.parent / "src" / "suite_auditor" / "differential.py"
     src = module.read_text(encoding="utf-8")
     block = src[src.index("class _SideEffect(BaseException):") : src.index("def _equal(x, y):")]
-    ns = {"sys": sys, "_NOEQ": object(), "_render": lambda v: (repr(v), v), "_norm": lambda s: s}
+    # `os` is in here because the guard computes the os.open write-flag mask from it.
+    ns = {
+        "sys": sys,
+        "os": os,
+        "_NOEQ": object(),
+        "_render": lambda v: (repr(v), v),
+        "_norm": lambda s: s,
+    }
     exec(block, ns)  # noqa: S102 - running the shipped guard is the point
     call, guard = ns["_call"], ns["_GUARD"]
 
@@ -40,6 +47,19 @@ def test_proof_step_cannot_touch_the_machine(tmp_path):
             return "caught it myself"
         return "deleted"
 
+    def write_through_a_descriptor() -> str:
+        fd = os.open(str(probe), os.O_WRONLY | os.O_TRUNC)
+        try:
+            os.write(fd, b"clobbered")
+        finally:
+            os.close(fd)
+        return "written"
+
+    def create_through_a_descriptor() -> str:
+        fd = os.open(str(tmp_path / "made.txt"), os.O_WRONLY | os.O_CREAT)
+        os.close(fd)
+        return "created"
+
     for label, fn in [
         ("delete", lambda: os.remove(probe)),
         ("write", lambda: probe.write_text("clobbered", encoding="utf-8")),
@@ -48,12 +68,32 @@ def test_proof_step_cannot_touch_the_machine(tmp_path):
         # A function that wraps its own side effect in `except Exception` must not be
         # able to hide the block - that is why _SideEffect derives from BaseException.
         ("self-swallowed", swallows_it),
+        # The `open` audit event is raised by builtins.open with a mode STRING and by
+        # os.open with None and an integer flag set. Reading args[1] as the mode found ""
+        # for every os.open and let it through, so these two wrote and truncated real
+        # files while the run still returned a verdict obtained by doing it. os.write
+        # raises no audit event at all, which is why the descriptor is the thing to stop.
+        ("os.open truncate", write_through_a_descriptor),
+        ("os.open create", create_through_a_descriptor),
     ]:
         (kind, _detail), _ = call(fn, (), {})
         assert kind == "impure", f"{label} was not blocked: got {kind}"
 
     assert probe.exists(), "the guarded calls changed the filesystem"
     assert probe.read_text(encoding="utf-8") == "keep me"
+    assert not (tmp_path / "made.txt").exists(), "os.open created a file through the guard"
+
+    # O_RDONLY is 0, so a read through a descriptor must still get through: a guard that
+    # blocked reads would make the proof step useless rather than safe.
+    def read_through_a_descriptor() -> int:
+        fd = os.open(str(probe), os.O_RDONLY)
+        try:
+            return len(os.read(fd, 16))
+        finally:
+            os.close(fd)
+
+    (kind, _detail), _ = call(read_through_a_descriptor, (), {})
+    assert kind == "ok", f"a read through os.open was blocked: {kind}"
     assert guard[0] is False, "the guard was left on, which would affect the tool's own I/O"
 
 
