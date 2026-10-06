@@ -181,3 +181,37 @@ def test_the_sensitivity_study_is_published_with_its_data():
         "SENSITIVITY.md and sensitivity-toolz.json disagree about the headline"
     )
     assert "0 of 2" in text, "the before-fix number is what gives the after-fix one meaning"
+
+
+def test_the_comparison_numbers_match_the_audit_it_describes():
+    """COMPARISON.md's suite-auditor column must be what the tool actually reports.
+
+    The cosmic-ray side cannot be re-derived here - it needs cosmic-ray installed and a
+    long run - so it is recorded in the document with its version and settings. This
+    checks the half that can be checked, which is the half making the claim.
+    """
+    doc = ROOT / "docs" / "COMPARISON.md"
+    assert doc.is_file(), "docs/COMPARISON.md is missing"
+    text = doc.read_text(encoding="utf-8")
+
+    # The two witnesses quoted in the document are the point of the comparison, so they
+    # have to be the ones the tool produces.
+    for fragment in (
+        "call (3)",
+        "before ok: 7",
+        "after ok: 5",
+        "call (10, 0.2)",
+        "before ok: 12.0",
+        "after ok: 22.0",
+    ):
+        assert fragment in text, f"the comparison no longer quotes {fragment!r}"
+
+    # And it must say plainly that the mutant counts are not comparable, because that is
+    # the honest part a favourable comparison is most tempted to drop.
+    lowered = text.lower()
+    assert "not comparable" in lowered, (
+        "COMPARISON.md no longer says the rates are not comparable"
+    )
+    assert "mutmut" in lowered and "397" in text, (
+        "it no longer says why mutmut is absent rather than represented by a guess"
+    )

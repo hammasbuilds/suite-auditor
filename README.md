@@ -5,7 +5,7 @@
   <a href="https://github.com/hammasbuilds/suite-auditor/actions/workflows/ci.yml"><img src="https://github.com/hammasbuilds/suite-auditor/actions/workflows/ci.yml/badge.svg" alt="ci"></a>
   <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="python">
   <img src="https://img.shields.io/badge/runtime%20deps-0-brightgreen" alt="zero dependencies">
-  <img src="https://img.shields.io/badge/tests-119-brightgreen" alt="tests">
+  <img src="https://img.shields.io/badge/tests-120-brightgreen" alt="tests">
   <a href="https://github.com/hammasbuilds/suite-auditor/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="license"></a>
 </p>
 
@@ -269,8 +269,16 @@ Full detail in [docs/RESULTS.md](https://github.com/hammasbuilds/suite-auditor/b
   the home directory) could collide - use `-j 1` for those.
 - **Compiled extensions must be built in place.** The copy's own source directories are
   put first on `PYTHONPATH` so the tests import the mutated copy, not an installed one.
-- **It does not replace `mutmut` or `cosmic-ray`,** which are more thorough. This adds the
-  proof step and the grading.
+- **It does not replace `mutmut` or `cosmic-ray`,** which generate far more mutants. This
+  adds the proof step and the grading — and that claim is now measured rather than
+  asserted: [`docs/COMPARISON.md`](docs/COMPARISON.md) runs cosmic-ray over the same
+  target. It reports **41 survivors** as a flat list of function-plus-operator names;
+  this reports **2 proven gaps with the call that proves each** — `shipping(3)` returning
+  7 instead of 5, `with_tax(10, 0.2)` returning 12.0 instead of 22.0 on a call the tests
+  really made — plus 2 refusals with their reason. The rates are not comparable, because
+  cosmic-ray applies eleven operators to a single `+` and has no per-function cap; what is
+  comparable is what you are told about a survivor. **26 of its 41 are in the one function
+  no test reaches**, which is one fact reported 26 times, and the fact that matters most.
 
 ## Development
 
