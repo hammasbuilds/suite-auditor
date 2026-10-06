@@ -123,3 +123,61 @@ def test_the_readme_unproven_breakdown_matches_the_committed_audits():
         )
         total = int([c.strip() for c in total_line.strip("|").split("|")][column])
         assert total == sum(audits[name].values()), f"{name}: total {total} != parts"
+
+
+def test_the_callable_pool_reaches_a_higher_order_function():
+    """A parameter that wants a function has to be offered one.
+
+    The pool is harvested from literals in the covering tests, and a callable passed in a
+    test is an `ast.Name`, never a Constant - so `valfilter(predicate, d, factory=dict)`
+    got 64 generated calls that all raised TypeError on both sides, and a planted gap in
+    it could not be proven. Measured: 0 of 2 before, 2 of 2 after. See docs/SENSITIVITY.md.
+    """
+    import ast
+
+    from suite_auditor.inputs import argument_sets
+
+    source = (
+        "def valfilter(predicate, d, factory=dict):\n"
+        "    rv = factory()\n"
+        "    for k, v in d.items():\n"
+        "        if predicate(v):\n"
+        "            rv[k] = v\n"
+        "    return rv\n"
+    )
+    fn = next(
+        node
+        for node in ast.walk(ast.parse(source))
+        if isinstance(node, ast.FunctionDef)
+    )
+    sets = argument_sets(fn, {}, observed=[])
+    assert sets, "no argument sets at all"
+    firsts = {s.pos[0] for s in sets if getattr(s, "pos", None)}
+    thirds = {s.pos[2] for s in sets if getattr(s, "pos", None) and len(s.pos) > 2}
+    # Something callable must be on offer for BOTH - fixing `predicate` alone left the
+    # third argument as a dict instance, so `factory()` raised and every call still failed.
+    assert firsts & {"bool", "len", "str", "dict", "list"}, (
+        f"no callable offered for `predicate`: {sorted(firsts)[:8]}"
+    )
+    assert thirds & {"dict", "list", "set", "tuple"}, (
+        f"no factory offered for `factory`: {sorted(thirds)[:8]}"
+    )
+
+
+def test_the_sensitivity_study_is_published_with_its_data():
+    """A rate with no committed output behind it is not checkable."""
+    doc = ROOT / "docs" / "SENSITIVITY.md"
+    assert doc.is_file(), "docs/SENSITIVITY.md is missing"
+    text = doc.read_text(encoding="utf-8")
+    data = json.loads(
+        (ROOT / "docs" / "sensitivity-toolz.json").read_text(encoding="utf-8")
+    )
+    # The headline pair, which is the only part that measures the prover rather than the
+    # plants, must match the committed run.
+    assert data["proven_total"] == data["newly_surviving_total"], (
+        "the committed run no longer shows every planted gap proven"
+    )
+    assert f"{data['proven_total']} of {data['newly_surviving_total']}" in text, (
+        "SENSITIVITY.md and sensitivity-toolz.json disagree about the headline"
+    )
+    assert "0 of 2" in text, "the before-fix number is what gives the after-fix one meaning"

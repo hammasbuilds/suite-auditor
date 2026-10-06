@@ -1,0 +1,55 @@
+{
+  "target": "C:\\Users\\dell\\AppData\\Local\\Temp\\claude\\d--github\\9ecf52ac-9133-4b3a-8b8b-0b0e578e4abb\\scratchpad\\toolz_target",
+  "per_function": 6,
+  "seconds": 91.6,
+  "pristine": {
+    "mutants": 23,
+    "survivors": 0,
+    "proven_gaps": 0
+  },
+  "plants": [
+    {
+      "plant": "valmap-every-assertion-loosened",
+      "file": "toolz/tests/test_dicttoolz.py",
+      "newly_surviving": 0,
+      "proven": 0,
+      "unproven": 0,
+      "unproven_verdicts": []
+    },
+    {
+      "plant": "keymap-every-assertion-loosened",
+      "file": "toolz/tests/test_dicttoolz.py",
+      "newly_surviving": 0,
+      "proven": 0,
+      "unproven": 0,
+      "unproven_verdicts": []
+    },
+    {
+      "plant": "valmap-and-keymap-environ-checks-dropped",
+      "file": "toolz/tests/test_dicttoolz.py",
+      "newly_surviving": 0,
+      "proven": 0,
+      "unproven": 0,
+      "unproven_verdicts": []
+    },
+    {
+      "plant": "valfilter-equality-loosened",
+      "file": "toolz/tests/test_dicttoolz.py",
+      "newly_surviving": 1,
+      "proven": 1,
+      "unproven": 0,
+      "unproven_verdicts": []
+    },
+    {
+      "plant": "keyfilter-equality-loosened",
+      "file": "toolz/tests/test_dicttoolz.py",
+      "newly_surviving": 1,
+      "proven": 1,
+      "unproven": 0,
+      "unproven_verdicts": []
+    }
+  ],
+  "newly_surviving_total": 2,
+  "proven_total": 2,
+  "sensitivity": 1.0
+}

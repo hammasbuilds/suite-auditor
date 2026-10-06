@@ -37,6 +37,54 @@ from pathlib import Path
 # Values that exercise the corners most mutation operators live at.
 GENERIC = ["0", "1", "-1", "2", '""', '"a"', "[]", "[1, 2]", "None", "True", "False", "{}"]
 
+# Parameters that take a function, by name, and what to offer them.
+#
+# The pool is harvested from LITERALS in the covering tests, and a callable passed in a
+# test is an `ast.Name`, never a Constant - so a higher-order function got no valid call at
+# all. Measured on toolz's `dicttoolz`: both planted gaps came back "all 64 argument sets
+# raised on both sides", so the prover proved 0 of 2 gaps that were definitely there. toolz
+# is a functional library, which is most of it.
+#
+# Builtins and a lambda only. The probe has to resolve these without importing anything
+# from the target's test module, which is the one thing this design does not do - so
+# `iseven` from the test file is not available even though it would be the ideal argument.
+CALLABLE_NAMES = (
+    "func",
+    "fn",
+    "f",
+    "function",
+    "predicate",
+    "pred",
+    "key",
+    "keyfunc",
+    "callback",
+    "op",
+    "binop",
+    "transform",
+    # A factory is a callable too, and missing it kept `valfilter(predicate, d, factory)`
+    # unprovable even once `predicate` was fixed: the third argument came out as `{1: 1}`,
+    # a dict INSTANCE, so `factory()` raised "'dict' object is not callable" and all 64
+    # calls still failed on both sides.
+    "factory",
+    "cls",
+    "constructor",
+)
+CALLABLE_POOL = [
+    # The type constructors first: they are the usual argument for a `factory` parameter
+    # and they are also perfectly good one-argument callables.
+    "dict",
+    "list",
+    "bool",
+    "len",
+    "str",
+    "set",
+    "tuple",
+    "abs",
+    "(lambda *a: True)",
+    "(lambda *a: False)",
+    "(lambda x: x)",
+]
+
 OBSERVED, RECOMBINED, GENERATED = "observed", "recombined", "generated"
 
 PROVENANCE_LABEL = {
@@ -256,7 +304,12 @@ def argument_sets(
             if i < len(a.pos):
                 near += _neighbours(a.pos[i])
         vals: list[str] = []
+        # A parameter named for a function goes first to callables: offering it `0` and
+        # `""` produces 64 calls that all raise, which is how a provable gap in
+        # `valfilter(predicate, d)` came back unproven.
+        wants_callable = name.lower() in CALLABLE_NAMES
         for group in (
+            CALLABLE_POOL if wants_callable else [],
             boundaries,
             near,
             pool.get(name, []),

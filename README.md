@@ -5,7 +5,7 @@
   <a href="https://github.com/hammasbuilds/suite-auditor/actions/workflows/ci.yml"><img src="https://github.com/hammasbuilds/suite-auditor/actions/workflows/ci.yml/badge.svg" alt="ci"></a>
   <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="python">
   <img src="https://img.shields.io/badge/runtime%20deps-0-brightgreen" alt="zero dependencies">
-  <img src="https://img.shields.io/badge/tests-117-brightgreen" alt="tests">
+  <img src="https://img.shields.io/badge/tests-119-brightgreen" alt="tests">
   <a href="https://github.com/hammasbuilds/suite-auditor/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="license"></a>
 </p>
 
@@ -221,10 +221,20 @@ reached by no test, and four of its gaps are calls the suite made and then accep
 different answer for, e.g. `_looks_like_number('src_path')` returning `True` instead of
 `False`.
 
-**What is missing here, and is the honest next step:** no study plants known gaps and
-measures what share of them the prover proves. Without that, the prover's sensitivity is
-unmeasured, and these two columns cannot separate "this suite is thorough" from "this tool
-is quiet". `flake-detective`'s `scripts/inject_and_score.py` is the working template.
+**How often does the prover prove a gap that is really there?** That question is what
+makes the `0` above mean anything, and it is now measured:
+[`docs/SENSITIVITY.md`](docs/SENSITIVITY.md). Gaps are planted by loosening assertions in
+`toolz`'s own tests, and the share of the resulting survivors that the prover proves is its
+sensitivity. The first run was **0 of 2** — both planted gaps came back "all 64 argument
+sets raised on both sides", because `valfilter(predicate, d, factory=dict)` takes a
+*callable* and the argument pool is harvested from literals, so a higher-order function
+never got a valid call at all. toolz is a functional library, which is most of it. With
+callables in the pool it is **2 of 2**, and the full toolz audit is unchanged — verified by
+running both pools in one environment.
+
+Three of the five plants created no survivor: loosening one assertion in a suite that kills
+92.4% of mutants does not make a hole, because other assertions still catch the mutant.
+What is still missing is more than one module of one library behind the rate.
 
 Both columns were re-run on 2026-10-04 on Python 3.12, toolz at upstream commit `451af60`
 (`sh scripts/reproduce_toolz.sh`) and repo-surgeon at `d69c12d` (command in
