@@ -83,6 +83,23 @@ def summary(audit: Audit, repo_name: str) -> str:
             f"  skipped            : {counts['skipped']}  (could not be scored; not in any rate)"
         )
 
+    # An install of the project shadowing the scratch copy means the suite imported the
+    # real files, so mutants in them were never seen and every one of them is scored as
+    # killed. The audit warns about this while it runs and nothing carried it afterwards:
+    # not this report, not --json. A high kill rate with invisible mutants behind it is
+    # precisely the clean bill of health this tool exists to refuse.
+    if audit.stray:
+        lines.append(
+            f"  ! SHADOWED: the suite executed {len(audit.stray)} file(s) from the real "
+            "checkout rather than the scratch copy, so mutants in them were invisible to "
+            "the tests and counted as killed. Uninstall the project, or install it "
+            "editable, and audit again."
+        )
+        for path in audit.stray[:5]:
+            lines.append(f"      {path}")
+        if len(audit.stray) > 5:
+            lines.append(f"      ... and {len(audit.stray) - 5} more")
+
     # The kill rate is a rate over the functions a test reaches, so on its own it
     # says nothing about how much of the package that is. Printed together, and
     # never apart: a suite covering a tenth of the code and killing everything in
@@ -152,6 +169,28 @@ def summary(audit: Audit, repo_name: str) -> str:
     return "\n".join(ln for ln in lines if ln != "")
 
 
+def _health_json(health: object) -> dict | None:
+    """The baseline suite run, including the two members `asdict` would drop.
+
+    `clean` and `caveat()` are a property and a method, so `dataclasses.asdict` omits both
+    silently - and they are the two that say whether anything else here can be believed. A
+    suite that collected no tests has passed=0 and failed=0, which reads as a healthy run
+    with a small surface.
+    """
+    if health is None:
+        return None
+    return {
+        "ran": bool(getattr(health, "ran", False)),
+        "exit_code": getattr(health, "exit_code", None),
+        "passed": getattr(health, "passed", 0),
+        "failed": getattr(health, "failed", 0),
+        "errors": getattr(health, "errors", 0),
+        "collected_nothing": bool(getattr(health, "collected_nothing", False)),
+        "clean": bool(getattr(health, "clean", False)),
+        "caveat": health.caveat() if hasattr(health, "caveat") else "",
+    }
+
+
 def write_json(audit: Audit, path: Path) -> None:
     path.write_text(
         json.dumps(
@@ -166,6 +205,18 @@ def write_json(audit: Audit, path: Path) -> None:
                 "uncovered": audit.uncovered,
                 "failing_only": audit.failing_only,
                 "seconds": round(audit.seconds, 1),
+                # Every reason not to read the rates above at face value. The text report
+                # printed all of these and this export carried none of them, so the one
+                # consumer that cannot ask a follow-up question - a CI gate reading
+                # --json - got a kill rate with nothing qualifying it. `no_targets` alone
+                # means the rates are not about this suite at all.
+                "no_targets": audit.no_targets,
+                "scored": len(audit.scored),
+                "stopped_early": audit.stopped_early,
+                "planned_mutants": audit.planned_mutants,
+                "audited_functions": audit.audited_functions,
+                "stray": audit.stray,
+                "suite_health": _health_json(audit.health),
                 "results": [r.as_row() for r in audit.results],
             },
             indent=2,
