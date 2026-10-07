@@ -52,6 +52,12 @@ _NONDETERMINISTIC_CALLS = {
 }  # fmt: skip
 _NONDETERMINISTIC_ATTRS = {"now", "utcnow", "today"}  # datetime.now(), date.today(), ...
 
+# Modules whose every function is nondeterministic, matched on the object of an attribute
+# call. `random.randint`, `random.choice`, `secrets.token_hex`, `time.time` - naming the
+# methods one at a time is a list that goes stale, and the one that was missing was the
+# single most obvious of them.
+_NONDETERMINISTIC_MODULES = {"random", "secrets", "time"}
+
 
 def _looks_nondeterministic(source: str) -> bool:
     """Does this function's own source call something whose result is not a function
@@ -68,11 +74,29 @@ def _looks_nondeterministic(source: str) -> bool:
     except SyntaxError:
         return False
     for node in ast.walk(tree):
-        if isinstance(node, ast.Call):
-            fn = node.func
-            name = fn.attr if isinstance(fn, ast.Attribute) else getattr(fn, "id", None)
-            if name in _NONDETERMINISTIC_CALLS or name in _NONDETERMINISTIC_ATTRS:
-                return True
+        if not isinstance(node, ast.Call):
+            continue
+        fn = node.func
+        name = fn.attr if isinstance(fn, ast.Attribute) else getattr(fn, "id", None)
+        if name in _NONDETERMINISTIC_CALLS or name in _NONDETERMINISTIC_ATTRS:
+            return True
+        # The MODULE, not only the attribute. This matched `random` as a bare call and
+        # `randint` nowhere, so `random.randint(1, 6)` - the exact example in the comment
+        # at the call site, and in the test written for it - slipped through, along with
+        # `random.choice`, `shuffle`, `uniform`, `sample` and `randrange`.
+        #
+        # The runtime repeat check was then the only guard, and it is probabilistic: two
+        # draws from a six-sided die agree one time in six, so both sides' repeats agree
+        # one time in thirty-six. Measured on that function, the prover reported a proven
+        # gap on byte-identical behaviour **1.5% of the time** - which made this package's
+        # own test for the guard flaky at 1.5%, and flake-detective attributed the flip to
+        # test ORDER, because at five runs per arm one flip in one arm looks like one.
+        if (
+            isinstance(fn, ast.Attribute)
+            and isinstance(fn.value, ast.Name)
+            and fn.value.id in _NONDETERMINISTIC_MODULES
+        ):
+            return True
     return False
 
 

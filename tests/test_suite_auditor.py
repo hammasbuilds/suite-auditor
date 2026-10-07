@@ -561,3 +561,47 @@ def test_a_partial_audit_counts_mutants_not_just_functions():
     assert "after 3 of 17 planned mutants, in 3 of 3 covered functions" in summary(
         partial, "somelib"
     )
+
+
+def test_the_nondeterminism_guard_matches_the_module_not_only_the_method():
+    """`random.randint` was the one call it missed, and the only one it documented.
+
+    `_NONDETERMINISTIC_CALLS` held `random` - which matches a bare `random()` - and not
+    `randint`, so `random.randint(1, 6)` reached the runtime repeat check as its only
+    guard. That check is probabilistic: two draws from a six-sided die agree one time in
+    six, both sides' repeats agree one time in thirty-six, and the prover reported a
+    proven gap on byte-identical behaviour **1.5% of the time** (measured over 200 runs).
+
+    That made the test above this one flaky at 1.5%, which flake-detective found while
+    being run over this repository and attributed to test ORDER - correctly, in the sense
+    that one flip in one arm out of five runs is what an order dependence also looks like.
+    """
+    for source in (
+        "def f():\n    import random\n    return random.randint(1, 6)\n",
+        "def f(xs):\n    import random\n    return random.choice(xs)\n",
+        "def f(xs):\n    import random\n    random.shuffle(xs)\n    return xs\n",
+        "def f():\n    import random\n    return random.uniform(0, 1)\n",
+        "def f():\n    import secrets\n    return secrets.token_hex(4)\n",
+        "def f():\n    import time\n    return time.monotonic_ns()\n",
+    ):
+        assert _looks_nondeterministic(source), source
+
+    # And a local variable that merely shares a name with one of those modules must not
+    # trip it - the cost of being wrong that way is sensitivity, for nothing.
+    assert not _looks_nondeterministic("def f(random):\n    return random + 1\n")
+    assert not _looks_nondeterministic("def f(time):\n    return time * 2\n")
+    assert not _looks_nondeterministic("def f(x):\n    return x * 2\n")
+
+
+def test_a_low_entropy_random_function_never_reports_a_proven_gap():
+    """The regression test for the 1.5%, run enough times to have seen it.
+
+    40 comparisons of a six-sided die against itself-plus-one. Before the guard matched
+    the module, this failed about one run in sixty-seven; the source-level rule makes it
+    impossible rather than unlikely, so a single pass here is not what makes this test
+    worth having - it is that the rule cannot be probabilistic any more.
+    """
+    old = "def dice(n=0):\n    import random\n    return random.randint(1, 6) + n\n"
+    new = "def dice(n=0):\n    import random\n    return random.randint(1, 6) + n + 1\n"
+    for _ in range(40):
+        assert compare("", old, new, "dice", ["(0,)"] * 20)["status"] != "differs"
