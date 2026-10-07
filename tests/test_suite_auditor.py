@@ -605,3 +605,105 @@ def test_a_low_entropy_random_function_never_reports_a_proven_gap():
     new = "def dice(n=0):\n    import random\n    return random.randint(1, 6) + n + 1\n"
     for _ in range(40):
         assert compare("", old, new, "dice", ["(0,)"] * 20)["status"] != "differs"
+
+
+def test_a_leading_cls_on_a_module_function_is_not_a_receiver():
+    """`_restore_curry(cls, func, args, kwargs, userdict, is_decorated)` is a function.
+
+    toolz has a module-level function whose first parameter is named `cls`. Both the
+    argument generator and the call recorder dropped it as a receiver, so every generated
+    call and every observed call was one argument short. All 64 of them raised
+    `missing 1 required positional argument`, and the audit reported "no valid input
+    could be built" - which reads as a limitation of the tool's reach, for what was a
+    miscounted call.
+
+    A dot in the qualified name is what makes a function a method, in the AST (the
+    target's name) and at runtime (`code.co_qualname`).
+    """
+    import ast
+
+    from suite_auditor.inputs import _params
+
+    source = "def _restore_curry(cls, func, args, kwargs, userdict, is_decorated):\n    pass\n"
+    fn = ast.parse(source).body[0]
+    as_function, _ = _params(fn, is_method=False)
+    as_method, _ = _params(fn, is_method=True)
+    assert as_function[0] == "cls" and len(as_function) == 6
+    assert as_method[0] == "func" and len(as_method) == 5
+
+    # And a real method still loses its receiver.
+    method = ast.parse("def m(self, x):\n    pass\n").body[0]
+    assert _params(method, is_method=True)[0] == ["x"]
+
+
+def test_the_recorder_keeps_a_leading_cls_on_a_plain_function():
+    """The other half: observed calls were recorded one argument short too.
+
+    An observed arity that disagrees with the signature makes `argument_sets` fall back
+    to the observed sets alone, so a miscount here poisons every call for that function -
+    which is how 64 generated sets became 21 observed ones, all of them invalid.
+
+    The recorder lives in `PLUGIN`, a source template written to a temporary directory
+    and never imported, so the template is executed here and the function called out of
+    it. Two earlier versions of this test were worse: one read the template's text through
+    a hard-coded absolute path and asserted that certain characters were present, and one
+    imported the function from the module, which has never had it.
+    """
+    import ast
+
+    from suite_auditor.coverage import PLUGIN
+
+    # Only this function out of the template. Executing the whole plugin raises KeyError
+    # from `os.environ`: it reads the variables the audit sets for it, which is right for
+    # a plugin and makes it unusable as a unit under test.
+    tree = ast.parse(PLUGIN)
+    node = next(
+        n
+        for n in tree.body
+        if isinstance(n, ast.FunctionDef) and n.name == "takes_a_receiver"
+    )
+    namespace: dict = {}
+    exec(compile(ast.Module(body=[node], type_ignores=[]), "<plugin>", "exec"), namespace)
+    takes_a_receiver = namespace["takes_a_receiver"]
+
+    def plain(cls, func, args):  # a module-level shape: `cls` is an argument
+        return cls, func, args
+
+    class Holder:
+        def method(self, x):
+            return x
+
+        @classmethod
+        def maker(cls, x):
+            return x
+
+    assert takes_a_receiver(plain.__code__) is False
+    assert takes_a_receiver(Holder.method.__code__) is True
+    assert takes_a_receiver(Holder.maker.__code__) is True
+
+    # And the case this test's own fixture exposed: `plain` is nested inside this test, so
+    # its qualname is `test_...<locals>.plain` - a dot, and not a method. "Contains a dot"
+    # was the first rule and it called that a method.
+    assert "<locals>" in plain.__code__.co_qualname
+    assert "." in plain.__code__.co_qualname
+    # A method of a class defined inside a function is still a method.
+    assert takes_a_receiver(Holder.method.__code__) is True
+    assert "<locals>" in Holder.method.__code__.co_qualname
+
+
+def test_a_parameter_named_args_is_offered_something_unpackable():
+    """A function doing `f(*args, **kwargs)` needs a tuple and a dict, not literals.
+
+    Same idea as the callable pool: a parameter whose NAME says what shape it takes gets
+    that shape first, because a pool harvested from literals never produces one.
+    """
+    import ast
+
+    from suite_auditor.inputs import argument_sets
+
+    fn = ast.parse("def f(args, kwargs):\n    return len(args) + len(kwargs)\n").body[0]
+    sets = argument_sets(fn, {}, is_method=False)
+    first = {s.pos[0] for s in sets if s.pos}
+    second = {s.pos[1] for s in sets if len(s.pos) > 1}
+    assert any(v.startswith(("(", "[")) for v in first), first
+    assert any(v.startswith("{") for v in second), second

@@ -30,7 +30,7 @@
   "failing_only": [
     "toolz/__init__.py::__getattr__"
   ],
-  "seconds": 149.6,
+  "seconds": 168.2,
   "no_targets": false,
   "scored": 418,
   "stopped_early": false,
@@ -322,7 +322,7 @@
       "witness": null,
       "strength": 3,
       "provenance": "",
-      "detail": "survived; inconclusive: all 52 argument sets raised on both sides - ValueError: too many values to unpack (expected 4) (35 of 52, +7 other)"
+      "detail": "survived; inconclusive: all 60 argument sets raised on both sides - ValueError: too many values to unpack (expected 4) (43 of 60, +7 other)"
     },
     {
       "target": "toolz/_signatures.py::check_valid",
@@ -342,7 +342,7 @@
       "witness": null,
       "strength": 3,
       "provenance": "",
-      "detail": "survived; inconclusive: all 52 argument sets raised on both sides - ValueError: too many values to unpack (expected 4) (35 of 52, +7 other)"
+      "detail": "survived; inconclusive: all 60 argument sets raised on both sides - ValueError: too many values to unpack (expected 4) (43 of 60, +7 other)"
     },
     {
       "target": "toolz/_signatures.py::check_valid",
@@ -392,7 +392,7 @@
       "witness": null,
       "strength": 3,
       "provenance": "",
-      "detail": "survived; inconclusive: all 52 argument sets raised on both sides - ValueError: too many values to unpack (expected 4) (36 of 52, +7 other)"
+      "detail": "survived; inconclusive: all 60 argument sets raised on both sides - ValueError: too many values to unpack (expected 4) (44 of 60, +7 other)"
     },
     {
       "target": "toolz/_signatures.py::check_partial",
@@ -1832,7 +1832,7 @@
       "witness": null,
       "strength": 3,
       "provenance": "",
-      "detail": "survived; inconclusive: all 64 argument sets raised on both sides - TypeError: _restore_curry() missing 1 required positional argument: 'is_decorated' (64 of 64)"
+      "detail": "survived; inconclusive: all 64 argument sets raised on both sides - TypeError: 'function' object is not iterable (10 of 64, +26 other)"
     },
     {
       "target": "toolz/functoolz.py::_restore_curry",
@@ -1842,7 +1842,7 @@
       "witness": null,
       "strength": 3,
       "provenance": "",
-      "detail": "survived; inconclusive: all 64 argument sets raised on both sides - TypeError: _restore_curry() missing 1 required positional argument: 'is_decorated' (64 of 64)"
+      "detail": "survived; inconclusive: all 64 argument sets raised on both sides - TypeError: 'function' object is not iterable (10 of 64, +26 other)"
     },
     {
       "target": "toolz/functoolz.py::_restore_curry",

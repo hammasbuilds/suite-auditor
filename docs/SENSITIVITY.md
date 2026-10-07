@@ -126,6 +126,37 @@ identity lambda first. `tabulate((lambda x: x))` then yields `[0, 1, 2, …]` ag
 reach, and it is the verdict most likely to be believed, because it sounds like a fact
 about the code rather than a limit of the tool.
 
+### A third one, found by reading the reasons rather than the rate
+
+The nine `no_input` survivors on toolz are what the audit calls "no valid input could be
+built", and once the message carried the exception two of them turned out not to be that
+at all:
+
+```
+_restore_curry()  missing 1 required positional argument: 'is_decorated'   (64 of 64)
+```
+
+`toolz/functoolz.py::_restore_curry(cls, func, args, kwargs, userdict, is_decorated)` is
+a **module-level function** whose first parameter happens to be named `cls`. Both the
+argument generator and the call recorder dropped it as a receiver, so every generated
+call and every observed call was one argument short - and an observed arity that
+disagrees with the signature makes the generator fall back to the observed sets alone,
+which is how 64 generated sets became 21 invalid ones. A limitation of the tool's reach,
+reported for what was a miscounted call.
+
+A dot in the qualified name is the signal, in the AST and at runtime. "Contains a dot" was
+the first rule and it was wrong too: a function nested inside another function has one,
+so the test's own fixture - a `def plain(cls, ...)` written inside the test - was read as
+a method. What separates them is the segment immediately before the name: `<locals>` means
+nested in a function, a class name means a method, nothing means module level.
+
+`_restore_curry` is still unprovable, and now says why: it calls `cls(func, *args,
+**kwargs)`, so it needs an instance of toolz's own `curry` class, which no literal can
+stand in for. That is the honest shape of the `no_input` bucket - it did not shrink, and
+every entry in it now names the structured value it could not build. A parameter named
+`args` or `kwargs` is offered tuples and dicts for the same reason the callable pool
+exists, which fixed the first 53 of those 64 failures without reaching the rest.
+
 ## What this still does not measure
 
 Whether the plants resemble the gaps that matter in real code. They are deliberately

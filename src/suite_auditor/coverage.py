@@ -117,6 +117,41 @@ def _classify(path):
     return result
 
 
+def takes_a_receiver(code) -> bool:
+    """Is this code object's first parameter a receiver rather than an argument?
+
+    A leading `self` or `cls` is the receiver only in a method, and `co_qualname` carries
+    the dot that says so. On Python 3.10, where `co_qualname` does not exist, the old
+    assumption stands - it is wrong only for a module-level function that names its first
+    parameter `self` or `cls`, which is what this exists for, and there is nothing else
+    in a code object to tell them apart.
+
+    `toolz/functoolz.py::_restore_curry(cls, func, args, kwargs, userdict, is_decorated)`
+    is such a function. Dropping its `cls` recorded every observed call one argument
+    short; `argument_sets` then saw an observed arity that disagreed with the signature,
+    fell back to the observed sets alone, and all 21 of them raised `missing 1 required
+    positional argument`. The audit called that "no valid input could be built" - a
+    limitation of the tool's reach, for what was a miscounted call.
+    """
+    qualname = getattr(code, "co_qualname", None)
+    if qualname is None:  # pragma: no cover - Python 3.10 only
+        return True
+    # Not just "contains a dot": a function nested inside another function has one too.
+    # `test_x.<locals>.plain` would then be read as a method and lose its first argument,
+    # which is how the test for this found the flaw. What distinguishes them is the
+    # segment immediately before the name - `<locals>` means nested in a function, a
+    # class name means a method, and nothing means module level.
+    #
+    #   _restore_curry            -> no parent        -> an argument
+    #   curry._should_curry       -> parent `curry`   -> a receiver
+    #   test_x.<locals>.plain     -> parent <locals>  -> an argument
+    #   f.<locals>.C.m            -> parent `C`       -> a receiver
+    parts = qualname.split(".")
+    if len(parts) < 2:
+        return False
+    return parts[-2] != "<locals>"
+
+
 def _simple(v, depth=0):
     t = type(v)
     if t is float:
@@ -152,8 +187,9 @@ def _capture(key, frame, code):
     names = code.co_varnames[: code.co_argcount + code.co_kwonlyargcount]
     npos = code.co_argcount
     pos, kw = [], {}
+    receiver = takes_a_receiver(code)
     for i, name in enumerate(names):
-        if i == 0 and name in ("self", "cls"):
+        if i == 0 and receiver and name in ("self", "cls"):
             continue
         if name not in loc:
             return

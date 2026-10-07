@@ -120,6 +120,19 @@ FUNCTION_POOL = [
     "set",
 ]
 
+# Parameters named for a positional argument tuple or a keyword dict, and what to offer
+# them. The same idea as CALLABLE_NAMES: a parameter whose NAME says what shape it takes
+# gets that shape first, because a pool of literals never produces one.
+#
+# Measured on `toolz/functoolz.py::_restore_curry(cls, func, args, kwargs, userdict,
+# is_decorated)`, which does `func(*args, **kwargs)`: with the receiver bug fixed it got
+# full-arity calls and then failed 53 of 64 times with "Value after * must be an
+# iterable, not int" - a real limitation rather than a miscount, and one a tuple fixes.
+UNPACK_NAMES = ("args", "argv", "varargs", "positional")
+UNPACK_POOL = ["()", "(1,)", "(1, 2)", "[]", "[1]"]
+KWARG_NAMES = ("kwargs", "kw", "keywords", "options", "opts", "kwds")
+KWARG_POOL = ['{}', '{"x": 1}', '{"a": 1, "b": 2}']
+
 # Parameter names that need a callable taking no arguments; everything else in
 # CALLABLE_NAMES gets FUNCTION_POOL.
 FACTORY_NAMES = ("factory", "cls", "constructor")
@@ -271,10 +284,26 @@ def harvest_for(repo: Path, covering_tests: list[str]) -> dict[str, list[str]]:
     return pool
 
 
-def _params(fn: ast.FunctionDef | ast.AsyncFunctionDef) -> tuple[list[str], list[str]]:
-    """(positional parameter names, keyword-only names that have no default)."""
+def _params(
+    fn: ast.FunctionDef | ast.AsyncFunctionDef, is_method: bool = True
+) -> tuple[list[str], list[str]]:
+    """(positional parameter names, keyword-only names that have no default).
+
+    `is_method` decides whether a leading `self` or `cls` is the receiver or an ordinary
+    parameter. It used to be assumed, and `toolz/functoolz.py::_restore_curry(cls, func,
+    args, kwargs, userdict, is_decorated)` is a MODULE-LEVEL function whose first
+    parameter happens to be named `cls`. Every generated call was therefore one argument
+    short, all 64 of them raised `missing 1 required positional argument`, and the audit
+    reported "no valid input could be built" - a limitation, for what was a bug in the
+    call.
+
+    Defaulting to True keeps the old behaviour for any caller that does not know, which
+    is the safe direction: dropping a receiver that is not one produces calls that always
+    raise, and keeping one that is produces calls that always raise too, but the audit
+    already reports the second as a method it could not build an instance for.
+    """
     positional = [a.arg for a in fn.args.posonlyargs + fn.args.args]
-    if positional and positional[0] in ("self", "cls"):
+    if is_method and positional and positional[0] in ("self", "cls"):
         positional = positional[1:]
     required_kw = [
         a.arg for a, d in zip(fn.args.kwonlyargs, fn.args.kw_defaults, strict=True) if d is None
@@ -287,6 +316,7 @@ def argument_sets(
     pool: dict[str, list[str]],
     cap: int = 64,
     observed: list[dict] | None = None,
+    is_method: bool = True,
 ) -> list[ArgSet]:
     """Ways to call `fn`: real recorded calls first, then careful variations.
 
@@ -294,7 +324,7 @@ def argument_sets(
     product explodes, and a witness in which exactly one value differs from a real call
     is immediately readable - that value is the cause.
     """
-    positional, required_kw = _params(fn)
+    positional, required_kw = _params(fn, is_method)
     out: list[ArgSet] = []
     seen: set[tuple] = set()
 
@@ -358,6 +388,10 @@ def argument_sets(
         callables = (
             CALLABLE_POOL if lowered in FACTORY_NAMES else FUNCTION_POOL
         ) if wants_callable else []
+        if lowered in UNPACK_NAMES:
+            callables = UNPACK_POOL
+        elif lowered in KWARG_NAMES:
+            callables = KWARG_POOL
         for group in (
             callables,
             boundaries,
