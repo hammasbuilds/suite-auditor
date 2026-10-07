@@ -197,54 +197,69 @@ is never exit 0.
 | functions in the package | 157 | 39 | 67 |
 | **reached by no test** | 15 | **0** | **28 (42%)** |
 | mutants scored | 418 | 154 | 154 |
-| **kill rate** | **92.6%** | **97.4%** | **60.4%** |
-| caught share (kill rate x covered fraction) | 83.1% | **97.4%** | 35.2% |
-| proven gaps | **0** | **0** | **7** (6 on a call the tests really made) |
-| unproven survivors | 31 | 4 | 54 |
-| &nbsp;&nbsp;of those: ran on a real input and agreed | 5 | 1 | 12 |
-| &nbsp;&nbsp;a method, which cannot be called without its instance | 8 | 1 | 19 |
-| &nbsp;&nbsp;no valid input could be built | 12 | 2 | 20 |
-| &nbsp;&nbsp;disagreed only where both versions raised | 4 | 0 | 3 |
-| &nbsp;&nbsp;the unmutated function could not be called either | 2 | 0 | 0 |
+| **kill rate** | **92.1%** | **97.4%** | **60.4%** |
+| caught share (kill rate x covered fraction) | 82.7% | **97.4%** | 35.2% |
+| proven gaps | **1** | **0** | **7** (6 on a call the tests really made) |
+| unproven survivors | 32 | 4 | 54 |
+| &nbsp;&nbsp;of those: ran on a real input and agreed | 12 | 1 | 12 |
+| &nbsp;&nbsp;a method, which cannot be called without its instance | 6 | 1 | 19 |
+| &nbsp;&nbsp;no valid input could be built | 9 | 2 | 20 |
+| &nbsp;&nbsp;disagreed only where both versions raised | 5 | 0 | 3 |
+| &nbsp;&nbsp;the unmutated function could not be called either | 0 | 0 | 0 |
 
 **Read the unproven rows before the gap rows.** Only the first of them is about the test
 suite. The other three quarters are how far this tool could reach: a function it never
 managed to hand a valid argument is a fact about the tool, and one that ran and refused is
-a fact about the package. So `toolz`'s **0** is not by itself evidence that the suite is
-good - a prover that proved nothing anywhere would also score 0, and 24 of those 31
-survivors were never run on a real input at all. What the 0 does establish is narrower and
-still worth stating: of the 9 toolz survivors this tool did exercise, 5 agreed on every
-input and 4 disagreed only where both versions raised, which is not proof of anything.
+a fact about the package. `toolz`'s **1** is not a verdict on the suite either: of its 32
+unproven survivors, 20 were never run on a real input at all - 9 because no valid argument
+could be built and 6 because they are methods needing an instance - and 12 ran and agreed.
 
-`toolz` is a functional library maintained since 2013; its suite killed 387 of 418 mutants.
+`toolz` is a functional library maintained since 2013; its suite killed 385 of 418 mutants.
 `tomli` is a TOML parser whose suite reaches **every** function and kills 97.4% of mutants -
 the highest here, and the cleanest sheet this tool has produced. `repo-surgeon` is one of
 mine, whose README said "47 tests": 42% of its functions are reached by no test, and four of
 its gaps are calls the suite made and then accepted a different answer for, e.g.
 `_looks_like_number('src_path')` returning `True` instead of `False`.
 
-**Two third-party nulls and one self-audit full of gaps is the shape to be suspicious of**,
-and it is why the sensitivity study below exists: *every* positive finding here is in my own
-repository, so the two zeroes have to be shown to be the suite's doing and not the prover's
-silence. [`docs/SENSITIVITY.md`](docs/SENSITIVITY.md) plants gaps in `toolz`'s own tests and
-measures what share the prover proves - **0 of 2 before a fix it found, 2 of 2 after.** So
-the zeroes mean something: the prover demonstrably proves a planted gap in the same module
-where it reports none.
+**`toolz` read 0 proven gaps until 2026-10-07, and that zero was the prover's doing.**
+Chasing a planted gap that came back unproven in `boltons` found that the prover rebuilt a
+header around each extracted function and kept only assignments whose value was a
+*literal* - so a module-level constant built by a call (`ANSI_SEQUENCES = re.compile(...)`)
+was dropped and the function raised `NameError` on every input. Three more defects sat
+behind it, all in the argument pool. With them fixed the tool proves a real gap in toolz:
 
-**How often does the prover prove a gap that is really there?** That question is what
-makes the `0` above mean anything, and it is now measured:
-[`docs/SENSITIVITY.md`](docs/SENSITIVITY.md). Gaps are planted by loosening assertions in
-`toolz`'s own tests, and the share of the resulting survivors that the prover proves is its
-sensitivity. The first run was **0 of 2** — both planted gaps came back "all 64 argument
-sets raised on both sides", because `valfilter(predicate, d, factory=dict)` takes a
-*callable* and the argument pool is harvested from literals, so a higher-order function
-never got a valid call at all. toolz is a functional library, which is most of it. With
-callables in the pool it is **2 of 2**, and the full toolz audit is unchanged — verified by
-running both pools in one environment.
+```
+toolz/functoolz.py::is_arity   `return rv` -> `return None` when the signature is unknown
+  is_arity(2, dict)   original False, mutant None
+```
 
-Three of the five plants created no survivor: loosening one assertion in a suite that kills
-92.4% of mutants does not make a hole, because other assertions still catch the mutant.
-What is still missing is more than one module of one library behind the rate.
+Verified outside this tool, by reconstructing the mutant against installed toolz: an
+ordinary two-argument call separates them, so it is not an artefact of a generated third
+argument. The suite does not notice.
+
+**Two third-party nulls and one self-audit full of gaps was the shape to be suspicious of**,
+and it was right to be. [`docs/SENSITIVITY.md`](docs/SENSITIVITY.md) plants gaps in a
+target's own tests and measures what share the prover proves, now across four third-party
+libraries:
+
+| target | planted survivors | proven |
+|---|---:|---:|
+| `toolz` `451af60` | 2 | **2** |
+| `boltons` `4e5faa3` | 2 | **2** |
+| `more-itertools` `1ea82a7` | 1 | **1** |
+| `cachetools` `9976f1a` | 0 | — no plant created a survivor |
+
+`cachetools` is the informative row: `methodkey` delegates to `hashkey`, so gutting
+`test_hashkey` leaves `test_methodkey` still killing the mutant. A suite where several
+tests reach one function cannot be holed by weakening one of them, and the script says
+"the plants no longer bite" rather than reporting a rate over an empty denominator.
+
+**Each of those rates began at zero.** `boltons` was 0 of 2 and `more-itertools` 0 of 1,
+and the pair across the fix is the only part that measures the prover rather than the
+plants - a single rate of 1.000 means the plants did not discriminate, which the script
+says itself. What is still missing is targets beyond text and sequence utilities, and the
+9 `no_input` survivors toolz still has: a function needing an instance of its own class
+remains out of reach.
 
 Both columns were re-run on 2026-10-04 on Python 3.12, toolz at upstream commit `451af60`
 (`sh scripts/reproduce_toolz.sh`) and repo-surgeon at `d69c12d` (command in
@@ -301,6 +316,13 @@ uv run python demo.py
 ```
 
 Without uv: `python -m venv .venv`, activate it, then `pip install -e . pytest`.
+
+130 tests. `pytest --cov=suite_auditor` reports **83%** of statements, with a gap worth
+naming: the differential prover runs in a subprocess from a source template, so coverage
+cannot see the code that actually compares the two versions. That part is measured by
+planting gaps whose existence is known and counting how many it proves - see
+[`docs/SENSITIVITY.md`](docs/SENSITIVITY.md) - which is the only measurement of it that
+means anything.
 
 ## License
 

@@ -46,6 +46,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from suite_auditor.audit import audit  # noqa: E402
+from suite_auditor.report import unproven_reason  # noqa: E402
 
 # Each plant: a name, the test file to edit, the text to find, and what to replace it
 # with. One edit each, so the hole it makes is unambiguous.
@@ -84,12 +85,23 @@ PLANTS: tuple[tuple[str, str, str, str], ...] = (
 
 
 def survivors(report) -> dict[str, str]:
-    """Mutant -> verdict, for every mutant that was not killed."""
+    """Mutant -> verdict, for every mutant that was not killed.
+
+    An unproven survivor records WHICH reason it was unproven for, not just
+    "unproven". The bare verdict is what this script used to keep, and it made a run
+    on more-itertools read "0 of 1 proven" with nothing to act on - while the whole
+    reason the toolz measurement moved from 0 of 2 to 2 of 2 was reading the reason
+    ("all 64 argument sets raised on both sides") and fixing the argument pool it
+    pointed at. A sensitivity number with no reason beside it says the prover failed
+    without saying what to do about it.
+    """
     out: dict[str, str] = {}
     for result in report.results:
         verdict = str(getattr(result.verdict, "value", result.verdict))
         if verdict == "killed":
             continue
+        if verdict != "proven-gap":
+            verdict = f"{verdict}:{unproven_reason(getattr(result, 'detail', ''))}"
         key = f"{result.target}|{result.kind}|{getattr(result, 'mutant', '')}"
         out[key] = verdict
     return out
@@ -193,8 +205,22 @@ def main() -> int:
             shutil.copytree(args.target, work)
             path = work / rel
             text = path.read_text(encoding="utf-8")
-            if find not in text:
+            found = text.count(find)
+            if found == 0:
                 print(f"  SKIP {name}: the text to weaken is not in {rel}")
+                continue
+            if found > 1:
+                # `replace(..., 1)` would take the first one, which may be in a
+                # different test than the plant is named for. In cachetools'
+                # test_keys.py the line `self.assertNotEqual(key(1, 2, 3), key(3, 2, 1))`
+                # appears in test_hashkey and again in test_typedkey, so a plant aimed
+                # at one would silently weaken the other and the row would be
+                # attributed to the wrong function. A measurement that can land
+                # somewhere other than where it says is worse than no measurement.
+                print(
+                    f"  SKIP {name}: the text to weaken appears {found} times in {rel};"
+                    " a plant has to name one place, so include more context"
+                )
                 continue
             path.write_text(text.replace(find, replace, 1), encoding="utf-8")
             report = run_audit(
@@ -214,14 +240,49 @@ def main() -> int:
                 "proven": len(proven),
                 "unproven": len(unproven),
                 "unproven_verdicts": sorted({new[k] for k in unproven}),
+                # WHICH mutant, not just how many. A row reading "0 of 2 proven,
+                # no_input" says the argument pool is at fault without saying for which
+                # function, and the pool is per-parameter - so the next step is always
+                # "which one", and finding out meant re-running a 25-minute audit.
+                "unproven_mutants": sorted(
+                    f"{k.split('|')[0]} [{k.split('|')[1]}] {new[k]}" for k in unproven
+                ),
+                "proven_mutants": sorted(k.split("|")[0] for k in proven),
             }
         )
         share = f"{len(proven)}/{len(new)}" if new else "no new survivors"
-        print(f"  {name:<34} {share:>18} proven")
+        # The reason an unproven survivor was not proven is the actionable half. Without
+        # it a run reads "0 of 1" and there is nothing to do; with it, "no_input" points
+        # straight at the argument pool, which is what moved toolz from 0 of 2 to 2 of 2.
+        why = sorted({new[k].partition(":")[2] for k in unproven} - {""})
+        print(
+            f"  {name:<34} {share:>18} proven"
+            + (f"   [{', '.join(why)}]" if why else "")
+        )
 
     planted = sum(r["newly_surviving"] for r in rows)
     proved = sum(r["proven"] for r in rows)
+    reasons: dict[str, int] = {}
+    for row in rows:
+        for verdict in row.get("unproven_verdicts", []):
+            reason = str(verdict).partition(":")[2] or "unknown"
+            reasons[reason] = reasons.get(reason, 0) + 1
     print()
+    if reasons:
+        print(
+            "why the unproven ones were unproven: "
+            + ", ".join(f"{k} {v}" for k, v in sorted(reasons.items()))
+        )
+        print(
+            "  no_input      the argument pool could build no call that runs on both"
+            " sides\n"
+            "  both_raised   they differ only where both versions raise\n"
+            "  equivalent    every argument set agrees - the mutant may be a true"
+            " equivalent\n"
+            "  method        a method could not be called without building its class\n"
+            "Only no_input and method are this tool's to fix. equivalent may mean the"
+            " plant\ndid not actually change behaviour, which is a fact about the plant.\n"
+        )
     if not planted:
         print("No plant created a surviving mutant - the plants no longer bite.")
         return 1

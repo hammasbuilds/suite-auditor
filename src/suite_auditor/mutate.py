@@ -271,6 +271,7 @@ def package_context(path: Path) -> tuple[str, str]:
 
 
 def _bound(node: ast.stmt) -> set[str]:
+    """Every name this module-level statement binds."""
     out: set[str] = set()
     if isinstance(node, ast.Import | ast.ImportFrom):
         for a in node.names:
@@ -278,6 +279,13 @@ def _bound(node: ast.stmt) -> set[str]:
     elif isinstance(node, ast.Assign):
         for t in node.targets:
             out |= {n.id for n in ast.walk(t) if isinstance(n, ast.Name)}
+    elif isinstance(node, ast.AnnAssign | ast.AugAssign):
+        # `TABLE: dict[str, int] = {...}` and `COUNT += 1` bind a name too, and a
+        # function reading one of them raised NameError while this returned nothing.
+        if isinstance(node.target, ast.Name):
+            out.add(node.target.id)
+    elif isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+        out.add(node.name)
     return out
 
 
@@ -295,21 +303,69 @@ def free_names(source: str) -> set[str]:
     return names | attrs
 
 
-def header_for(tree: ast.Module, source: str, needed: set[str]) -> str:
-    """Only the imports and literal constants the function reads."""
+# Statements at module level that can supply a name the function reads.
+HEADER_STATEMENTS = (
+    ast.Import,
+    ast.ImportFrom,
+    ast.Assign,
+    ast.AnnAssign,
+    ast.FunctionDef,
+    ast.AsyncFunctionDef,
+    ast.ClassDef,
+)
+
+
+def header_for(
+    tree: ast.Module, source: str, needed: set[str], exclude: str = ""
+) -> str:
+    """The module-level names the function reads, and the ones those read in turn.
+
+    This kept only imports and assignments whose value was a LITERAL, so a constant
+    built by a call was dropped: `ANSI_SEQUENCES = re.compile(...)`,
+    `LOG = logging.getLogger(__name__)`, a dict comprehension. The extracted function
+    then raised `NameError` on every input, and the prover reported that as "all N
+    argument sets raised on both sides" - which reads as a bad argument pool and sent
+    the diagnosis to the wrong place entirely. Measured on boltons' `strip_ansi`: 23 of
+    23 inputs raised `NameError: name 'ANSI_SEQUENCES' is not defined`.
+
+    So: a closure rather than one pass. Take the statement binding each needed name, add
+    the names that statement itself reads, repeat until nothing new appears. Helper
+    functions and classes are included for the same reason - a function calling a
+    module-level helper had the identical problem.
+
+    `exclude` is the target's own name, which arrives separately as the body to mutate;
+    including it here would define the original right after the mutant and the mutation
+    would do nothing.
+    """
     lines = source.splitlines()
-    kept: list[str] = []
+    binders: list[tuple[ast.stmt, set[str], str]] = []
     for node in tree.body:
-        if not isinstance(node, ast.Import | ast.ImportFrom | ast.Assign):
+        if not isinstance(node, HEADER_STATEMENTS):
             continue
-        if isinstance(node, ast.Assign) and not isinstance(
-            node.value, ast.Constant | ast.Tuple | ast.List | ast.Dict | ast.Set
-        ):
+        bound = _bound(node)
+        if not bound or (exclude and bound == {exclude}):
             continue
-        if not (_bound(node) & needed):
-            continue
-        kept.append("\n".join(lines[node.lineno - 1 : node.end_lineno]))
-    return "\n".join(kept)
+        body = "\n".join(lines[node.lineno - 1 : node.end_lineno])
+        binders.append((node, bound, body))
+
+    wanted = set(needed)
+    chosen: dict[int, tuple[ast.stmt, str]] = {}
+    while True:
+        added = False
+        for index, (node, bound, body) in enumerate(binders):
+            if index in chosen or not (bound & wanted):
+                continue
+            chosen[index] = (node, body)
+            # What this statement needs in turn. Its own bound names are not a
+            # dependency on anything else, and a recursive function would otherwise
+            # keep the loop going for ever.
+            wanted |= free_names(body) - bound
+            added = True
+        if not added:
+            break
+
+    # Original order: a constant defined in terms of an earlier one has to come after it.
+    return "\n".join(body for _, (_, body) in sorted(chosen.items()))
 
 
 def _target(ctx: tuple, node, name: str) -> Target:
@@ -321,7 +377,7 @@ def _target(ctx: tuple, node, name: str) -> Target:
         path=rel_s,
         name=name,
         source=body,
-        header=header_for(tree, src, free_names(body)),
+        header=header_for(tree, src, free_names(body), exclude=name),
         sys_path=sys_path,
         package=package,
         lineno=start,

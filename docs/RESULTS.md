@@ -34,17 +34,36 @@ No language model is involved anywhere in this tool.
 | reached only by a failing test | 1 | 0 |
 | **reached by no test** | 15 | **28 (42%)** |
 | mutants scored | 418 | 154 |
-| killed by the suite | 387 | 93 |
-| **kill rate** | **92.6%** | **60.4%** |
-| **caught share** (kill rate x covered fraction) | 83.1% | 35.2% |
-| proven gaps | **0** | **7** |
+| killed by the suite | 385 | 93 |
+| **kill rate** | **92.1%** | **60.4%** |
+| **caught share** (kill rate x covered fraction) | 82.7% | 35.2% |
+| proven gaps | **1** | **7** |
 | of those, on a call the tests really made | - | 6 |
-| unproven survivors | 31 | 54 |
-| wall clock | 204 s | 117 s |
+| unproven survivors | 32 | 54 |
+| wall clock | 150 s | 117 s |
 
 `toolz` had one test failing in this environment; it was left out of the run (a failing
 test would "kill" every mutant it meets), and the one function only it reaches is listed
 separately rather than as unreached.
+
+### toolz's one gap, and why it was 0 until 2026-10-07
+
+```
+toolz/functoolz.py::is_arity   `return rv` -> `return None` when the signature is unknown
+  is_arity(2, dict)   original False, mutant None
+```
+
+The zero was this tool's doing, not a property of toolz's suite. The prover rebuilt a
+header around each extracted function and kept only assignments whose value was a
+**literal**, so a module-level constant built by a call was dropped and the function raised
+`NameError` on every generated input - reported as "all N argument sets raised on both
+sides", which reads as a bad argument pool. Three further defects in the pool sat behind
+it. [`docs/SENSITIVITY.md`](SENSITIVITY.md) has all four; the planted-gap study is what
+exposed them, on `boltons` rather than here.
+
+Checked outside this tool before being published: the mutant was reconstructed against
+installed toolz, and `is_arity(2, dict)` - an ordinary two-argument call, no generated
+third argument - returns `False` where the mutant returns `None`.
 
 ## What changed since the first published numbers
 

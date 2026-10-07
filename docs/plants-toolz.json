@@ -1,0 +1,32 @@
+[
+ [
+  "valmap-every-assertion-loosened",
+  "toolz/tests/test_dicttoolz.py",
+  "        assert valmap(inc, D({1: 1, 2: 2}), **kw) == D({1: 2, 2: 3})",
+  "        assert valmap(inc, D({1: 1, 2: 2}), **kw) is not None"
+ ],
+ [
+  "keymap-every-assertion-loosened",
+  "toolz/tests/test_dicttoolz.py",
+  "        assert keymap(inc, D({1: 1, 2: 2}), **kw) == D({2: 1, 3: 2})",
+  "        assert keymap(inc, D({1: 1, 2: 2}), **kw) is not None"
+ ],
+ [
+  "valfilter-equality-loosened",
+  "toolz/tests/test_dicttoolz.py",
+  "        assert valfilter(iseven, D({1: 2, 2: 3}), **kw) == D({1: 2})",
+  "        assert valfilter(iseven, D({1: 2, 2: 3}), **kw) is not None"
+ ],
+ [
+  "keyfilter-equality-loosened",
+  "toolz/tests/test_dicttoolz.py",
+  "        assert keyfilter(iseven, D({1: 2, 2: 3}), **kw) == D({2: 3})",
+  "        assert keyfilter(iseven, D({1: 2, 2: 3}), **kw) is not None"
+ ],
+ [
+  "itemmap-equality-loosened",
+  "toolz/tests/test_dicttoolz.py",
+  "        assert itemmap(reversed, D({1: 2, 2: 4}), **kw) == D({2: 1, 4: 2})",
+  "        assert itemmap(reversed, D({1: 2, 2: 4}), **kw) is not None"
+ ]
+]

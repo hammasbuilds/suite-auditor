@@ -379,9 +379,36 @@ def compare(
         # Every input raised on both sides: the arguments were wrong for this function
         # and the run established nothing. Reporting that as agreement is how an
         # unverified change gets a clean bill of health.
+        # WHICH exception, not just that there was one. "all 23 argument sets raised on
+        # both sides" reads as "no valid input could be built", which points at the
+        # argument pool - and that was the right reading once, for a higher-order
+        # function offered only literals. But it is also what an import failure, a
+        # missing dependency in the target's environment, or a function that simply
+        # rejects everything generated looks like, and those need different fixes. The
+        # most common exception on each side is the thing that says which.
+        def _why(side: str) -> str:
+            seen: dict[str, int] = {}
+            for row in rows:
+                if row[side][0] == "ok":
+                    continue
+                text = str(row[side][1]).strip().splitlines()
+                text = text[-1] if text else "?"
+                seen[text[:120]] = seen.get(text[:120], 0) + 1
+            if not seen:
+                return ""
+            top, n = max(seen.items(), key=lambda kv: kv[1])
+            extra = f", +{len(seen) - 1} other" if len(seen) > 1 else ""
+            return f"{top} ({n} of {len(rows)}{extra})"
+
+        old_why, new_why = _why("old"), _why("new")
+        same_reason = old_why == new_why
+        reason = old_why if same_reason else f"old: {old_why}; new: {new_why}"
         return {
             "status": "inconclusive",
-            "detail": f"all {len(rows)} argument sets raised on both sides",
+            "detail": (
+                f"all {len(rows)} argument sets raised on both sides"
+                + (f" - {reason}" if reason else "")
+            ),
             "tried": len(rows),
         }
 

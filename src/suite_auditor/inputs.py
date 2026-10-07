@@ -35,7 +35,20 @@ from dataclasses import dataclass
 from pathlib import Path
 
 # Values that exercise the corners most mutation operators live at.
-GENERIC = ["0", "1", "-1", "2", '""', '"a"', "[]", "[1, 2]", "None", "True", "False", "{}"]
+# Bytes as well as str. A function that branches on `isinstance(x, (bytes, bytearray))`
+# - any text helper that accepts both - has a whole half nothing could reach, and on
+# boltons' `strip_ansi` the mutant and the original agreed on all 11 exercised inputs
+# because every one of them was a str and the differing branch needs bytes.
+# Ordered by TYPE diversity, not by how ordinary the value looks, because only the
+# first GENERIC_SLOTS of these survive the cap on a function whose tests supply plenty
+# of literals. Appended in the obvious order - ints, then strings, then containers,
+# with the bytes at the end - the reserved six came out `0, 1, -1, "", "a", []`: two
+# types for six slots, and the bytes that `strip_ansi` branches on never offered at
+# all. The first six now cover int, str, None, bytes, list and bool.
+GENERIC = [
+    "0", '""', "None", 'b""', "[]", "True",
+    "1", "-1", '"a"', 'b"a"', 'bytearray(b"a")', "{}", "[1, 2]", "2", "False",
+]  # fmt: skip
 
 # Parameters that take a function, by name, and what to offer them.
 #
@@ -84,6 +97,39 @@ CALLABLE_POOL = [
     "(lambda *a: False)",
     "(lambda x: x)",
 ]
+
+# The same callables, ordered for a parameter that takes a plain FUNCTION rather than a
+# factory. `dict` leads the list above because `factory()` has to be callable with no
+# arguments, and it is the wrong first choice for `function`: `map(dict, count(0))`
+# raises on its first item, so the one call that could have shown a mutated default -
+# `tabulate(function, start=0)` with `start` left out - raised identically on both sides
+# and the mutant was reported as possibly equivalent. The identity lambda accepts an int,
+# a string, anything, and returns something that differs when its input differs.
+FUNCTION_POOL = [
+    "(lambda x: x)",
+    "(lambda *a: a)",
+    "str",
+    "bool",
+    "abs",
+    "(lambda *a: True)",
+    "(lambda *a: False)",
+    "len",
+    "list",
+    "tuple",
+    "dict",
+    "set",
+]
+
+# Parameter names that need a callable taking no arguments; everything else in
+# CALLABLE_NAMES gets FUNCTION_POOL.
+FACTORY_NAMES = ("factory", "cls", "constructor")
+
+# How many values one parameter is offered, and how many of those slots the generic pool
+# keeps whatever else is available. Six is enough for both bytes values, a string, an
+# int, None and an empty container - the type diversity that a mutant branching on type
+# needs, and which the harvested literals of a single test file rarely contain.
+CAP = 24
+GENERIC_SLOTS = 6
 
 OBSERVED, RECOMBINED, GENERATED = "observed", "recombined", "generated"
 
@@ -307,17 +353,30 @@ def argument_sets(
         # A parameter named for a function goes first to callables: offering it `0` and
         # `""` produces 64 calls that all raise, which is how a provable gap in
         # `valfilter(predicate, d)` came back unproven.
-        wants_callable = name.lower() in CALLABLE_NAMES
+        lowered = name.lower()
+        wants_callable = lowered in CALLABLE_NAMES
+        callables = (
+            CALLABLE_POOL if lowered in FACTORY_NAMES else FUNCTION_POOL
+        ) if wants_callable else []
         for group in (
-            CALLABLE_POOL if wants_callable else [],
+            callables,
             boundaries,
             near,
             pool.get(name, []),
             pool.get("*", []),
-            GENERIC,
         ):
             vals += [v for v in group[:12] if v not in vals]
-        pools.append(vals[:24])
+        # GENERIC last, but with slots RESERVED for it. It used to be one more group
+        # appended before a `vals[:24]` trim, so on a function whose covering tests
+        # supply plenty of literals the generic values were all cut - every one of
+        # them. Measured on boltons' `strip_ansi`: 23 argument sets, not one of them
+        # bytes, while the mutant and the original differ only on the bytes branch.
+        # The function's own constants and its tests' literals are the better inputs
+        # and still come first; what they must not do is leave no room for a value of
+        # a different TYPE.
+        keep = vals[: CAP - GENERIC_SLOTS]
+        keep += [v for v in GENERIC if v not in keep][:GENERIC_SLOTS]
+        pools.append(keep[:CAP])
 
     if real:
         baseline = list(real[0].pos)
@@ -329,6 +388,34 @@ def argument_sets(
         base_kw = tuple((k, (pool.get(k) or ["None"])[0]) for k in required_kw)
         if push(ArgSet(tuple(baseline), base_kw, GENERATED)):
             return out
+
+    # Calls that OMIT the optional parameters, so a mutated default is reachable at all.
+    #
+    # Every set above supplies every positional parameter, and a change to a default
+    # value can only be observed when the argument is left out. Measured on
+    # more-itertools' `tabulate(function, start=0)`: a planted gap mutating that `0` came
+    # back "all agree" over every argument set, correctly, because `start` was passed
+    # explicitly in all of them. The mutation was not equivalent - it was unreachable,
+    # and "possibly an equivalent mutant" is the wrong thing to tell somebody about it.
+    # Varied, not just the baseline prefix. One truncated call reuses whatever the
+    # baseline happened to hold, and for `tabulate(function, start=0)` that was
+    # `tabulate(dict)` - which raises on its first item either way, so the mutated
+    # default stayed invisible. The remaining parameters are varied one at a time, the
+    # same way the full-length calls are.
+    n_required = len(positional) - len(fn.args.defaults)
+    for keep in range(len(positional) - 1, max(n_required, 0) - 1, -1):
+        if keep > len(baseline):
+            continue
+        if push(ArgSet(tuple(baseline[:keep]), base_kw, GENERATED)):
+            return out
+        for i in range(keep):
+            for value in pools[i][:8]:
+                if value == baseline[i]:
+                    continue
+                args = list(baseline[:keep])
+                args[i] = value
+                if push(ArgSet(tuple(args), base_kw, GENERATED)):
+                    return out
 
     for i, p in enumerate(pools):
         for value in p:
