@@ -105,6 +105,7 @@ import json, os, re, sys, types
 
 SYS_PATH = {sys_path!r}
 PACKAGE = {package!r}
+TARGET_FILE = {target_file!r}
 HEADER = {header!r}
 OLD = {old!r}
 NEW = {new!r}
@@ -125,6 +126,17 @@ def _load(tag, source):
     mod = types.ModuleType(name)
     mod.__dict__["__name__"] = name
     mod.__dict__["__package__"] = PACKAGE
+    # `__file__`, because a function that reads it is not exotic: a cache directory, a
+    # data file beside the module, `Path(__file__).parent`. Without it the extracted
+    # function raises NameError on whichever branch touches it - and when a mutation
+    # changes which branch runs, that NameError becomes a "difference" between the two
+    # versions and the tool reports a proven gap on nothing.
+    #
+    # Found by auditing assay-drift: a `compare` mutant in `ncbi.search` made the
+    # original return [] and the mutant reach `_cache_dir()`, which reads `__file__`, so
+    # the witness was `old: []` against `new: NameError`. Real inside the probe, absent
+    # in reality.
+    mod.__dict__["__file__"] = TARGET_FILE
     exec(compile(PREAMBLE + HEADER + "\\n\\n" + source, "<" + tag + ">", "exec"), mod.__dict__)
     return mod.__dict__[NAME]
 
@@ -245,6 +257,16 @@ def _call(fn, args, kwargs):
         return ("ok", _norm(text)), value
     except _SideEffect as effect:
         return ("impure", _norm(str(effect))), _NOEQ
+    except SystemExit as exc:
+        # SystemExit inherits from BaseException, so `except Exception` let it through and
+        # it killed the runner before it could print its result marker. The whole
+        # comparison then came back `status: error` with the function's own stdout as the
+        # message - which is how `assaydrift/cli.py::main` was unprovable and reported as
+        # an error rather than as anything about the suite.
+        #
+        # An exit code is behaviour, and a mutant that changes it is a real difference, so
+        # it is an outcome rather than a crash.
+        return ("exit", _norm(str(exc.code))), _NOEQ
     except Exception as exc:
         return ("raise", _norm(type(exc).__name__ + ": " + str(exc)[:200])), _NOEQ
     finally:
@@ -305,6 +327,7 @@ def compare(
     sys_path: str = "",
     package: str = "",
     python: str = "",
+    target_file: str = "",
 ) -> dict:
     """Compare two versions. Returns a verdict dict; never raises.
 
@@ -325,6 +348,7 @@ def compare(
     script = RUNNER.format(
         sys_path=sys_path,
         package=package,
+        target_file=target_file,
         header=header,
         old=old,
         new=new,

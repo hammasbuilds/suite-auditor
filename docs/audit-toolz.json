@@ -30,7 +30,7 @@
   "failing_only": [
     "toolz/__init__.py::__getattr__"
   ],
-  "seconds": 168.2,
+  "seconds": 154.5,
   "no_targets": false,
   "scored": 418,
   "stopped_early": false,

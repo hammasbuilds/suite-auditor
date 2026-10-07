@@ -319,6 +319,9 @@ def _prove(target: Target, mutant: str, kind: str, argsets, python: str) -> Resu
         target.sys_path,
         target.package,
         python,
+        # The real module's path, so an extracted function that reads `__file__` - a
+        # cache directory, a data file beside the module - behaves as it would in place.
+        str(Path(target.sys_path) / target.path) if target.sys_path else target.path,
     )
     if diff["status"] == "differs":
         w = diff["witness"]

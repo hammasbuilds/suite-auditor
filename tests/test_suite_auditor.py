@@ -8,6 +8,7 @@ does not read the second, so these mostly guard the line between "survived" and 
 from __future__ import annotations
 
 import ast
+import json
 import textwrap
 
 from suite_auditor.audit import patch_file
@@ -707,3 +708,54 @@ def test_a_parameter_named_args_is_offered_something_unpackable():
     second = {s.pos[1] for s in sets if len(s.pos) > 1}
     assert any(v.startswith(("(", "[")) for v in first), first
     assert any(v.startswith("{") for v in second), second
+
+
+def test_a_function_that_exits_is_compared_not_treated_as_a_crash():
+    """`SystemExit` inherits from BaseException, so `except Exception` let it through.
+
+    It killed the runner before it could print its result marker, and the comparison came
+    back `status: error` with the function's own stdout as the message. Found auditing
+    assay-drift, where `cli.py::main` calls `sys.exit()`: two survivors landed in an
+    `other` reason bucket that said nothing about the suite.
+
+    An exit code is behaviour, and a mutant that changes one is a real difference.
+    """
+    old = "def go(n):\n    import sys\n    if n > 2:\n        sys.exit(2)\n    return n\n"
+    new = "def go(n):\n    import sys\n    if n > 1:\n        sys.exit(2)\n    return n\n"
+    r = compare("", old, new, "go", ["(1,)", "(2,)", "(3,)"])
+    assert r["status"] == "differs"
+    assert r["witness"]["old"].startswith("ok:")
+    assert r["witness"]["new"].startswith("exit:")
+
+    # And two versions that exit the same way agree, rather than both being errors.
+    same = "def go(n):\n    import sys\n    sys.exit(3)\n"
+    r = compare("", same, same, "go", ["(1,)"])
+    assert r["status"] != "error", r.get("detail")
+
+
+def test_an_extracted_function_can_read_its_own_dunder_file():
+    """A function reading `__file__` is ordinary, and raised NameError in the probe.
+
+    A cache directory, a data file beside the module, `Path(__file__).parent`. Without
+    `__file__` in the namespace, whichever branch touches it raises - and when a mutation
+    changes which branch runs, that NameError becomes a "difference" and the tool reports
+    a proven gap on nothing. Found auditing assay-drift: a `compare` mutant in
+    `ncbi.search` gave `old: []` against `new: NameError`.
+    """
+    source = (
+        "def where(flag):\n"
+        "    import os\n"
+        "    if flag:\n"
+        "        return os.path.basename(__file__)\n"
+        "    return 'no'\n"
+    )
+    r = compare("", source, source, "where", ["(True,)", "(False,)"], target_file="x/y/mod.py")
+    assert r["status"] != "error", r.get("detail")
+    # Identical source must agree; before the fix the True branch raised NameError and
+    # the comparison was inconclusive rather than agreeing.
+    assert "raised on both sides" not in (r.get("detail") or "")
+
+    # And the mutation that changes which branch runs is not a gap on that account.
+    mutant = source.replace("if flag:", "if not flag:")
+    r = compare("", source, mutant, "where", ["(True,)"], target_file="x/y/mod.py")
+    assert "NameError" not in json.dumps(r.get("witness") or {}), r.get("witness")
