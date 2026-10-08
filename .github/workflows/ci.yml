@@ -6,13 +6,13 @@ on:
 
 jobs:
   test:
-    # The classifiers promise 3.11-3.13 on Linux and Windows; this is what keeps that true.
+    # The classifiers promise 3.11-3.14 on Linux and Windows; this is what keeps that true.
     # Windows matters here in particular: line endings, path spelling and process trees
     # all behave differently, and each has been a bug.
     strategy:
       fail-fast: false
       matrix:
-        python: ["3.11", "3.12", "3.13"]
+        python: ["3.11", "3.12", "3.13", "3.14"]
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:

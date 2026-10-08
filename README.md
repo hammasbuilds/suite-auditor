@@ -238,7 +238,7 @@ ordinary two-argument call separates them, so it is not an artefact of a generat
 argument. The suite does not notice.
 
 **Two third-party nulls and one self-audit full of gaps was the shape to be suspicious of**,
-and it was right to be. [`docs/SENSITIVITY.md`](docs/SENSITIVITY.md) plants gaps in a
+and it was right to be. [`docs/SENSITIVITY.md`](https://github.com/hammasbuilds/suite-auditor/blob/main/docs/SENSITIVITY.md) plants gaps in a
 target's own tests and measures what share the prover proves, now across four third-party
 libraries:
 
@@ -296,7 +296,7 @@ Full detail in [docs/RESULTS.md](https://github.com/hammasbuilds/suite-auditor/b
   put first on `PYTHONPATH` so the tests import the mutated copy, not an installed one.
 - **It does not replace `mutmut` or `cosmic-ray`,** which generate far more mutants. This
   adds the proof step and the grading — and that claim is now measured rather than
-  asserted: [`docs/COMPARISON.md`](docs/COMPARISON.md) runs cosmic-ray over the same
+  asserted: [`docs/COMPARISON.md`](https://github.com/hammasbuilds/suite-auditor/blob/main/docs/COMPARISON.md) runs cosmic-ray over the same
   target. It reports **41 survivors** as a flat list of function-plus-operator names;
   this reports **2 proven gaps with the call that proves each** — `shipping(3)` returning
   7 instead of 5, `with_tax(10, 0.2)` returning 12.0 instead of 22.0 on a call the tests
@@ -321,7 +321,7 @@ Without uv: `python -m venv .venv`, activate it, then `pip install -e . pytest`.
 naming: the differential prover runs in a subprocess from a source template, so coverage
 cannot see the code that actually compares the two versions. That part is measured by
 planting gaps whose existence is known and counting how many it proves - see
-[`docs/SENSITIVITY.md`](docs/SENSITIVITY.md) - which is the only measurement of it that
+[`docs/SENSITIVITY.md`](https://github.com/hammasbuilds/suite-auditor/blob/main/docs/SENSITIVITY.md) - which is the only measurement of it that
 means anything.
 
 ## License
