@@ -659,9 +659,7 @@ def test_the_recorder_keeps_a_leading_cls_on_a_plain_function():
     # a plugin and makes it unusable as a unit under test.
     tree = ast.parse(PLUGIN)
     node = next(
-        n
-        for n in tree.body
-        if isinstance(n, ast.FunctionDef) and n.name == "takes_a_receiver"
+        n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "takes_a_receiver"
     )
     namespace: dict = {}
     exec(compile(ast.Module(body=[node], type_ignores=[]), "<plugin>", "exec"), namespace)

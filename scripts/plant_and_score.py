@@ -189,9 +189,7 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="plant-pristine-") as tmp:
         pristine_dir = Path(tmp) / "pricing"
         shutil.copytree(args.target, pristine_dir)
-        pristine = run_audit(
-            pristine_dir, python, args.per_function, args.test_target, args.limit
-        )
+        pristine = run_audit(pristine_dir, python, args.per_function, args.test_target, args.limit)
     base_survivors = survivors(pristine)
     print(
         f"pristine: {len(pristine.results)} mutants, {len(base_survivors)} survived, "
@@ -223,9 +221,7 @@ def main() -> int:
                 )
                 continue
             path.write_text(text.replace(find, replace, 1), encoding="utf-8")
-            report = run_audit(
-                work, python, args.per_function, args.test_target, args.limit
-            )
+            report = run_audit(work, python, args.per_function, args.test_target, args.limit)
 
         now = survivors(report)
         # The hole this plant made: mutants that survive now and did not before.
@@ -255,10 +251,7 @@ def main() -> int:
         # it a run reads "0 of 1" and there is nothing to do; with it, "no_input" points
         # straight at the argument pool, which is what moved toolz from 0 of 2 to 2 of 2.
         why = sorted({new[k].partition(":")[2] for k in unproven} - {""})
-        print(
-            f"  {name:<34} {share:>18} proven"
-            + (f"   [{', '.join(why)}]" if why else "")
-        )
+        print(f"  {name:<34} {share:>18} proven" + (f"   [{', '.join(why)}]" if why else ""))
 
     planted = sum(r["newly_surviving"] for r in rows)
     proved = sum(r["proven"] for r in rows)

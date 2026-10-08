@@ -198,9 +198,7 @@ def _argsets_for(repo: Path, target: Target, observed: list[dict]):
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
             # A dot in the qualified name is what makes it a method; a leading
             # `cls` on a module-level function is just a parameter.
-            return argument_sets(
-                node, pool, observed=observed, is_method="." in target.name
-            )
+            return argument_sets(node, pool, observed=observed, is_method="." in target.name)
     return None
 
 

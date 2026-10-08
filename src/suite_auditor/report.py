@@ -225,9 +225,7 @@ def _unproven_lines(audit) -> list[str]:
     out = [f"      {n:>4}  {labels[key]}" for key, n in breakdown.items()]
     agreed, total = breakdown.get("equivalent", 0), sum(breakdown.values())
     if total and agreed != total:
-        out.append(
-            f"      only {agreed} of {total} ran on a real input and agreed; the rest is"
-        )
+        out.append(f"      only {agreed} of {total} ran on a real input and agreed; the rest is")
         out.append("      this tool's reach, not evidence about the suite")
     return out
 

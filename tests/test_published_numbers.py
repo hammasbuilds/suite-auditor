@@ -62,9 +62,7 @@ def _row(label: str) -> str:
 # Column order in the README table. Parametrised rather than hardcoded per test,
 # because adding `tomli` as a third target shifted repo-surgeon from 1 to 2 and the
 # indices were the only thing that noticed.
-@pytest.mark.parametrize(
-    "column, name", [(0, "toolz"), (1, "tomli"), (2, "repo-surgeon")]
-)
+@pytest.mark.parametrize("column, name", [(0, "toolz"), (1, "tomli"), (2, "repo-surgeon")])
 def test_the_audit_table_is_the_committed_runs(column, name):
     run = json.loads((ROOT / "docs" / f"audit-{name}.json").read_text(encoding="utf-8"))
     counts = run["counts"]
@@ -151,11 +149,7 @@ def test_the_callable_pool_reaches_a_higher_order_function():
         "            rv[k] = v\n"
         "    return rv\n"
     )
-    fn = next(
-        node
-        for node in ast.walk(ast.parse(source))
-        if isinstance(node, ast.FunctionDef)
-    )
+    fn = next(node for node in ast.walk(ast.parse(source)) if isinstance(node, ast.FunctionDef))
     sets = argument_sets(fn, {}, observed=[])
     assert sets, "no argument sets at all"
     firsts = {s.pos[0] for s in sets if getattr(s, "pos", None)}
@@ -175,9 +169,7 @@ def test_the_sensitivity_study_is_published_with_its_data():
     doc = ROOT / "docs" / "SENSITIVITY.md"
     assert doc.is_file(), "docs/SENSITIVITY.md is missing"
     text = doc.read_text(encoding="utf-8")
-    data = json.loads(
-        (ROOT / "docs" / "sensitivity-toolz.json").read_text(encoding="utf-8")
-    )
+    data = json.loads((ROOT / "docs" / "sensitivity-toolz.json").read_text(encoding="utf-8"))
     # The headline pair, which is the only part that measures the prover rather than the
     # plants, must match the committed run.
     assert data["proven_total"] == data["newly_surviving_total"], (
@@ -215,9 +207,7 @@ def test_the_comparison_numbers_match_the_audit_it_describes():
     # And it must say plainly that the mutant counts are not comparable, because that is
     # the honest part a favourable comparison is most tempted to drop.
     lowered = text.lower()
-    assert "not comparable" in lowered, (
-        "COMPARISON.md no longer says the rates are not comparable"
-    )
+    assert "not comparable" in lowered, "COMPARISON.md no longer says the rates are not comparable"
     assert "mutmut" in lowered and "397" in text, (
         "it no longer says why mutmut is absent rather than represented by a guess"
     )

@@ -315,9 +315,7 @@ HEADER_STATEMENTS = (
 )
 
 
-def header_for(
-    tree: ast.Module, source: str, needed: set[str], exclude: str = ""
-) -> str:
+def header_for(tree: ast.Module, source: str, needed: set[str], exclude: str = "") -> str:
     """The module-level names the function reads, and the ones those read in turn.
 
     This kept only imports and assignments whose value was a LITERAL, so a constant

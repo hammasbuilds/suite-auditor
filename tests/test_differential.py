@@ -1,5 +1,3 @@
-
-
 def test_proof_step_cannot_touch_the_machine(tmp_path):
     """The proof call must not be able to write, delete, spawn or connect.
 
@@ -18,7 +16,12 @@ def test_proof_step_cannot_touch_the_machine(tmp_path):
     import sys
     from pathlib import Path
 
-    module = Path(__file__).parent.parent / "src" / "suite_auditor" / "differential.py"
+    # Located through the imported module, not through the repo layout: CI also runs
+    # this suite against the installed wheel from a copied tests/ directory, where
+    # ../src/ does not exist.
+    import suite_auditor.differential
+
+    module = Path(suite_auditor.differential.__file__)
     src = module.read_text(encoding="utf-8")
     block = src[src.index("class _SideEffect(BaseException):") : src.index("def _equal(x, y):")]
     # `os` is in here because the guard computes the os.open write-flag mask from it.

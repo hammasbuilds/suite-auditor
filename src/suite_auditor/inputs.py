@@ -131,7 +131,7 @@ FUNCTION_POOL = [
 UNPACK_NAMES = ("args", "argv", "varargs", "positional")
 UNPACK_POOL = ["()", "(1,)", "(1, 2)", "[]", "[1]"]
 KWARG_NAMES = ("kwargs", "kw", "keywords", "options", "opts", "kwds")
-KWARG_POOL = ['{}', '{"x": 1}', '{"a": 1, "b": 2}']
+KWARG_POOL = ["{}", '{"x": 1}', '{"a": 1, "b": 2}']
 
 # Parameter names that need a callable taking no arguments; everything else in
 # CALLABLE_NAMES gets FUNCTION_POOL.
@@ -386,8 +386,8 @@ def argument_sets(
         lowered = name.lower()
         wants_callable = lowered in CALLABLE_NAMES
         callables = (
-            CALLABLE_POOL if lowered in FACTORY_NAMES else FUNCTION_POOL
-        ) if wants_callable else []
+            (CALLABLE_POOL if lowered in FACTORY_NAMES else FUNCTION_POOL) if wants_callable else []
+        )
         if lowered in UNPACK_NAMES:
             callables = UNPACK_POOL
         elif lowered in KWARG_NAMES:

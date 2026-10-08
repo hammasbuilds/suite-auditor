@@ -410,13 +410,13 @@ def compare(
     # whose two sides never both returned cannot support either conclusion, so if
     # nothing comparable survives, the honest answer is that nothing was established.
     if blocked and not remaining:
-        effects = sorted({r["old"][1] if r["old"][0] == "impure" else r["new"][1]
-                          for r in blocked})
+        effects = sorted({r["old"][1] if r["old"][0] == "impure" else r["new"][1] for r in blocked})
         return {
             "status": "inconclusive",
             "detail": "every call that could have decided this tried to leave the "
-                      "process (" + ", ".join(effects[:3])
-                      + "); proving it would mean running its side effects",
+            "process ("
+            + ", ".join(effects[:3])
+            + "); proving it would mean running its side effects",
             "tried": len(rows),
         }
     rows = remaining
