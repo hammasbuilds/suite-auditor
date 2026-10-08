@@ -123,3 +123,26 @@ def test_an_activated_venv_inside_the_project_is_not_flagged(tmp_path, monkeypat
     venv.create(inner, with_pip=False)
     monkeypatch.setenv("VIRTUAL_ENV", str(inner))
     assert resolve_python(tmp_path).warning == ""
+
+
+def test_the_version_is_the_same_in_every_place_it_is_declared() -> None:
+    """__version__, pyproject.toml and the installed metadata must agree.
+
+    The version is written twice - here and in pyproject.toml - and the other tests
+    only check that `--version` prints `__version__`, which is true however wrong
+    both are. Bump pyproject alone and the wheel says suite-auditor {new} while
+    `suite-auditor --version` says the old one; release.yml compares the tag to
+    pyproject, so nothing would have caught it.
+    """
+    from importlib.metadata import version
+
+    assert version("suite-auditor") == __version__
+
+    # pyproject.toml is absent wherever only tests/ is shipped, as in the
+    # installed-wheel CI job.
+    pyproject = Path(__file__).resolve().parent.parent / "pyproject.toml"
+    if pyproject.exists():
+        import tomllib
+
+        declared = tomllib.loads(pyproject.read_text(encoding="utf-8"))
+        assert declared["project"]["version"] == __version__
