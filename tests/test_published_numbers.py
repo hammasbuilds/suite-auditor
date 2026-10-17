@@ -40,7 +40,7 @@ def _report(text: str) -> list[str]:
 
 
 def test_the_readme_audit_block_is_what_the_command_prints():
-    shown = README.read_text(encoding="utf-8").split("## What it looks like", 1)[1]
+    shown = README.read_text(encoding="utf-8").split("## Sample input / output", 1)[1]
     shown = shown.split("```", 2)[1]
     env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
     env.pop("VIRTUAL_ENV", None)
