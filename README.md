@@ -42,6 +42,25 @@ reach what        a time          cover it            suite passed  -> PROVE IT:
                                                                          agree  -> unproven
 ```
 
+## Screenshots
+
+A small browser front end drives the package for demonstrations. It is a local demo and is **not part of
+the package** — the package has no web surface and no runtime dependencies. Every result on these screens
+is a live call into the library.
+
+![Overview](https://raw.githubusercontent.com/hammasbuilds/suite-auditor/main/docs/screenshots/00-overview.png)
+*The front end as it opens: every feature is a tab, and the page states that nothing on it is precomputed.*
+
+![Audit A Suite](https://raw.githubusercontent.com/hammasbuilds/suite-auditor/main/docs/screenshots/01-audit-a-suite.png)
+*Mutants killed per function, and each proven gap with the concrete call that proves it.*
+
+![What Tests Reach](https://raw.githubusercontent.com/hammasbuilds/suite-auditor/main/docs/screenshots/02-what-tests-reach.png)
+*Which functions the tests actually reach, and the arguments they were reached with.*
+
+![Proving Safely](https://raw.githubusercontent.com/hammasbuilds/suite-auditor/main/docs/screenshots/03-proving-safely.png)
+*The proof step attempting to write, delete, spawn and connect — and being refused each time.*
+
+
 ## Sample input / output
 
 `python demo.py` audits
