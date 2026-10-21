@@ -42,16 +42,6 @@ reach what        a time          cover it            suite passed  -> PROVE IT:
                                                                          agree  -> unproven
 ```
 
-## Architecture
-
-![Pipeline](https://raw.githubusercontent.com/hammasbuilds/suite-auditor/main/docs/screenshots/architecture.png)
-*The path a call travels, stage by stage: scratch copy -> trace -> mutate -> run covering tests -> prove the survivor -> report. Every stage is a module in this
-repository. Animated: [`docs/architecture.html`](https://github.com/hammasbuilds/suite-auditor/blob/main/docs/architecture.html) — one file, no
-dependencies, opens in any browser.*
-
-![Decision architecture](https://raw.githubusercontent.com/hammasbuilds/suite-auditor/main/docs/screenshots/architecture-deep.png)
-*A surviving mutant is not a gap until both versions can be separated on the inputs the tests really used. 13 killed, 2 proven, 2 unproven - and only the 2 are reported. Animated: [`docs/architecture-deep.html`](https://github.com/hammasbuilds/suite-auditor/blob/main/docs/architecture-deep.html).*
-
 ## Screenshots
 
 A small browser front end drives the package for demonstrations. It is a local demo and is **not part of
@@ -69,7 +59,6 @@ is a live call into the library.
 
 ![Proving Safely](https://raw.githubusercontent.com/hammasbuilds/suite-auditor/main/docs/screenshots/03-proving-safely.png)
 *The proof step attempting to write, delete, spawn and connect — and being refused each time.*
-
 
 ## Sample input / output
 
