@@ -36,6 +36,8 @@ from __future__ import annotations
 import argparse
 import io
 import json
+import shutil
+import os
 import re
 import subprocess
 import sys
@@ -53,6 +55,38 @@ TOP = ("https://raw.githubusercontent.com/hugovk/top-pypi-packages/main/"
 # which would have shrunk and biased the very sample this script exists to
 # make unbiased.
 TEST_FILE = re.compile(r"^[^/]+/(?:src/)?(tests?)/(?:.*/)?test_[^/]*\.py$")
+
+
+# A thousand candidates means a thousand virtualenvs. The system temp directory is
+# on C: here, which filled, and `uv venv` then failed for 160 of 295 candidates -
+# an infrastructure failure that looked like a property of those projects.
+SCRATCH = Path(os.environ.get("CENSUS_SCRATCH", r"D:\_census_scratch"))
+
+
+def _remove_tree(path: Path, tries: int = 5) -> None:
+    """Delete a tree, waiting out the handles Windows holds briefly after a process exits."""
+    for attempt in range(tries):
+        try:
+            shutil.rmtree(path)
+            return
+        except FileNotFoundError:
+            return
+        except OSError:
+            if attempt == tries - 1:
+                return  # leave it rather than fail the run; the next start sweeps it
+            time.sleep(0.4 * (attempt + 1))
+
+
+def sweep_scratch() -> int:
+    """Remove scratch trees left by an earlier run. Returns how many went."""
+    if not SCRATCH.exists():
+        return 0
+    gone = 0
+    for child in SCRATCH.iterdir():
+        if child.is_dir():
+            _remove_tree(child)
+            gone += not child.exists()
+    return gone
 
 
 def fetch_json(url: str) -> dict:
@@ -165,8 +199,14 @@ def prepare(root: Path, package: str, version: str, tests: Path) -> tuple[Path |
     non-zero collected count before a single mutant is generated.
     """
     venv = root.parent / "venv"
-    if subprocess.run(["uv", "venv", str(venv), "-q"], capture_output=True).returncode:
-        return None, "could not create a venv"
+    _remove_tree(venv)
+    made = subprocess.run(["uv", "venv", str(venv), "-q"], capture_output=True, text=True)
+    if made.returncode:
+        # Recording only "could not create a venv" made 160 exclusions in one run
+        # unexplainable after the fact - the same blind spot this tool exists to
+        # find in other people's checks.
+        why = (made.stderr or made.stdout or "").strip().splitlines()
+        return None, f"could not create a venv: {why[-1][:110] if why else 'no output'}"
     py = venv / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
     # Install from the unpacked sdist, not from PyPI, so the project's own declared
     # test extras resolve. Installing only the published package left every suite
@@ -213,6 +253,11 @@ def main() -> int:
     ap.add_argument("--out", default="target-census.json")
     args = ap.parse_args()
 
+    SCRATCH.mkdir(parents=True, exist_ok=True)
+    swept = sweep_scratch()
+    if swept:
+        print(f"swept {swept} scratch tree(s) left by an earlier run")
+    print(f"scratch: {SCRATCH}")
     names = top_packages(args.packages)
     print(f"{len(names)} packages from the external top-downloads list\n")
     out, results, started = Path(args.out), [], time.time()
@@ -227,7 +272,8 @@ def main() -> int:
             out.write_text(json.dumps(results, indent=1), encoding="utf-8")
             continue
         row["version"], url = sd
-        with tempfile.TemporaryDirectory(prefix="sa-census-", ignore_cleanup_errors=True) as tmp:
+        with tempfile.TemporaryDirectory(prefix="sa-census-", dir=SCRATCH,
+                                            ignore_cleanup_errors=True) as tmp:
             root = unpack(url, Path(tmp))
             if root is None:
                 row["excluded"] = "sdist ships no test directory"
