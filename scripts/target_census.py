@@ -45,6 +45,7 @@ import tarfile
 import tempfile
 import threading
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -94,9 +95,27 @@ def sweep_scratch() -> int:
     return gone
 
 
-def fetch_json(url: str) -> dict:
-    with urllib.request.urlopen(url, timeout=60) as response:
-        return json.loads(response.read().decode())
+class IndexUnreachable(RuntimeError):
+    """The package index could not be read. Says nothing about the package."""
+
+
+def fetch_json(url: str, tries: int = 4) -> dict:
+    """Read JSON from the index, retrying a transient failure.
+
+    Without retries a single slow response discarded a candidate, and under load from
+    several concurrent corpus jobs that discarded most of them: one run wrote off 950
+    of 1,000 packages as publishing no sdist when nearly all of them do.
+    """
+    last: Exception | None = None
+    for attempt in range(tries):
+        try:
+            with urllib.request.urlopen(url, timeout=60) as response:
+                return json.loads(response.read().decode())
+        except (urllib.error.URLError, TimeoutError, OSError, ValueError) as exc:
+            last = exc
+            if attempt < tries - 1:
+                time.sleep(1.5 * (attempt + 1))
+    raise IndexUnreachable(f"{type(last).__name__}: {last}")
 
 
 def top_packages(count: int) -> list[str]:
@@ -107,10 +126,9 @@ def top_packages(count: int) -> list[str]:
 
 def newest_sdist(package: str) -> tuple[str, str] | None:
     """The newest final release's sdist url, or None if the project publishes none."""
-    try:
-        data = fetch_json(f"https://pypi.org/pypi/{package}/json")
-    except Exception:  # noqa: BLE001 - unreadable is an outcome, recorded by the caller
-        return None
+    # Deliberately not caught here. A failure to reach the index is not a fact about
+    # the package, and the caller records it as its own outcome.
+    data = fetch_json(f"https://pypi.org/pypi/{package}/json")
     version = data["info"]["version"]
     for f in data["releases"].get(version, []):
         if f["packagetype"] == "sdist" and f["filename"].endswith(".tar.gz"):
