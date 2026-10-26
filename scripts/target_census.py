@@ -57,7 +57,7 @@ TOP = ("https://raw.githubusercontent.com/hugovk/top-pypi-packages/main/"
 # which would have shrunk and biased the very sample this script exists to
 # make unbiased.
 # A gate must cost far less than what it guards.
-CLEAN_RUN_SECONDS = 300
+CLEAN_RUN_SECONDS = 120
 CLEAN_RUN_MEMORY_MB = 4096
 
 TEST_FILE = re.compile(r"^[^/]+/(?:src/)?(tests?)/(?:.*/)?test_[^/]*\.py$")
@@ -209,7 +209,8 @@ def install_test_deps(root: Path, py: Path, pip) -> list[str]:
     return applied
 
 
-def prepare(root: Path, package: str, version: str, tests: Path) -> tuple[Path | None, str]:
+def prepare(root: Path, package: str, version: str, tests: Path,
+            clean_seconds: int = CLEAN_RUN_SECONDS) -> tuple[Path | None, str]:
     """A venv with the project installed, but only if its clean suite really runs.
 
     Without this the audit "succeeded" on every project and measured nothing: no
@@ -252,9 +253,9 @@ def prepare(root: Path, package: str, version: str, tests: Path) -> tuple[Path |
     outcome, detail, text = run_with_budgets(
         [str(py), "-m", "pytest", str(tests), "-q", "-x", "--no-header",
          "-p", "no:cacheprovider"],
-        seconds=CLEAN_RUN_SECONDS, memory_mb=CLEAN_RUN_MEMORY_MB, cwd=root)
+        seconds=clean_seconds, memory_mb=CLEAN_RUN_MEMORY_MB, cwd=root)
     if outcome == "timeout":
-        return None, f"clean suite did not finish inside {CLEAN_RUN_SECONDS}s"
+        return None, f"clean suite did not finish inside {clean_seconds}s"
     if outcome == "memory":
         return None, f"clean suite exceeded memory: {detail}"
     collected = 0
@@ -363,6 +364,15 @@ def main() -> int:
                     help="memory a single project's audit may use, whole process tree "
                          "(4096). One suite reached 15.4 GB on a 31.6 GB machine "
                          "inside its time budget")
+    ap.add_argument("--clean-seconds", type=int, default=CLEAN_RUN_SECONDS,
+                    help=f"time the clean suite may take ({CLEAN_RUN_SECONDS}). A "
+                         "project slower than this is excluded: the audit reruns the "
+                         "suite once per mutant, so a slow suite is unaffordable here "
+                         "and spending the full budget on it starves the rest")
+    ap.add_argument("--resume", action="store_true",
+                    help="keep rows already in --out and process only the rest. This "
+                         "census has been restarted repeatedly for harness fixes, and "
+                         "each restart previously discarded every completed candidate")
     ap.add_argument("--out", default="target-census.json")
     args = ap.parse_args()
 
@@ -373,9 +383,21 @@ def main() -> int:
     print(f"scratch: {SCRATCH}")
     names = top_packages(args.packages)
     print(f"{len(names)} packages from the external top-downloads list\n")
-    out, results, started = Path(args.out), [], time.time()
+    out = Path(args.out)
+    results: list[dict] = []
+    if args.resume and out.exists():
+        try:
+            results = json.loads(out.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            results = []
+    done_names = {r["package"] for r in results if isinstance(r, dict) and "package" in r}
+    if done_names:
+        print(f"resuming: {len(done_names):,} candidates already processed")
+    started = time.time()
 
     for i, name in enumerate(names, 1):
+        if name in done_names:
+            continue
         try:
             row: dict = {"package": name}
             sd = newest_sdist(name)
@@ -394,7 +416,7 @@ def main() -> int:
                 elif (tests := test_dir(root)) is None:
                     row["excluded"] = "no test_*.py under tests/"
                 else:
-                    py, why = prepare(root, name, row["version"], tests)
+                    py, why = prepare(root, name, row["version"], tests, args.clean_seconds)
                     row["clean_run"] = why
                     if py is None:
                         row["excluded"] = why
