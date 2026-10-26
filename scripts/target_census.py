@@ -190,12 +190,16 @@ def prepare(root: Path, package: str, version: str, tests: Path) -> tuple[Path |
     collected = 0
     for m in re.finditer(r"(\d+) (?:passed|collected)", text):
         collected = max(collected, int(m.group(1)))
-    if clean.returncode != 0:
-        tail = [l for l in text.strip().splitlines() if l.strip()]
-        return None, f"clean suite does not pass: {tail[-1][:110] if tail else '?'}"
+    failed = max((int(m.group(1)) for m in re.finditer(r"(\d+) failed", text)), default=0)
     if collected == 0:
-        return None, "clean suite passes but collects no tests"
-    return py, (f"{collected} tests collected"
+        return None, "clean suite collects no tests"
+    # A few pre-existing failures are not a reason to drop a project: the tool
+    # reports them ("N test(s) already fail on the unmodified code") and carries a
+    # health caveat for the case. Only a mostly-broken suite is excluded, because
+    # then "killed" stops meaning anything.
+    if failed > max(5, collected * 0.2):
+        return None, f"clean suite mostly broken: {failed} of {collected} failing"
+    return py, (f"{collected} collected, {failed} already failing"
                 + (f" (deps: {', '.join(extras_used)})" if extras_used else ""))
 
 
