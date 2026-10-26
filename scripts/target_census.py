@@ -43,6 +43,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import threading
 import time
 import urllib.request
 from pathlib import Path
@@ -54,6 +55,10 @@ TOP = ("https://raw.githubusercontent.com/hugovk/top-pypi-packages/main/"
 # tarball omits directory entries looked like it shipped no tests at all -
 # which would have shrunk and biased the very sample this script exists to
 # make unbiased.
+# A gate must cost far less than what it guards.
+CLEAN_RUN_SECONDS = 300
+CLEAN_RUN_MEMORY_MB = 4096
+
 TEST_FILE = re.compile(r"^[^/]+/(?:src/)?(tests?)/(?:.*/)?test_[^/]*\.py$")
 
 
@@ -223,10 +228,17 @@ def prepare(root: Path, package: str, version: str, tests: Path) -> tuple[Path |
         return None, f"install failed: {last[-1][:110] if last else '?'}"
 
     extras_used = install_test_deps(root, py, pip)
-    clean = subprocess.run([str(py), "-m", "pytest", str(tests), "-q", "-x", "--no-header",
-                            "-p", "no:cacheprovider"],
-                           cwd=root, capture_output=True, text=True, timeout=900)
-    text = clean.stdout + clean.stderr
+    # Budgeted like the audit, and it cannot raise: an unguarded TimeoutExpired here
+    # killed a whole thousand-candidate run at its first slow project. The clean run
+    # is a gate, so it gets a shorter time cap than the audit it guards.
+    outcome, detail, text = run_with_budgets(
+        [str(py), "-m", "pytest", str(tests), "-q", "-x", "--no-header",
+         "-p", "no:cacheprovider"],
+        seconds=CLEAN_RUN_SECONDS, memory_mb=CLEAN_RUN_MEMORY_MB, cwd=root)
+    if outcome == "timeout":
+        return None, f"clean suite did not finish inside {CLEAN_RUN_SECONDS}s"
+    if outcome == "memory":
+        return None, f"clean suite exceeded memory: {detail}"
     collected = 0
     for m in re.finditer(r"(\d+) (?:passed|collected)", text):
         collected = max(collected, int(m.group(1)))
@@ -279,28 +291,47 @@ def _tree_rss_mb(root_pid: int) -> float:
     return total / 1048576
 
 
-def run_with_budgets(cmd: list[str], seconds: int, memory_mb: int) -> tuple[str, str]:
+def run_with_budgets(cmd: list[str], seconds: int, memory_mb: int,
+                     cwd: Path | None = None) -> tuple[str, str, str]:
     """Run a command under both a time and a memory budget.
 
-    Returns (outcome, detail) where outcome is "ok", "timeout" or "memory".
+    Returns (outcome, detail, output) where outcome is "ok", "timeout" or "memory".
+    The output is returned in every case, including the two kills, because the
+    partial output of a stopped run is still what says how far it got.
     """
+    chunks: list[str] = []
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                            text=True)
+                            text=True, cwd=cwd, encoding="utf-8", errors="replace")
+
+    def drain() -> None:
+        assert proc.stdout is not None
+        for line in proc.stdout:
+            chunks.append(line)
+
+    reader = threading.Thread(target=drain, daemon=True)
+    reader.start()
+
     deadline = time.time() + seconds
     peak = 0.0
+    outcome, detail = "ok", ""
     while proc.poll() is None:
         if time.time() > deadline:
             subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"],
                            capture_output=True)
-            return "timeout", f"{seconds}s"
+            outcome, detail = "timeout", f"{seconds}s"
+            break
         used = _tree_rss_mb(proc.pid)
         peak = max(peak, used)
         if used > memory_mb:
             subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"],
                            capture_output=True)
-            return "memory", f"{used:,.0f} MB over the {memory_mb:,} MB cap"
+            outcome, detail = "memory", f"{used:,.0f} MB over the {memory_mb:,} MB cap"
+            break
         time.sleep(4)
-    return "ok", f"peak {peak:,.0f} MB"
+    reader.join(timeout=10)
+    if outcome == "ok":
+        detail = f"peak {peak:,.0f} MB"
+    return outcome, detail, "".join(chunks)
 
 
 def main() -> int:
@@ -327,72 +358,79 @@ def main() -> int:
     out, results, started = Path(args.out), [], time.time()
 
     for i, name in enumerate(names, 1):
-        row: dict = {"package": name}
-        sd = newest_sdist(name)
-        if sd is None:
-            row["excluded"] = "no sdist published"
-            results.append(row)
-            print(f"  [{i}/{len(names)}] {name:24} excluded: no sdist")
-            out.write_text(json.dumps(results, indent=1), encoding="utf-8")
-            continue
-        row["version"], url = sd
-        with tempfile.TemporaryDirectory(prefix="sa-census-", dir=SCRATCH,
-                                            ignore_cleanup_errors=True) as tmp:
-            root = unpack(url, Path(tmp))
-            if root is None:
-                row["excluded"] = "sdist ships no test directory"
-            elif (tests := test_dir(root)) is None:
-                row["excluded"] = "no test_*.py under tests/"
-            else:
-                py, why = prepare(root, name, row["version"], tests)
-                row["clean_run"] = why
-                if py is None:
-                    row["excluded"] = why
-                    results.append(row)
-                    print(f"  [{i}/{len(names)}] {name:24} excluded: {why[:46]}", flush=True)
-                    out.write_text(json.dumps(results, indent=1), encoding="utf-8")
-                    continue
-                # --out is a DIRECTORY; it writes AUDIT.md and audit.json into it.
-                report_dir = Path(tmp) / "report"
-                report = report_dir / "audit.json"
-                cmd = [sys.executable, "-m", "suite_auditor", "audit", str(root),
-                       "--test", str(tests.relative_to(root)),
-                       "--python", str(py),
-                       "--per-function", str(args.per_function),
-                       "-j", str(args.jobs), "-q", "--out", str(report_dir)]
-                t0 = time.time()
-                try:
-                    outcome, detail = run_with_budgets(cmd, args.budget, args.memory_mb)
-                    row["seconds"] = round(time.time() - t0, 1)
-                    row["resources"] = detail
-                    if outcome == "memory":
-                        row["excluded"] = f"memory budget exceeded: {detail}"
+        try:
+            row: dict = {"package": name}
+            sd = newest_sdist(name)
+            if sd is None:
+                row["excluded"] = "no sdist published"
+                results.append(row)
+                print(f"  [{i}/{len(names)}] {name:24} excluded: no sdist")
+                out.write_text(json.dumps(results, indent=1), encoding="utf-8")
+                continue
+            row["version"], url = sd
+            with tempfile.TemporaryDirectory(prefix="sa-census-", dir=SCRATCH,
+                                                ignore_cleanup_errors=True) as tmp:
+                root = unpack(url, Path(tmp))
+                if root is None:
+                    row["excluded"] = "sdist ships no test directory"
+                elif (tests := test_dir(root)) is None:
+                    row["excluded"] = "no test_*.py under tests/"
+                else:
+                    py, why = prepare(root, name, row["version"], tests)
+                    row["clean_run"] = why
+                    if py is None:
+                        row["excluded"] = why
                         results.append(row)
-                        print(f"  [{i}/{len(names)}] {name:24} excluded: {row['excluded'][:46]}",
-                              flush=True)
+                        print(f"  [{i}/{len(names)}] {name:24} excluded: {why[:46]}", flush=True)
                         out.write_text(json.dumps(results, indent=1), encoding="utf-8")
                         continue
-                    if outcome == "timeout":
-                        row["excluded"] = f"budget exceeded ({args.budget}s)"
-                        results.append(row)
-                        print(f"  [{i}/{len(names)}] {name:24} excluded: {row['excluded'][:46]}",
-                              flush=True)
-                        out.write_text(json.dumps(results, indent=1), encoding="utf-8")
-                        continue
-                    if report.exists():
-                        audit = json.loads(report.read_text(encoding="utf-8"))
-                        # An audit that planned no mutants measured nothing. It is an
-                        # exclusion with a reason, never a row in a rate.
-                        if not audit.get("planned_mutants"):
-                            row["excluded"] = "audit planned no mutants"
-                            row["empty_audit"] = audit
+                    # --out is a DIRECTORY; it writes AUDIT.md and audit.json into it.
+                    report_dir = Path(tmp) / "report"
+                    report = report_dir / "audit.json"
+                    cmd = [sys.executable, "-m", "suite_auditor", "audit", str(root),
+                           "--test", str(tests.relative_to(root)),
+                           "--python", str(py),
+                           "--per-function", str(args.per_function),
+                           "-j", str(args.jobs), "-q", "--out", str(report_dir)]
+                    t0 = time.time()
+                    try:
+                        outcome, detail, _ = run_with_budgets(cmd, args.budget, args.memory_mb)
+                        row["seconds"] = round(time.time() - t0, 1)
+                        row["resources"] = detail
+                        if outcome == "memory":
+                            row["excluded"] = f"memory budget exceeded: {detail}"
+                            results.append(row)
+                            print(f"  [{i}/{len(names)}] {name:24} excluded: {row['excluded'][:46]}",
+                                  flush=True)
+                            out.write_text(json.dumps(results, indent=1), encoding="utf-8")
+                            continue
+                        if outcome == "timeout":
+                            row["excluded"] = f"budget exceeded ({args.budget}s)"
+                            results.append(row)
+                            print(f"  [{i}/{len(names)}] {name:24} excluded: {row['excluded'][:46]}",
+                                  flush=True)
+                            out.write_text(json.dumps(results, indent=1), encoding="utf-8")
+                            continue
+                        if report.exists():
+                            audit = json.loads(report.read_text(encoding="utf-8"))
+                            # An audit that planned no mutants measured nothing. It is an
+                            # exclusion with a reason, never a row in a rate.
+                            if not audit.get("planned_mutants"):
+                                row["excluded"] = "audit planned no mutants"
+                                row["empty_audit"] = audit
+                            else:
+                                row["audit"] = audit
                         else:
-                            row["audit"] = audit
-                    else:
-                        row["excluded"] = "audit produced no report"
-                except subprocess.TimeoutExpired:  # handled by run_with_budgets
-                    row["seconds"] = args.budget
-                    row["excluded"] = f"budget exceeded ({args.budget}s)"
+                            row["excluded"] = "audit produced no report"
+                    except subprocess.TimeoutExpired:  # handled by run_with_budgets
+                        row["seconds"] = args.budget
+                        row["excluded"] = f"budget exceeded ({args.budget}s)"
+        except Exception as exc:  # noqa: BLE001
+            # A census walks a thousand projects it has never seen, over a network,
+            # running their code. Two runs died at their first awkward project - an
+            # unguarded TimeoutExpired from a clean suite, an SSL TimeoutError while
+            # fetching an sdist. Anything that escapes is that candidate's result.
+            row["excluded"] = f"candidate failed: {type(exc).__name__}: {exc}"[:160]
         results.append(row)
         state = row.get("excluded", "audited")
         rate = (time.time() - started) / i
