@@ -243,6 +243,66 @@ def prepare(root: Path, package: str, version: str, tests: Path) -> tuple[Path |
                 + (f" (deps: {', '.join(extras_used)})" if extras_used else ""))
 
 
+def _tree_rss_mb(root_pid: int) -> float:
+    """Resident memory of a process and every descendant, in MB.
+
+    Done with one CIM query rather than a library, because this package and its
+    scripts carry no third-party dependencies.
+    """
+    query = (
+        "Get-CimInstance Win32_Process | "
+        "ForEach-Object { $_.ProcessId.ToString() + ',' + "
+        "$_.ParentProcessId.ToString() + ',' + $_.WorkingSetSize.ToString() }"
+    )
+    try:
+        out = subprocess.run(["powershell", "-NoProfile", "-Command", query],
+                             capture_output=True, text=True, timeout=30).stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return 0.0
+    parent: dict[int, int] = {}
+    size: dict[int, int] = {}
+    for line in out.splitlines():
+        bits = line.strip().split(",")
+        if len(bits) == 3 and all(b.strip().isdigit() for b in bits):
+            pid, ppid, rss = (int(b) for b in bits)
+            parent[pid] = ppid
+            size[pid] = rss
+    total = 0
+    for pid in size:
+        walker, hops = pid, 0
+        while walker in parent and hops < 40:
+            if walker == root_pid:
+                total += size[pid]
+                break
+            walker = parent[walker]
+            hops += 1
+    return total / 1048576
+
+
+def run_with_budgets(cmd: list[str], seconds: int, memory_mb: int) -> tuple[str, str]:
+    """Run a command under both a time and a memory budget.
+
+    Returns (outcome, detail) where outcome is "ok", "timeout" or "memory".
+    """
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                            text=True)
+    deadline = time.time() + seconds
+    peak = 0.0
+    while proc.poll() is None:
+        if time.time() > deadline:
+            subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"],
+                           capture_output=True)
+            return "timeout", f"{seconds}s"
+        used = _tree_rss_mb(proc.pid)
+        peak = max(peak, used)
+        if used > memory_mb:
+            subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"],
+                           capture_output=True)
+            return "memory", f"{used:,.0f} MB over the {memory_mb:,} MB cap"
+        time.sleep(4)
+    return "ok", f"peak {peak:,.0f} MB"
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--packages", type=int, default=60)
@@ -250,6 +310,10 @@ def main() -> int:
                     help="seconds a single project's audit may take (900)")
     ap.add_argument("--per-function", type=int, default=5)
     ap.add_argument("--jobs", default="4")
+    ap.add_argument("--memory-mb", type=int, default=4096,
+                    help="memory a single project's audit may use, whole process tree "
+                         "(4096). One suite reached 15.4 GB on a 31.6 GB machine "
+                         "inside its time budget")
     ap.add_argument("--out", default="target-census.json")
     args = ap.parse_args()
 
@@ -298,9 +362,23 @@ def main() -> int:
                        "-j", str(args.jobs), "-q", "--out", str(report_dir)]
                 t0 = time.time()
                 try:
-                    proc = subprocess.run(cmd, capture_output=True, text=True,
-                                          timeout=args.budget)
+                    outcome, detail = run_with_budgets(cmd, args.budget, args.memory_mb)
                     row["seconds"] = round(time.time() - t0, 1)
+                    row["resources"] = detail
+                    if outcome == "memory":
+                        row["excluded"] = f"memory budget exceeded: {detail}"
+                        results.append(row)
+                        print(f"  [{i}/{len(names)}] {name:24} excluded: {row['excluded'][:46]}",
+                              flush=True)
+                        out.write_text(json.dumps(results, indent=1), encoding="utf-8")
+                        continue
+                    if outcome == "timeout":
+                        row["excluded"] = f"budget exceeded ({args.budget}s)"
+                        results.append(row)
+                        print(f"  [{i}/{len(names)}] {name:24} excluded: {row['excluded'][:46]}",
+                              flush=True)
+                        out.write_text(json.dumps(results, indent=1), encoding="utf-8")
+                        continue
                     if report.exists():
                         audit = json.loads(report.read_text(encoding="utf-8"))
                         # An audit that planned no mutants measured nothing. It is an
@@ -311,9 +389,8 @@ def main() -> int:
                         else:
                             row["audit"] = audit
                     else:
-                        tail = (proc.stderr or proc.stdout).strip().splitlines()
-                        row["excluded"] = f"audit produced no report: {tail[-1][:120] if tail else '?'}"
-                except subprocess.TimeoutExpired:
+                        row["excluded"] = "audit produced no report"
+                except subprocess.TimeoutExpired:  # handled by run_with_budgets
                     row["seconds"] = args.budget
                     row["excluded"] = f"budget exceeded ({args.budget}s)"
         results.append(row)
