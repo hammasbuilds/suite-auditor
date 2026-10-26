@@ -104,6 +104,54 @@ def test_dir(root: Path) -> Path | None:
 
 
 
+TEST_GROUP = re.compile(r"test|dev|check|^ci$", re.I)
+NOT_TEST_GROUP = re.compile(r"doc|bench|emscripten|lint|release|min|publish|typing", re.I)
+
+
+def declared_groups(root: Path) -> list[str]:
+    """Group names a project really declares, in a sensible install order.
+
+    Read from pyproject.toml rather than guessed, because `uv pip install --group`
+    returns 0 for a group that does not exist, so a return code cannot tell the
+    difference between installed and absent.
+    """
+    pyproject = root / "pyproject.toml"
+    if not pyproject.exists():
+        return []
+    try:
+        import tomllib
+        data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        return []
+    names = list(data.get("dependency-groups", {}))
+    wanted = [n for n in names if TEST_GROUP.search(n) and not NOT_TEST_GROUP.search(n)]
+    # `test` before `dev` so the lighter set lands first, then anything it missed.
+    return sorted(wanted, key=lambda n: (0 if n.lower().startswith("test") else 1, n))
+
+
+def install_test_deps(root: Path, py: Path, pip) -> list[str]:
+    """Install every test-ish group and extra. Returns what was actually applied."""
+    applied = []
+    for group in declared_groups(root):
+        done = subprocess.run(["uv", "pip", "install", "-q", "--python", str(py),
+                               "--group", group], cwd=root,
+                              capture_output=True, text=True, timeout=900)
+        if done.returncode == 0 and "was not found" not in (done.stderr or ""):
+            applied.append(f"group:{group}")
+    if not applied:
+        for extra in ("test", "tests", "testing", "dev"):
+            if pip(f"{root}[{extra}]").returncode == 0:
+                applied.append(f"extra:{extra}")
+                break
+    for req in ("test-requirements.txt", "requirements-test.txt", "dev-requirements.txt",
+                "requirements-dev.txt", "requirements/test.txt", "requirements/dev.txt"):
+        path = root / req
+        if path.exists() and pip("-r", str(path)).returncode == 0:
+            applied.append(req)
+            break
+    return applied
+
+
 def prepare(root: Path, package: str, version: str, tests: Path) -> tuple[Path | None, str]:
     """A venv with the project installed, but only if its clean suite really runs.
 
@@ -134,29 +182,7 @@ def prepare(root: Path, package: str, version: str, tests: Path) -> tuple[Path |
         last = (base.stderr or "").strip().splitlines()
         return None, f"install failed: {last[-1][:110] if last else '?'}"
 
-    # Test dependencies are declared three different ways in the wild, and missing
-    # them is why every clean run failed at first. All three are tried.
-    extras_used = []
-    for group in ("test", "tests", "testing", "dev"):
-        # PEP 735 [dependency-groups] - what packaging, urllib3 and most modern
-        # projects use. An extras-only install cannot see these at all.
-        done = subprocess.run(["uv", "pip", "install", "-q", "--python", str(py),
-                               "--group", group], cwd=root,
-                              capture_output=True, text=True, timeout=900)
-        if done.returncode == 0:
-            extras_used.append(f"group:{group}")
-            break
-    if not extras_used:
-        for extra in ("test", "tests", "testing", "dev"):
-            if pip(f"{root}[{extra}]").returncode == 0:
-                extras_used.append(f"extra:{extra}")
-                break
-    for req in ("test-requirements.txt", "requirements-test.txt", "dev-requirements.txt",
-                "requirements-dev.txt", "requirements/test.txt", "requirements/dev.txt"):
-        path = root / req
-        if path.exists() and pip("-r", str(path)).returncode == 0:
-            extras_used.append(req)
-            break
+    extras_used = install_test_deps(root, py, pip)
     clean = subprocess.run([str(py), "-m", "pytest", str(tests), "-q", "-x", "--no-header",
                             "-p", "no:cacheprovider"],
                            cwd=root, capture_output=True, text=True, timeout=900)
@@ -197,7 +223,7 @@ def main() -> int:
             out.write_text(json.dumps(results, indent=1), encoding="utf-8")
             continue
         row["version"], url = sd
-        with tempfile.TemporaryDirectory(prefix="sa-census-") as tmp:
+        with tempfile.TemporaryDirectory(prefix="sa-census-", ignore_cleanup_errors=True) as tmp:
             root = unpack(url, Path(tmp))
             if root is None:
                 row["excluded"] = "sdist ships no test directory"
