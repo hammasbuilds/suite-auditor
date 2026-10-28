@@ -100,6 +100,19 @@ INFRA_FAILURES = (
 )
 
 
+def audited_rows(results: list[dict]) -> list[dict]:
+    """The rows that carry a measurement, by the same rule the summariser applies.
+
+    This was written inline as `"audit" in r`, which is true of a row holding an audit
+    that planned 524 mutants and scored none of them. It is the line that printed
+    "117 of 1000 projects audited" while docs/census-summary.json, which does call
+    scored_nothing(), published its medians over 110. Named so a test can hold the
+    count to the predicate instead of re-implementing it.
+    """
+    return [r for r in results
+            if isinstance(r, dict) and "audit" in r and not scored_nothing(r["audit"])]
+
+
 def scored_nothing(audit: dict) -> str | None:
     """Why this audit measured nothing, or None if it measured something.
 
@@ -479,6 +492,27 @@ def main() -> int:
             results = json.loads(out.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             results = []
+        # Re-apply scored_nothing() to rows written before it existed. This census is
+        # resumed across every harness fix, so a row keeps whatever classification was
+        # current the day it was measured: a completed 1,000-project file still carried
+        # seven rows holding an `audit` that scored none of its 15 to 524 mutants, and
+        # the run's own closing line read "117 of 1000 projects audited" while the
+        # summariser - which does re-apply the predicate - published medians over 110.
+        # Writing the predicate once and calling it from the writer and the summariser
+        # was not enough: the resumed file is a third reader, and the rule has to be
+        # re-applied to what is already on disk rather than only to new rows.
+        stale = 0
+        for row in results:
+            if not isinstance(row, dict) or "audit" not in row:
+                continue
+            why = scored_nothing(row["audit"])
+            if why:
+                row["excluded"] = why
+                row["empty_audit"] = row.pop("audit")
+                stale += 1
+        if stale:
+            print(f"reclassified {stale} resumed row(s) that recorded an audit which "
+                  f"scored no mutants: they are exclusions, not measurements")
     retry = [r for r in results if isinstance(r, dict) and _is_infra_failure(r)]
     if retry:
         print(f"retrying {len(retry):,} candidates whose exclusion was an infrastructure "
@@ -582,7 +616,7 @@ def main() -> int:
               f"~{rate * (todo - measured) / 60:.0f}min left", flush=True)
         out.write_text(json.dumps(results, indent=1), encoding="utf-8")
 
-    audited = [r for r in results if "audit" in r]
+    audited = audited_rows(results)
     print(f"\n{len(audited)} of {len(results)} projects audited; "
           f"{len(results) - len(audited)} excluded, each with its reason in {out}")
     return 0
