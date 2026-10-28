@@ -405,8 +405,14 @@ def build_map(
     python: str = "",
     original: Path | None = None,
     extra_paths: list[str] | None = None,
+    pytest_args: list[str] | None = None,
 ) -> Trace:
     """Trace the suite once. Never raises for a target that will not run.
+
+    `pytest_args` are appended to the pytest command, so a target whose own addopts
+    deselect part of its suite can be traced over the whole of it. The report says how
+    many tests were deselected and advises re-running with the marker enabled; without a
+    way to pass that marker the advice could not be followed.
 
     The SuiteHealth is returned alongside and is not optional. The result of the
     pytest subprocess used to be discarded entirely, so a target whose tests could
@@ -447,6 +453,10 @@ def build_map(
             "--tb=short",
             f"--basetemp={scratch / 'basetemp'}",
         ]
+        # Before the target path, because a pytest option after a positional argument
+        # still parses but reads badly in the log, and `-m` must not be mistaken for
+        # part of the path.
+        cmd += list(pytest_args or [])
         if test_target:
             cmd.append(test_target)
         try:

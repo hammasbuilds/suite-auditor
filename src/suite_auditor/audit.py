@@ -352,6 +352,7 @@ def audit(
     max_seconds: float = 0.0,
     python: str = "",
     jobs: int = 1,
+    pytest_args: list[str] | None = None,
 ) -> Audit:
     t0 = time.time()
     repo = repo.resolve()
@@ -380,7 +381,8 @@ def audit(
         roots = package_roots(work, [t.path for t in find_targets(work)])
 
         say("tracing which tests cover which functions (one suite run)...")
-        trace = build_map(work, test_target, python=python, original=repo, extra_paths=roots)
+        trace = build_map(work, test_target, python=python, original=repo,
+                          extra_paths=roots, pytest_args=pytest_args)
         out.health = trace.health
         say(f"  {len(trace.cov)} functions traced, {trace.health.passed} tests passed")
         if trace.stray:

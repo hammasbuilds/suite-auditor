@@ -111,7 +111,8 @@ def cmd_coverage(args: argparse.Namespace) -> int:
             "and (when there is no src/ at all) in .py files at the repo root."
         )
     roots = package_roots(repo, [t.path for t in targets])
-    trace = build_map(repo, test, python=python, extra_paths=roots)
+    trace = build_map(repo, test, python=python, extra_paths=roots,
+                      pytest_args=list(getattr(args, "pytest_arg", None) or []))
     cov, health = trace.cov, trace.health
     if not cov:
         if not health.ran:
@@ -161,8 +162,10 @@ def cmd_coverage(args: argparse.Namespace) -> int:
         print()
         print(f"  ! {health.deselected} test(s) were deselected by the target's own pytest")
         print("    configuration (its addopts -m/-k settings), so the unreached list is")
-        print("    relative to the tests that ran, not to the suite. Re-run with that")
-        print("    marker enabled to see what those tests reach.")
+        print("    relative to the tests that ran, not to the suite. To include them:")
+        # The exact command, in the = form, because a bare -m is read as one of ours.
+        print(f"      suite-auditor coverage {args.repo} "
+              f'--pytest-arg=-m --pytest-arg="slow or not slow"')
 
     if broken:
         print("\n  only failing tests reach these (fix the tests first):")
@@ -197,6 +200,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
             timeout=args.timeout,
             progress=not args.quiet,
             max_seconds=args.max_seconds,
+            pytest_args=list(getattr(args, "pytest_arg", None) or []),
             python=python,
             jobs=args.jobs,
         )
@@ -236,6 +240,17 @@ def _common(p: argparse.ArgumentParser) -> None:
         "project's .venv/venv/env if it has one, else an activated venv, else this one",
     )
     p.add_argument("-q", "--quiet", action="store_true", help="no progress output")
+    p.add_argument(
+        "--pytest-arg",
+        action="append",
+        metavar="ARG",
+        default=[],
+        help="an extra argument for the target's pytest, repeatable. The report says how "
+        "many tests the target's own addopts deselected and suggests re-running with the "
+        "marker enabled; this is how. Use the = form for anything that starts with a "
+        "dash, because argparse reads a bare -m as an option of ours: "
+        "--pytest-arg=-m --pytest-arg=\"slow or not slow\"",
+    )
 
 
 def build_parser() -> argparse.ArgumentParser:
