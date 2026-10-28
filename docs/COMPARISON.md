@@ -64,13 +64,71 @@ The other two survivors are not called gaps, and the report says which kind each
 `format_price` appears once, under "reached by no test" — a function nothing exercises
 cannot be mutation-tested, so it is reported separately rather than counted as 26 survivors.
 
+## The same pair on a real package: `xmltodict` 1.0.4
+
+The section above is a 27-line example, and its own limitations say so. `xmltodict` is a
+real package from the thousand-package census - one module, 19 functions, 119 tests, a
+suite that runs in half a second - so the same comparison can be made where it means
+something. Same machine, same virtualenv, same interpreter; cosmic-ray 8.4.1.
+
+| | cosmic-ray | suite-auditor |
+|---|---:|---:|
+| mutants generated | 413 | 89 |
+| …at distinct source positions | 227 | — |
+| killed | 345 | 81 (91.0%) |
+| **survivors** | **68 (16.5%)** | **8** |
+| …proven to behave differently | — | **1** |
+| …refused, with a reason | — | 7 |
+| functions no test reaches | — | 0 of 19 |
+| wall clock | 351s | 28s |
+
+**Again, the rates are not comparable.** cosmic-ray's 68 survivors sit at 33 distinct
+source positions, and 22 of them are one family at **two** positions: every binary
+substitution of a single `*` - `Mul_Add`, `Mul_Sub`, `Mul_Div`, `Mul_FloorDiv`,
+`Mul_Mod`, `Mul_Pow`, `Mul_RShift`, `Mul_LShift`, `Mul_BitOr`, `Mul_BitAnd`,
+`Mul_BitXor`. Eighteen more are comparison substitutions at nine positions. A survival
+rate over a mutant set built that way measures the operator set as much as the suite.
+
+## The one gap, and why the other tool could not express it
+
+suite-auditor's single proven gap is `drop_return` on `_process_namespace`: the `return
+name` in its non-string guard replaced by `return None`.
+
+```
+xmltodict.py::_process_namespace   [drop_return]
+  why it counts : both versions return a value, and the values differ
+  call          : _process_namespace(1, None, ':')
+  before        : ok: 1
+  after         : ok: None
+```
+
+**Verified by hand before publishing this.** With that one line changed, all **119 tests
+pass**. 6 of the 64 argument sets the prover tried disagree.
+
+cosmic-ray generated **11 mutants inside that function** - two `ReplaceUnaryOperator`,
+four `AddNot`, one `ExceptionReplacer`, four `NumberReplacer` - and **killed all eleven**.
+It reports no gap there, and could not: across all 413 mutants it used **64 distinct
+operators and not one of them removes or replaces a `return`**. The defect is outside its
+operator set on this target.
+
+That is the comparison, stated as narrowly as it deserves: on this package the other tool
+generated 4.6 times as many mutants, took 12 times as long, reported 8.5 times as many
+survivors with no verdict attached to any of them, and the one survivor that is
+demonstrably a hole in the suite is a mutation it does not make.
+
+**What this still does not show.** cosmic-ray's 68 survivors were not individually
+examined, so some of them are very likely real gaps that suite-auditor never generated -
+the reverse of the case above. A fair recall comparison needs the same operator set on
+both sides, which neither tool offers, and nothing here is evidence about which tool
+finds more. It is evidence about what you are told once something survives.
+
 ## What this does not show
 
 - **cosmic-ray finds more, because it generates more.** Several of its 41 are mutants this
   tool never produced. A fair recall comparison needs the same operator set, which neither
   tool offers.
-- **One target, 27 lines.** See [SENSITIVITY.md](SENSITIVITY.md) for the same honesty
-  problem and what was done about it.
+- **Two targets now**, the 27-line example above and `xmltodict` 1.0.4. See
+  [SENSITIVITY.md](SENSITIVITY.md) for the same honesty problem and what was done about it.
 - **mutmut is not here.** It does not run on native Windows
   ([boxed/mutmut#397](https://github.com/boxed/mutmut/issues/397)), which is where this was
   measured, so it is absent rather than represented by a guess.

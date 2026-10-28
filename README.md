@@ -199,8 +199,14 @@ In `cachetools`, `methodkey` delegates to `hashkey`, so weakening `test_hashkey`
 `test_methodkey` still killing the mutant; the script reports that instead of a rate over
 an empty denominator.
 
-**Against cosmic-ray** on the bundled example
-([docs/COMPARISON.md](https://github.com/hammasbuilds/suite-auditor/blob/main/docs/COMPARISON.md)):
+**Against cosmic-ray** on the bundled example and on `xmltodict` 1.0.4, a real package
+from the census
+([docs/COMPARISON.md](https://github.com/hammasbuilds/suite-auditor/blob/main/docs/COMPARISON.md)).
+On xmltodict, cosmic-ray generated 413 mutants to this tool's 89 and reported 68 survivors
+to its 8 - and the one survivor that is demonstrably a hole in the suite, a dropped
+`return` in `_process_namespace` that leaves all 119 tests passing, is a mutation
+cosmic-ray does not make: not one of the 64 operators it used removes or replaces a
+`return`. Its own 11 mutants inside that function were all killed:
 cosmic-ray reports 41 survivors as function-plus-operator names, 26 of them in the one
 function no test reaches; suite-auditor reports 2 proven gaps with the call that proves each,
 plus 2 refusals with their reason.
