@@ -155,28 +155,31 @@ whatever has a suite that passes on its own. Figures in
 
 | of 1,000 packages | |
 |---|---:|
-| **audited** | **110** |
+| **audited** | **112** |
 | sdist ships no test directory | 407 |
-| sdist ships tests, but the suite collects none | 296 |
-| clean suite over the 120s budget | 25 |
+| sdist ships tests, but the suite collects none | 299 |
 | audit over the 300s budget | 63 |
 | no sdist published at all | 46 |
 | the auditor planned no mutants | 30 |
+| clean suite over the 120s budget | 25 |
 | planned mutants and scored none | 7 |
-| other (install, memory, no report) | 16 |
+| memory budget exceeded | 4 |
+| audit produced no report | 3 |
+| install failed | 2 |
+| candidate failed | 2 |
 
-Over those 110 audits: median kill rate **84.5%**, median
-share of functions reached by some test **85.5%**, and
-**50 of 110** had at least one proven gap
-(218 gaps in total). Every median is over all 110 audited
+Over those 112 audits: median kill rate **84.8%**, median
+share of functions reached by some test **85.9%**, and
+**51 of 112** had at least one proven gap
+(219 gaps in total). Every median is over all 112 audited
 projects, which is the same number as the headline - an earlier run reported 117 audited
 and then took its medians over 110, because seven projects planned between 15 and 524
 mutants and scored none of them. `arrow` is the instructive one: its suite passes as a
 whole and every one of its 504 covering-test runs failed when run on its own, so there was
 no baseline to mutate against. Those seven are an exclusion with that reason, not an audit.
 
-The headline here is not the kill rate. It is that 890 of 1,000
-packages could not be put on the scale at all, and 703
+The headline here is not the kill rate. It is that 888 of 1,000
+packages could not be put on the scale at all, and 706
 of those for one reason: the published sdist either ships no tests or ships tests that
 collect nothing. Any tool of this kind inherits that limit, and a benchmark that quietly
 dropped them would report a rate over the 11% of the ecosystem whose
