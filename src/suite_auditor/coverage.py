@@ -289,6 +289,12 @@ class SuiteHealth:
     errors: int = 0
     collected_nothing: bool = False
     output_tail: str = ""
+    # Which tests failed, not just how many. The report said "2 test(s) failed" and
+    # nothing else, which a user cannot act on - and in the run that prompted this the
+    # two failures were the tool's own doing: the scratch copy leaves out a junctioned
+    # data directory, so the tests that read through it fail on the copy and pass in the
+    # repository. A count cannot show that; a name can.
+    failing: tuple[str, ...] = ()
 
     @property
     def clean(self) -> bool:
@@ -306,10 +312,20 @@ class SuiteHealth:
             parts.append(f"{self.errors} test(s) errored")
         if self.failed:
             parts.append(f"{self.failed} test(s) failed")
-        return " and ".join(parts)
+        line = " and ".join(parts)
+        if line and self.failing:
+            shown = ", ".join(self.failing[:3])
+            more = f" and {len(self.failing) - 3} more" if len(self.failing) > 3 else ""
+            line += f": {shown}{more}"
+        return line
 
 
 _COUNTS = re.compile(r"(\d+) (passed|failed|error|errors|skipped)")
+
+# pytest's short summary, which `-ra` and the default `-rfE` both print:
+#   FAILED tests/test_x.py::test_y - AssertionError: ...
+#   ERROR tests/test_z.py::test_w
+_FAILED_LINE = re.compile(r"^(?:FAILED|ERROR)\s+(\S+)", re.MULTILINE)
 
 
 def _read_health(stdout: str, stderr: str, returncode: int) -> SuiteHealth:
@@ -330,6 +346,10 @@ def _read_health(stdout: str, stderr: str, returncode: int) -> SuiteHealth:
         errors=counts["errors"],
         collected_nothing=returncode == 5 or ("no tests ran" in blob and not counts["passed"]),
         output_tail=tail,
+        # From the short summary rather than the count line, so the ids are the ones
+        # pytest itself printed. Deduplicated and ordered, because a test that both
+        # fails and errors appears twice.
+        failing=tuple(dict.fromkeys(_FAILED_LINE.findall(blob))),
     )
 
 

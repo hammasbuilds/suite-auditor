@@ -249,6 +249,10 @@ def _health_json(health: object) -> dict | None:
         "collected_nothing": bool(getattr(health, "collected_nothing", False)),
         "clean": bool(getattr(health, "clean", False)),
         "caveat": health.caveat() if hasattr(health, "caveat") else "",
+        # The ids, so a reader can tell a suite that is broken from a suite this tool
+        # broke - the scratch copy omits junctioned directories, and a test that reads
+        # through one fails on the copy while passing in the repository.
+        "failing": list(getattr(health, "failing", ()) or ()),
     }
 
 

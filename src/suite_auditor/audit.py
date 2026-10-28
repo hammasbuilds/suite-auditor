@@ -363,6 +363,19 @@ def audit(
 
     say("copying the repository to a scratch directory (your files are never modified)...")
     with Scratch(repo, copies=1) as scratch:
+        for link in scratch.skipped_junctions:
+            # Named, because the copy is not identical to the repository and a suite that
+            # reads through this path will fail for a reason the user cannot otherwise see.
+            say(f"  ! skipped {link.name}/: a junction, not copied (it points outside the "
+                f"repository, and following it copied 13.8 GB in one case here)")
+        # The budget is checked inside the mutant loop, so a phase before the loop could
+        # run past it unchallenged - which is exactly what happened when the copy followed
+        # a junction: `--max-seconds 600` was still unspent fifteen minutes in.
+        if max_seconds and time.time() - t0 > max_seconds:
+            out.stopped_early = True
+            say(f"  ! the copy alone took {time.time() - t0:.0f}s of a "
+                f"{max_seconds:.0f}s budget; nothing was scored")
+            return out
         work = scratch.copies[0]
         roots = package_roots(work, [t.path for t in find_targets(work)])
 

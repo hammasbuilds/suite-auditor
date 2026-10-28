@@ -270,7 +270,40 @@ def kill_all() -> None:
 # --- the scratch copy --------------------------------------------------------------------
 
 
-def _ignore_for(root: Path):
+def is_junction(path: Path) -> bool:
+    """True for a Windows directory junction.
+
+    `shutil.copytree(symlinks=True)` recreates symlinks instead of following them, and
+    that was taken to cover every kind of link. It does not cover junctions:
+    `os.path.islink()` returns **False** for one, so copytree walks straight through it
+    and copies the target.
+
+    Auditing a repository whose `data/` is a junction therefore copies whatever the
+    junction points at. One here points at a 13.8 GB dataset: the audit printed
+    "copying the repository to a scratch directory" and then nothing for fifteen minutes,
+    and `--max-seconds 600` did not stop it, because the budget is only consulted inside
+    the mutant loop and the loop had not begun.
+
+    `Path.is_junction()` exists from Python 3.12; below that the reparse tag from lstat
+    is the same test. Never raises - a path that cannot be stat'ed is not a junction, and
+    this runs over a tree the tool did not create.
+    """
+    try:
+        if hasattr(path, "is_junction"):
+            return bool(path.is_junction())
+        import os
+        import stat as _stat
+
+        st = os.lstat(path)
+        tag = getattr(st, "st_reparse_tag", 0)
+        return bool(st.st_file_attributes & _stat.FILE_ATTRIBUTE_REPARSE_POINT) and (
+            tag == getattr(_stat, "IO_REPARSE_TAG_MOUNT_POINT", 0xA0000003)
+        )
+    except (OSError, ValueError, AttributeError):
+        return False
+
+
+def _ignore_for(root: Path, skipped: list[Path] | None = None):
     root = root.resolve()
 
     def ignore(directory: str, names: list[str]) -> set[str]:
@@ -281,6 +314,15 @@ def _ignore_for(root: Path):
             if n in JUNK_DIRS or n.endswith(".egg-info"):
                 return True
             if at_top and n in ("build", "dist"):
+                return True
+            # Skipped rather than followed, and skipped rather than recreated: a junction
+            # recreated in the copy points back at the user's own files, and a mutant run
+            # that writes through it would modify them - which this tool prints a promise
+            # not to do. What was skipped is reported, so a suite that needs the data
+            # fails for a stated reason instead of a puzzling one.
+            if is_junction(d / n):
+                if skipped is not None:
+                    skipped.append(d / n)
                 return True
             return (d / n).is_dir() and _is_venv(d / n)
 
@@ -296,9 +338,15 @@ class Scratch:
         self.repo = repo.resolve()
         self.root = Path(tempfile.mkdtemp(prefix="suite-auditor-")).resolve()
         self.copies: list[Path] = []
+        # Junctions left out of the copy, for the caller to report. Empty for almost
+        # every repository, and 13.8 GB for one of ours.
+        self.skipped_junctions: list[Path] = []
         try:
             first = self.root / "w0" / self.repo.name
-            shutil.copytree(self.repo, first, symlinks=True, ignore=_ignore_for(self.repo))
+            shutil.copytree(
+                self.repo, first, symlinks=True,
+                ignore=_ignore_for(self.repo, self.skipped_junctions),
+            )
             self.copies.append(first)
             for i in range(1, copies):
                 dest = self.root / f"w{i}" / self.repo.name
