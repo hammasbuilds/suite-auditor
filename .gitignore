@@ -21,3 +21,10 @@ uv.lock
 .coverage.*
 htmlcov/
 coverage.xml
+
+# The raw thousand-project census: 19 MB, because every scored mutant carries its full
+# mutated source. docs/census-summary.json is the committed reduction of it, and that is
+# what the README's census figures and tests/test_census_numbers.py read. Regenerate the
+# raw file with scripts/target_census.py and the summary with scripts/census_summary.py.
+docs/target-census.json
+docs/*-census.json.poisoned

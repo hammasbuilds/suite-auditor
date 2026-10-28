@@ -148,6 +148,40 @@ toolz/functoolz.py::is_arity   `return rv` -> `return None` when the signature i
 In repo-surgeon, four gaps are calls the suite made and then accepted a different answer
 for, e.g. `_looks_like_number('src_path')` returning `True` instead of `False`.
 
+**Across the 1,000 most-downloaded packages on PyPI.**
+`scripts/target_census.py` walks the list, builds each sdist in its own venv, and audits
+whatever has a suite that passes on its own. Figures in
+[docs/census-summary.json](https://github.com/hammasbuilds/suite-auditor/blob/main/docs/census-summary.json):
+
+| of 1,000 packages | |
+|---|---:|
+| **audited** | **110** |
+| sdist ships no test directory | 407 |
+| sdist ships tests, but the suite collects none | 296 |
+| clean suite over the 120s budget | 25 |
+| audit over the 300s budget | 63 |
+| no sdist published at all | 46 |
+| the auditor planned no mutants | 30 |
+| planned mutants and scored none | 7 |
+| other (install, memory, no report) | 16 |
+
+Over those 110 audits: median kill rate **84.5%**, median
+share of functions reached by some test **85.5%**, and
+**50 of 110** had at least one proven gap
+(218 gaps in total). Every median is over all 110 audited
+projects, which is the same number as the headline - an earlier run reported 117 audited
+and then took its medians over 110, because seven projects planned between 15 and 524
+mutants and scored none of them. `arrow` is the instructive one: its suite passes as a
+whole and every one of its 504 covering-test runs failed when run on its own, so there was
+no baseline to mutate against. Those seven are an exclusion with that reason, not an audit.
+
+The headline here is not the kill rate. It is that 890 of 1,000
+packages could not be put on the scale at all, and 703
+of those for one reason: the published sdist either ships no tests or ships tests that
+collect nothing. Any tool of this kind inherits that limit, and a benchmark that quietly
+dropped them would report a rate over the 11% of the ecosystem whose
+tests you can actually run.
+
 **Sensitivity.** [docs/SENSITIVITY.md](https://github.com/hammasbuilds/suite-auditor/blob/main/docs/SENSITIVITY.md)
 plants gaps in a target's own tests and counts how many the prover proves:
 
