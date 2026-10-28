@@ -253,6 +253,9 @@ def _health_json(health: object) -> dict | None:
         # broke - the scratch copy omits junctioned directories, and a test that reads
         # through one fails on the copy while passing in the repository.
         "failing": list(getattr(health, "failing", ()) or ()),
+        # How many tests the target's own configuration left out, because every
+        # coverage figure below is relative to the tests that actually ran.
+        "deselected": int(getattr(health, "deselected", 0) or 0),
     }
 
 

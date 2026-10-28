@@ -157,6 +157,12 @@ def cmd_coverage(args: argparse.Namespace) -> int:
         print("    unreached number is an UPPER BOUND. Fix the target's suite, then re-run.")
     elif health.passed:
         print(f"  (traced across {health.passed} passing tests)")
+    if getattr(health, "deselected", 0):
+        print()
+        print(f"  ! {health.deselected} test(s) were deselected by the target's own pytest")
+        print("    configuration (its addopts -m/-k settings), so the unreached list is")
+        print("    relative to the tests that ran, not to the suite. Re-run with that")
+        print("    marker enabled to see what those tests reach.")
 
     if broken:
         print("\n  only failing tests reach these (fix the tests first):")

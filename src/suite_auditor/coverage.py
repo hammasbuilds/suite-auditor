@@ -295,6 +295,13 @@ class SuiteHealth:
     # data directory, so the tests that read through it fail on the copy and pass in the
     # repository. A count cannot show that; a name can.
     failing: tuple[str, ...] = ()
+    # Tests the target's own pytest configuration left out of this run. The unreached
+    # list is relative to the tests that ran, and a project whose addopts read
+    # `-m 'not slow'` runs only its fast tests by default - flake-detective does, and
+    # auditing it reported 16 unreached functions including every one of its arm
+    # builders, which are exercised by the tests that marker deselects. Reporting a
+    # scope-dependent list without the scope invites the wrong conclusion.
+    deselected: int = 0
 
     @property
     def clean(self) -> bool:
@@ -327,6 +334,9 @@ _COUNTS = re.compile(r"(\d+) (passed|failed|error|errors|skipped)")
 #   ERROR tests/test_z.py::test_w
 _FAILED_LINE = re.compile(r"^(?:FAILED|ERROR)\s+(\S+)", re.MULTILINE)
 
+# "14 deselected" in pytest's count line, from the project's own -m / -k settings.
+_DESELECTED = re.compile(r"(\d+) deselected")
+
 
 def _read_health(stdout: str, stderr: str, returncode: int) -> SuiteHealth:
     blob = stdout + stderr
@@ -350,6 +360,7 @@ def _read_health(stdout: str, stderr: str, returncode: int) -> SuiteHealth:
         # pytest itself printed. Deduplicated and ordered, because a test that both
         # fails and errors appears twice.
         failing=tuple(dict.fromkeys(_FAILED_LINE.findall(blob))),
+        deselected=max((int(n) for n in _DESELECTED.findall(blob)), default=0),
     )
 
 

@@ -383,6 +383,122 @@ def _target(ctx: tuple, node, name: str) -> Target:
     )
 
 
+def declared_packages(repo: Path) -> list[Path] | None:
+    """The directories the project says it ships, or None when it does not say.
+
+    The rule below this one is "only shipped package code", and it decides by looking for
+    `__init__.py`. That is true of every package in the tree, including ones the
+    distribution does not contain. Auditing this repository reported 329 functions with
+    90 reached, because `targets/` holds vendored copies of other projects used as audit
+    fixtures - 239 of the unreached functions were other people's code, and
+    `covered_fraction` and `caught_share`, the two headline figures, were diluted by it.
+
+    A project that says what it ships should be believed. Every build backend has a
+    place for it, and this reads the four that cover essentially all of PyPI:
+
+        [tool.hatch.build.targets.wheel]  packages = ["src/pkg"]
+        [tool.setuptools]                 packages = [...] / package-dir / py-modules
+        [tool.setuptools.packages.find]   where = ["src"]
+        [tool.poetry]                     packages = [{include = "pkg", from = "src"}]
+        [tool.flit.module]                name = "pkg"
+
+    Returns None, never an empty list, when nothing is declared or the file cannot be
+    read: a scope that cannot be determined must not narrow to nothing, which would
+    report a package with no functions as a package with no gaps.
+    """
+    try:
+        import tomllib
+    except ModuleNotFoundError:  # Python < 3.11
+        return None
+    config = repo / "pyproject.toml"
+    if not config.is_file():
+        return None
+    try:
+        data = tomllib.loads(config.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    tool = data.get("tool")
+    if not isinstance(tool, dict):
+        return None
+
+    out: list[Path] = []
+
+    def add(value: object, base: str = "") -> None:
+        if not isinstance(value, str) or not value.strip():
+            return
+        candidate = repo / base / value if base else repo / value
+        # Only a directory inside the repository, and only one that exists: a declaration
+        # naming something absent describes a build step, not a source tree.
+        try:
+            inside = candidate.resolve().is_relative_to(repo.resolve())
+        except (OSError, ValueError):
+            return
+        if inside and candidate.is_dir() and candidate not in out:
+            out.append(candidate)
+
+    hatch = tool.get("hatch", {})
+    if isinstance(hatch, dict):
+        wheel = hatch.get("build", {})
+        wheel = wheel.get("targets", {}) if isinstance(wheel, dict) else {}
+        wheel = wheel.get("wheel", {}) if isinstance(wheel, dict) else {}
+        if isinstance(wheel, dict):
+            for entry in wheel.get("packages") or []:
+                add(entry)
+            # `only-include` is the other hatch spelling for the same intent.
+            for entry in wheel.get("only-include") or []:
+                add(entry)
+
+    setuptools = tool.get("setuptools", {})
+    if isinstance(setuptools, dict):
+        package_dir = setuptools.get("package-dir")
+        roots = (
+            [v for v in package_dir.values() if isinstance(v, str)]
+            if isinstance(package_dir, dict)
+            else []
+        )
+        packages = setuptools.get("packages")
+        if isinstance(packages, list):
+            for entry in packages:
+                # A dotted package name under a declared package-dir, or under src/.
+                for base in roots or ["src", ""]:
+                    if isinstance(entry, str):
+                        add(entry.replace(".", "/"), base)
+        find = packages if isinstance(packages, dict) else setuptools.get("packages", {})
+        find = find.get("find", {}) if isinstance(find, dict) else {}
+        if isinstance(find, dict):
+            for entry in find.get("where") or []:
+                add(entry)
+        for entry in roots:
+            add(entry)
+
+    poetry = tool.get("poetry", {})
+    if isinstance(poetry, dict):
+        for entry in poetry.get("packages") or []:
+            if isinstance(entry, dict) and isinstance(entry.get("include"), str):
+                add(entry["include"], entry.get("from", "") or "")
+
+    flit = tool.get("flit", {})
+    if isinstance(flit, dict):
+        module = flit.get("module", {})
+        if isinstance(module, dict):
+            name = module.get("name")
+            if isinstance(name, str):
+                for base in ("", "src"):
+                    add(name, base)
+
+    return out or None
+
+
+def in_scope(repo: Path, path: Path, scope: list[Path] | None) -> bool:
+    """Whether this file belongs to the distribution under audit."""
+    if scope is None:
+        return True
+    try:
+        return any(path.is_relative_to(root) for root in scope)
+    except (OSError, ValueError):
+        return True
+
+
 def _python_files(repo: Path) -> list[Path]:
     """Every .py file worth considering, without descending into environments or caches.
 
@@ -408,10 +524,18 @@ def _python_files(repo: Path) -> list[Path]:
 
 
 def find_targets(repo: Path, include_methods: bool = True) -> list[Target]:
-    """Every function in the package that could be mutated, methods included."""
+    """Every function in the package that could be mutated, methods included.
+
+    "In the package" now means what the project declares it ships, when it declares
+    anything - see declared_packages(). Before that it meant any directory holding an
+    `__init__.py`, which swept in vendored copies of other projects.
+    """
     out: list[Target] = []
+    scope = declared_packages(repo)
     for p in _python_files(repo):
         rel = p.relative_to(repo)
+        if not in_scope(repo, p, scope):
+            continue
         # By pytest's conventions, not by substring: "test" in the name used to skip
         # latest.py, contest.py and attestation.py as though they were tests.
         if is_test_path(rel.as_posix()):

@@ -134,6 +134,13 @@ def scored_nothing(audit: dict) -> str | None:
     return f"audit scored none of its {audit['planned_mutants']} mutants: {why}"[:200]
 
 
+# How many times a candidate that failed for an infrastructure reason is measured
+# again. Two, not unbounded: the first retry covers a transient full disk or an
+# unreachable index, and a candidate that fails the same way twice on a machine whose
+# cause has been fixed is telling us about itself.
+MAX_INFRA_RETRIES = 2
+
+
 def _is_infra_failure(row: dict) -> bool:
     """True when this row records a failure of the harness, not a fact about the target."""
     text = f"{row.get('excluded') or ''} {row.get('error') or ''}"
@@ -487,6 +494,8 @@ def main() -> int:
     print(f"{len(names)} packages from the external top-downloads list\n")
     out = Path(args.out)
     results: list[dict] = []
+    # package -> how many times an infrastructure failure has already been retried.
+    carried: dict[str, int] = {}
     if args.resume and out.exists():
         try:
             results = json.loads(out.read_text(encoding="utf-8"))
@@ -513,11 +522,35 @@ def main() -> int:
         if stale:
             print(f"reclassified {stale} resumed row(s) that recorded an audit which "
                   f"scored no mutants: they are exclusions, not measurements")
-    retry = [r for r in results if isinstance(r, dict) and _is_infra_failure(r)]
+    # Bounded. An infrastructure failure is retried because it says nothing about the
+    # package - but a retry that fails the same way on a machine where the cause is fixed
+    # is no longer about the machine, and retrying it on every resume means the census
+    # never settles: seven rows have been re-measured on each of the last three runs, at
+    # several minutes of install attempts apiece. After MAX_INFRA_RETRIES the row is kept
+    # as an exclusion that names the environment, which is an honest answer, and the
+    # count is kept with it so a reader can see how often it was tried.
+    retry = [
+        r for r in results
+        if isinstance(r, dict)
+        and _is_infra_failure(r)
+        and r.get("infra_retries", 0) < MAX_INFRA_RETRIES
+    ]
+    exhausted = [
+        r for r in results
+        if isinstance(r, dict)
+        and _is_infra_failure(r)
+        and r.get("infra_retries", 0) >= MAX_INFRA_RETRIES
+    ]
     if retry:
         print(f"retrying {len(retry):,} candidates whose exclusion was an infrastructure "
               f"failure, not a finding")
-        results = [r for r in results if not (isinstance(r, dict) and _is_infra_failure(r))]
+        for row in retry:
+            carried[row["package"]] = row.get("infra_retries", 0) + 1
+        results = [r for r in results if r not in retry]
+    if exhausted:
+        print(f"{len(exhausted):,} candidate(s) failed on this machine "
+              f"{MAX_INFRA_RETRIES} times and are left as they are: "
+              + ", ".join(sorted(r.get("package", "?") for r in exhausted)))
     done_names = {r["package"] for r in results if isinstance(r, dict) and "package" in r}
     if done_names:
         print(f"resuming: {len(done_names):,} candidates already processed")
@@ -608,6 +641,9 @@ def main() -> int:
             # unguarded TimeoutExpired from a clean suite, an SSL TimeoutError while
             # fetching an sdist. Anything that escapes is that candidate's result.
             row["excluded"] = f"candidate failed: {type(exc).__name__}: {exc}"[:160]
+        if name in carried:
+            # How many times this machine has already failed on this candidate.
+            row["infra_retries"] = carried[name]
         results.append(row)
         state = row.get("excluded", "audited")
         rate = (time.time() - started) / measured
