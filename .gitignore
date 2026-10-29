@@ -28,3 +28,10 @@ coverage.xml
 # raw file with scripts/target_census.py and the summary with scripts/census_summary.py.
 docs/target-census.json
 docs/*-census.json.poisoned
+#
+# docs/census-rows.json.gz IS committed: one row per project with every aggregate the
+# summary reads and no mutated source, 156 KB, enough to recompute the published figures
+# (`census_summary.py --census docs/census-rows.json.gz`) and to see a changed row as a
+# diff. A summary alone is six medians and a package list: it cannot say what any one
+# project scored. blast-radius kept that arrangement until a re-measurement overwrote
+# four measured rows and there was no copy of what they had said.

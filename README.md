@@ -151,7 +151,13 @@ for, e.g. `_looks_like_number('src_path')` returning `True` instead of `False`.
 **Across the 1,000 most-downloaded packages on PyPI.**
 `scripts/target_census.py` walks the list, builds each sdist in its own venv, and audits
 whatever has a suite that passes on its own. Figures in
-[docs/census-summary.json](https://github.com/hammasbuilds/suite-auditor/blob/main/docs/census-summary.json):
+[docs/census-summary.json](https://github.com/hammasbuilds/suite-auditor/blob/main/docs/census-summary.json),
+and one row per package in
+[docs/census-rows.json.gz](https://github.com/hammasbuilds/suite-auditor/blob/main/docs/census-rows.json.gz) -
+156 KB, every aggregate the summary reads and no mutated source, so
+`python scripts/census_summary.py --census docs/census-rows.json.gz` recomputes the table
+below from the repository alone. The raw census is 19 MB and is not committed; a summary
+on its own cannot say what any single package scored:
 
 | of 1,000 packages | |
 |---|---:|
