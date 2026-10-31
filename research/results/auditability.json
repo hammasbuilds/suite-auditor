@@ -1,0 +1,221 @@
+{
+ "funnel": {
+  "total": 1000,
+  "stages": {
+   "no sdist on PyPI": {
+    "excluded": 46,
+    "of_all": {
+     "rate": 0.046,
+     "lo": 0.0347,
+     "hi": 0.0608,
+     "n": 1000,
+     "k": 46
+    },
+    "of_those_that_reached_this_stage": {
+     "rate": 0.046,
+     "lo": 0.0347,
+     "hi": 0.0608,
+     "n": 1000,
+     "k": 46
+    },
+    "reached_this_stage": 1000
+   },
+   "ships no tests": {
+    "excluded": 407,
+    "of_all": {
+     "rate": 0.407,
+     "lo": 0.377,
+     "hi": 0.4377,
+     "n": 1000,
+     "k": 407
+    },
+    "of_those_that_reached_this_stage": {
+     "rate": 0.4266,
+     "lo": 0.3956,
+     "hi": 0.4582,
+     "n": 954,
+     "k": 407
+    },
+    "reached_this_stage": 954
+   },
+   "tests collect nothing": {
+    "excluded": 299,
+    "of_all": {
+     "rate": 0.299,
+     "lo": 0.2714,
+     "hi": 0.3281,
+     "n": 1000,
+     "k": 299
+    },
+    "of_those_that_reached_this_stage": {
+     "rate": 0.5466,
+     "lo": 0.5047,
+     "hi": 0.5879,
+     "n": 547,
+     "k": 299
+    },
+    "reached_this_stage": 547
+   },
+   "suite did not finish in 120s": {
+    "excluded": 25,
+    "of_all": {
+     "rate": 0.025,
+     "lo": 0.017,
+     "hi": 0.0366,
+     "n": 1000,
+     "k": 25
+    },
+    "of_those_that_reached_this_stage": {
+     "rate": 0.1008,
+     "lo": 0.0692,
+     "hi": 0.1446,
+     "n": 248,
+     "k": 25
+    },
+    "reached_this_stage": 248
+   },
+   "audit budget exceeded (300s)": {
+    "excluded": 67,
+    "of_all": {
+     "rate": 0.067,
+     "lo": 0.0531,
+     "hi": 0.0842,
+     "n": 1000,
+     "k": 67
+    },
+    "of_those_that_reached_this_stage": {
+     "rate": 0.3004,
+     "lo": 0.2441,
+     "hi": 0.3636,
+     "n": 223,
+     "k": 67
+    },
+    "reached_this_stage": 223
+   },
+   "no mutable targets found": {
+    "excluded": 30,
+    "of_all": {
+     "rate": 0.03,
+     "lo": 0.0211,
+     "hi": 0.0425,
+     "n": 1000,
+     "k": 30
+    },
+    "of_those_that_reached_this_stage": {
+     "rate": 0.1923,
+     "lo": 0.1382,
+     "hi": 0.2612,
+     "n": 156,
+     "k": 30
+    },
+    "reached_this_stage": 156
+   },
+   "other reason": {
+    "excluded": 14,
+    "of_all": {
+     "rate": 0.014,
+     "lo": 0.0084,
+     "hi": 0.0234,
+     "n": 1000,
+     "k": 14
+    },
+    "of_those_that_reached_this_stage": {
+     "rate": 0.1111,
+     "lo": 0.0673,
+     "hi": 0.1779,
+     "n": 126,
+     "k": 14
+    },
+    "reached_this_stage": 126
+   }
+  },
+  "audited": {
+   "rate": 0.112,
+   "lo": 0.0939,
+   "hi": 0.1331,
+   "n": 1000,
+   "k": 112
+  },
+  "audited_of_those_shipping_a_usable_suite": {
+   "rate": 0.2048,
+   "lo": 0.1731,
+   "hi": 0.2406,
+   "n": 547,
+   "k": 112
+  }
+ },
+ "distributions": {
+  "kill_rate": {
+   "n": 112,
+   "min": 0.0,
+   "p25": 0.7333,
+   "median": 0.85,
+   "p75": 0.9083,
+   "p90": 0.9474,
+   "max": 1.0,
+   "mean": 0.8116,
+   "stdev": 0.1523
+  },
+  "covered_fraction": {
+   "n": 112,
+   "min": 0.0185,
+   "p25": 0.6818,
+   "median": 0.8605,
+   "p75": 0.9571,
+   "p90": 1.0,
+   "max": 1.0,
+   "mean": 0.7779,
+   "stdev": 0.2453
+  },
+  "proven_gaps": {
+   "n": 112,
+   "min": 0.0,
+   "p25": 0.0,
+   "median": 0.0,
+   "p75": 3.0,
+   "p90": 5.0,
+   "max": 33.0,
+   "mean": 1.9554,
+   "stdev": 4.6157
+  },
+  "packages_with_a_proven_gap": {
+   "rate": 0.4554,
+   "lo": 0.3661,
+   "hi": 0.5475,
+   "n": 112,
+   "k": 51
+  },
+  "mutants_scored": {
+   "n": 112,
+   "min": 1.0,
+   "p25": 36.0,
+   "median": 100.0,
+   "p75": 183.0,
+   "p90": 285.0,
+   "max": 1669.0,
+   "mean": 148.3393,
+   "stdev": 210.3256
+  }
+ },
+ "selection_bias": {
+  "population": "the 1,000 most-downloaded packages on PyPI",
+  "audited": 112,
+  "share_audited": {
+   "rate": 0.112,
+   "lo": 0.0939,
+   "hi": 0.1331,
+   "n": 1000,
+   "k": 112
+  },
+  "filters_in_order": [
+   "no sdist on PyPI",
+   "ships no tests",
+   "tests collect nothing",
+   "suite did not finish in 120s",
+   "audit budget exceeded (300s)",
+   "no mutable targets found"
+  ],
+  "direction": "Each filter removes packages that ship no suite, whose suite fails or collects nothing alone, or whose suite is too slow to audit in the budget. All of those plausibly correlate with weaker testing, so the 112 are biased towards better-tested packages and their kill rates are an upper bound on the population rather than an estimate of it.",
+  "what_would_remove_the_bias": "Auditing a random sample of the excluded packages is impossible for the ones with no suite, and would need a much larger time budget for the ones that timed out. The 60 budget-exceeded and 25 did-not-finish packages are the only recoverable part, and recovering them would need roughly an order of magnitude more compute."
+ }
+}
