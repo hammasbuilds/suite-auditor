@@ -192,6 +192,30 @@ collect nothing. Any tool of this kind inherits that limit, and a benchmark that
 dropped them would report a rate over the 11% of the ecosystem whose
 tests you can actually run.
 
+**Mutants that are the same program.** A kill rate is a rate over a mutant set, so the
+set must not hold mutants that cannot be killed or mutants counted twice. Trivial
+Compiler Equivalence (Papadakis et al., ICSE 2015) settles both with the compiler: a
+mutant that compiles to the original's program is equivalent, two that compile to each
+other's are duplicates. It has been measured for C and Java and not for Python. Over
+**2,467 mutants** from these twelve operators across five real packages
+([research/results/tce_rate.json](https://github.com/hammasbuilds/suite-auditor/blob/main/research/results/tce_rate.json)):
+
+| | C (Papadakis et al.) | **Python (here)** |
+|---|---:|---:|
+| equivalent | > 7% | **0.00%** — 0 of 2,467 |
+| duplicate | > 21% | **3.57%** — 88 of 2,467 |
+
+The zero is a result rather than a silence: planted folded-constant mutants (`60 * 60`
+for `3600`) are detected on every test run, so the detector is known to work. Mutating
+the AST of a language whose compiler only folds constants does not produce trivially
+equivalent mutants.
+
+The 3.57% is one operator. `negate_if` wraps an `if` test in `not`, so from
+`if not items:` it writes `if not not items:` — which compiles to exactly what `drop_not`
+writes, `if items:`. **78 of its 373 mutants, 20.9%, duplicate another operator's**;
+eight of the twelve operators produce none at all. The tool now filters before scoring
+and reports the counts in its JSON output.
+
 **The budget exclusions, re-measured.** 63 packages were excluded for exceeding a
 budget - the largest exclusion that more compute could recover, so 12 of them were
 re-audited at a 1,800s budget with the same code otherwise

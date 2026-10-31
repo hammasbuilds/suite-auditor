@@ -119,6 +119,17 @@ class Audit:
     part-way, so the share of mutants scored is the honest measure of how partial a
     partial audit is; the function count alone read "3 of 3" after 3 of 17 mutants."""
 
+    tce: dict = field(default_factory=dict)
+    """What Trivial Compiler Equivalence removed before scoring, as counts.
+
+    `planned`, `kept`, `equivalent`, `duplicate`, `undecidable`. Published rather than
+    applied silently: the share a filter removes is a property of the operator set and
+    the language, and a tool that quietly discards a third of its mutants while
+    reporting a kill rate is reporting a different number from one that does not. On
+    five real packages the equivalent share is 0 and the duplicate share 3.6%, against
+    over 7% and over 21% reported for C.
+    """
+
     no_targets: bool = False
     """No function was found to mutate at all.
 

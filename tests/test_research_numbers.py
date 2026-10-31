@@ -307,3 +307,76 @@ def test_the_conditional_share_column_is_the_artefact_s(paper, published):
             f"{row_label!r}: the manuscript's denominator is {denominator.strip()}, the "
             f"artefact's stage input is {stages[stage]['reached_this_stage']}"
         )
+
+
+# --- section 3.2: trivial compiler equivalence ----------------------------------------
+
+TCE_RATE = ROOT / "research" / "results" / "tce_rate.json"
+
+
+@pytest.mark.skipif(not TCE_RATE.exists(), reason="research/results/tce_rate.json is absent")
+def test_section_3_2_quotes_the_measured_tce_rates(paper):
+    """The two headline numbers, and the operator the duplicates concentrate in.
+
+    Section 3.2 publishes a zero. A zero is the number most likely to be left in place
+    after a measurement changes, because nothing about it looks stale.
+    """
+    measured = json.loads(TCE_RATE.read_text(encoding="utf-8"))
+    totals = measured["totals"]
+    section = paper[paper.index("## 3.2 How many") : paper.index("# 4. Comparison")]
+
+    assert f"{totals['planned']:,} mutants" in section, totals["planned"]
+    assert f"**{totals['equivalent']} of {totals['planned']:,} — 0.00%**" in section
+    assert f"**{totals['duplicate']} of {totals['planned']:,} — " in section
+    assert f"{totals['duplicate_share'] * 100:.2f}%" in section, totals["duplicate_share"]
+
+    by_operator = {}
+    for repo in measured["repositories"]:
+        for operator, counts in repo.get("by_operator", {}).items():
+            row = by_operator.setdefault(operator, {"planned": 0, "duplicate": 0})
+            row["planned"] += counts.get("planned", 0)
+            row["duplicate"] += counts.get("duplicate", 0)
+
+    worst = max(by_operator, key=lambda k: by_operator[k]["duplicate"])
+    row = by_operator[worst]
+    assert f"`{worst}`" in section, worst
+    assert f"| {row['planned']:,} | **{row['duplicate']}** |" in section, row
+    share = row["duplicate"] / row["planned"]
+    assert f"**{share * 100:.1f}%**" in section, f"{share * 100:.1f}"
+
+    zeroes = {k: v for k, v in by_operator.items() if v["duplicate"] == 0}
+    assert f"the other {_WORDS[len(zeroes)]}" in section, (
+        f"{len(zeroes)} operators have no duplicates and the table says otherwise"
+    )
+
+
+_WORDS = {
+    0: "none",
+    1: "one",
+    2: "two",
+    3: "three",
+    4: "four",
+    5: "five",
+    6: "six",
+    7: "seven",
+    8: "eight",
+    9: "nine",
+    10: "ten",
+    11: "eleven",
+    12: "twelve",
+}
+
+
+@pytest.mark.skipif(not TCE_RATE.exists(), reason="research/results/tce_rate.json is absent")
+def test_the_bound_on_the_filtered_median_is_arithmetic_not_assertion():
+    """Section 3.2 gives [0.842, 0.879]; recompute both endpoints from the inputs."""
+    measured = json.loads(TCE_RATE.read_text(encoding="utf-8"))
+    d = measured["totals"]["duplicate_share"]
+    summary = json.loads((ROOT / "docs" / "census-summary.json").read_text(encoding="utf-8"))
+    k = summary["kill_rate_median"]
+    all_killed = (k - d) / (1 - d)
+    none_killed = k / (1 - d)
+    assert f"{all_killed:.3f}" == "0.842", f"{all_killed:.4f}"
+    assert f"{none_killed:.3f}" == "0.879", f"{none_killed:.4f}"
+    paper = PAPER.read_text(encoding="utf-8")
+    assert f"**[{all_killed:.3f}, {none_killed:.3f}]**" in paper

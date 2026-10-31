@@ -20,12 +20,14 @@ most distributions do not ship a runnable suite.
 
 Within the 112, median kill rate is 0.85 (IQR 0.73–0.91), but kill rate is measured over
 covered functions only; the unconditional **caught share** — the fraction of a package's
-functions both reached and checked — has a median of **0.71** (IQR 0.50–0.82), and
+functions both reached and checked — has a median of **0.71** (IQR 0.49–0.82), and
 **45.5% [36.6%, 54.8%] carry at least one gap we can
-prove** — a surviving mutant with a witness: an argument set on
-which the mutated function returns a different value, verified by hand before publication.
-Mutants that survive without such a witness are **refused with a reason** rather than
-reported, which is the design decision the comparison below turns on.
+prove** — a surviving mutant with a witness: an argument set on which the original and the
+mutant are **both executed and return different values**. Mutants that survive without
+such a witness are **refused with a reason** rather than reported, which is the design
+decision the comparison below turns on. The witness is a machine check on every one of
+the 219 gaps; one gap was additionally confirmed by hand, by installing the mutant and
+running the package's whole suite (§4).
 
 Against `cosmic-ray` on `xmltodict` 1.0.4, that discipline found a gap `cosmic-ray` cannot
 express: `drop_return` on `_process_namespace`, a mutant under which **all 119 tests pass**.
@@ -73,12 +75,16 @@ of the top 1,000 cannot be audited at all.
 
 1. The **auditability funnel** over PyPI's top 1,000, with Wilson intervals at each stage
    and both unconditional and conditional readings (§3).
-2. **Proof-backed gap reporting** — a surviving mutant is a finding only with a witness,
+2. **Trivial Compiler Equivalence transferred to Python**, with the measurement the
+   literature does not have: 0% equivalent and 3.57% duplicate over 2,467 mutants,
+   against over 7% and over 21% for C, and the duplicates concentrated at 20.9% in a
+   single operator (§3.2).
+3. **Proof-backed gap reporting** — a surviving mutant is a finding only with a witness,
    and refusals carry reasons (§2).
-3. A comparison with `cosmic-ray` locating a gap outside its operator set, and the
+4. A comparison with `cosmic-ray` locating a gap outside its operator set, and the
    observation that operator-set differences, not suite quality, dominate disagreement
    between mutation tools (§4).
-4. An explicit statement of the **selection bias** the funnel creates, and why the audited
+5. An explicit statement of the **selection bias** the funnel creates, and why the audited
    kill rates are an upper bound rather than an estimate (§5).
 
 # 2. Method
@@ -187,6 +193,67 @@ axes are not comparable to each other because kill rate is conditional on covera
 bar. The median package has none and the maximum is 33, so the mean of 1.96 describes no
 package in the sample.
 
+## 3.2 How many of these mutants are the same program?
+
+A kill rate is a rate over a mutant set, so the set has to be free of mutants that cannot
+be killed and of mutants counted twice. Papadakis et al. [@tce2015] settle both with the
+compiler rather than with analysis: compile every mutant, and if one compiles to the
+original's binary it is **equivalent**; if two compile to each other's they are
+**duplicates**. On large C programs they discard over 7% as equivalent and over 21% as
+duplicates, and report that the detection rate against hand-analysed ground truth is about
+30% for C against about 54% for Java — a gap they attribute to mutation characteristics
+being language-dependent.
+
+Python is not in that series, and the reason usually given — CPython has no optimising
+compiler, so nothing collapses two programs into one form — is a hypothesis. We tested it.
+`src/suite_auditor/tce.py` compiles each mutant and canonicalises the result: the
+instruction stream with every operand resolved to the value it names, the function's name
+and docstring, and the exception table, with filenames, line numbers and position tables
+dropped. Over **2,467 mutants** from this tool's twelve operators across five real Python
+packages:
+
+| | C [@tce2015] | **Python (this work)** |
+|---|---:|---:|
+| equivalent | > 7% | **0 of 2,467 — 0.00%** |
+| duplicate | > 21% | **88 of 2,467 — 3.57%** |
+
+**The zero is a result, and it is only a result because the detector was shown to work.**
+`compile()` folds `60 * 60` to `3600`, and a planted mutant that replaces the literal with
+the product is detected as equivalent; so is folding inside a larger expression. Those
+plants, and the converse — that a genuinely different mutant is never called equivalent —
+run on every suite run. What produces the zero is that these operators mutate the AST, and
+the one normalisation CPython performs before emitting bytecode is constant folding, which
+an AST-level edit reaches only by arriving at the original's value. Mutation on a language
+whose compiler does not optimise does not generate trivially equivalent mutants.
+
+**The 3.57% is not diffuse. It is one operator.**
+
+| operator | mutants | duplicates | share |
+|---|---:|---:|---:|
+| `negate_if` | 373 | **78** | **20.9%** |
+| `swallow_except` | 56 | 3 | 5.4% |
+| `compare` | 368 | 4 | 1.1% |
+| `const` | 367 | 3 | 0.8% |
+| the other eight | 1,303 | **0** | 0% |
+
+`negate_if` wraps an `if` test in `not`. Applied to `if not items:` it produces
+`if not not items:`, which compiles to exactly what `drop_not` produces from the same
+line — `if items:`. Applied to `if x is None:` it produces `if not x is None:`, which is
+`compare`'s `if x is not None:`. One in five of that operator's mutants is a program the
+set already contains, and a kill rate over the unfiltered set weights those functions
+twice.
+
+**What this changes, and what it does not.** The tool now filters before scoring and
+publishes the counts in its JSON, so a reader can see which set a rate was taken over. The
+112 published audits were run before the filter existed, and re-running a thousand-package
+census is not affordable, so the effect on §3's medians is given as a bound rather than a
+correction. A duplicate is killed exactly when its twin is, so removing $d$ of $N$ mutants
+of which $k$ were killed takes $K/N$ to $(K-k)/(N-d)$: at $d/N = 0.0357$ and a median kill
+rate of 0.848, the filtered median lies in **[0.842, 0.879]** — the endpoints being all
+duplicates killed and none killed. The direction is not determined and the interval is
+narrow enough that no claim in §3 turns on it, which is why it is published as an interval
+rather than used to restate the medians.
+
 # 4. Comparison with `cosmic-ray`
 
 Same machine, same virtualenv, `xmltodict` 1.0.4 (19 functions, 119 tests):
@@ -229,6 +296,10 @@ have scored.
 
 **A kill rate depends on the operator set** (§4), so the median 0.848 is this tool's
 operator set on these packages and is not comparable to a figure from another tool.
+
+**The published rates were measured before the duplicate filter.** §3.2 bounds the
+effect at [0.842, 0.879] around a median of 0.848 and does not resolve it. A census run
+after the filter would resolve it, and has not been run.
 
 **Proven gaps are a lower bound.** The tool refuses what it cannot witness, so the 45.5%
 counts only provable gaps; the true share of packages with a real gap is higher by an
@@ -285,6 +356,12 @@ figure here rebuilds from the repository without the 19 MB raw census.
 - [@mindthegap] *Mind the Gap: The Difference Between Coverage and Mutation Score Can Guide Testing Efforts.* arXiv:2309.02395.
 - *Static and Dynamic Comparison of Mutation Testing Tools for Python.* SBQS.
 - *cosmic-ray* — mutation testing for Python. <https://github.com/sixty-north/cosmic-ray>
+- [@tce2015] Papadakis, M., Jia, Y., Harman, M. and Le Traon, Y. *Trivial Compiler
+  Equivalence: A Large Scale Empirical Study of a Simple, Fast and Effective Equivalent
+  Mutant Detection Technique.* ICSE 2015, pp. 936–946. Over 7% of mutants discarded as
+  equivalent and over 21% as duplicates on large C programs; detection against
+  hand-analysed ground truth about 30% for C and about 54% for Java.
+  <https://doi.org/10.1109/ICSE.2015.103>
 - [@teralizer] Glock, Bauer & Pinzger. *Teralizer: Semantics-Based Test Generalization
   from Conventional Unit Tests to Property-Based Tests.* arXiv:2512.14475, December 2025.
   Cited for its eligibility funnel; quoted from the abstract, which states the 632

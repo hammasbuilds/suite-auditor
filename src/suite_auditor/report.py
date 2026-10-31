@@ -282,6 +282,11 @@ def write_json(audit: Audit, path: Path) -> None:
                 "scored": len(audit.scored),
                 "stopped_early": audit.stopped_early,
                 "planned_mutants": audit.planned_mutants,
+                # What TCE removed before scoring. Published beside the counts it
+                # changes: a kill rate over a filtered mutant set is a different
+                # number from one over an unfiltered set, and a reader comparing this
+                # tool's rate with another's needs to know which was measured.
+                "tce": audit.tce or None,
                 "audited_functions": audit.audited_functions,
                 "stray": audit.stray,
                 # Why each survivor was not proven. Without it a consumer sees one

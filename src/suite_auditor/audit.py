@@ -26,13 +26,14 @@ import sys
 import textwrap
 import threading
 import time
-from collections import deque
+from collections import Counter, deque
 from collections.abc import Callable
 from concurrent.futures import FIRST_EXCEPTION, ThreadPoolExecutor, wait
 from dataclasses import dataclass, field
 from pathlib import Path
 from queue import Queue
 
+from suite_auditor import tce
 from suite_auditor.coverage import build_map, calls_for, tests_for
 from suite_auditor.differential import compare
 from suite_auditor.inputs import argument_sets, harvest_for, witness_strength
@@ -221,7 +222,8 @@ def audit_target(
     if argsets is None:
         return results
     if todo is None:
-        todo = mutants(textwrap.dedent(target.source), cap=per_function)
+        source = textwrap.dedent(target.source)
+        todo = tce.partition(source, mutants(source, cap=per_function))["kept"]
 
     def tick() -> None:
         if progress:
@@ -448,6 +450,26 @@ def audit(
         # Dedented: a method's source starts indented, which does not parse on its own,
         # and every method used to yield zero mutants without a word.
         plan = [(t, mutants(textwrap.dedent(t.source), cap=per_function)) for t in covered]
+        # Trivial Compiler Equivalence (Papadakis et al., ICSE 2015), on CPython
+        # bytecode: a mutant that compiles to the original's program is equivalent and
+        # must not be scored, and two mutants that compile to each other's are one
+        # program counted twice. Measured on five real packages, 3.6% of this operator
+        # set's mutants are duplicates - `if not not x:` from negate_if compiles to the
+        # same code as `if x:` from drop_not - and a kill rate over a set holding both
+        # weights that one function twice.
+        tce_counts = Counter()
+        deduped = []
+        for target, planned in plan:
+            if not planned:
+                deduped.append((target, planned))
+                continue
+            part = tce.partition(textwrap.dedent(target.source), planned)
+            summary = tce.summarise(part)
+            for key in ("planned", "kept", "equivalent", "duplicate", "undecidable"):
+                tce_counts[key] += summary[key]
+            deduped.append((target, part["kept"]))
+        plan = deduped
+        out.tce = dict(tce_counts)
         # A function with no mutable site (a bare `return self.x`) has nothing to score,
         # and listing it as "0/0 killed" is noise.
         barren = sum(1 for _, m in plan if not m)

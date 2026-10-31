@@ -1,0 +1,273 @@
+{
+ "method": "Trivial Compiler Equivalence (Papadakis et al., ICSE 2015), applied to CPython bytecode. A mutant whose canonical compiled form equals the original's is equivalent; two mutants sharing a form are duplicates. The canonical form is the instruction stream with operands resolved to the values they name, so a shuffled constant table does not hide a match.",
+ "interpreter": "CPython 3.14",
+ "mutants_per_function_cap": 8,
+ "operators": [
+  "binop",
+  "boolop",
+  "compare",
+  "const",
+  "drop_assert",
+  "drop_not",
+  "drop_raise",
+  "drop_return",
+  "negate_if",
+  "slice_lower",
+  "slice_upper",
+  "swallow_except"
+ ],
+ "totals": {
+  "planned": 2467,
+  "equivalent": 0,
+  "duplicate": 88,
+  "undecidable": 0,
+  "equivalent_share": 0.0,
+  "duplicate_share": 0.035671
+ },
+ "repositories": [
+  {
+   "repo": "suite-auditor",
+   "functions_with_mutants": 109,
+   "planned": 613,
+   "kept": 591,
+   "equivalent": 0,
+   "duplicate": 22,
+   "undecidable": 0,
+   "equivalent_share": 0.0,
+   "duplicate_share": 0.035889,
+   "by_operator": {
+    "binop": {
+     "planned": 46
+    },
+    "boolop": {
+     "planned": 74
+    },
+    "compare": {
+     "planned": 89
+    },
+    "const": {
+     "planned": 82
+    },
+    "drop_not": {
+     "planned": 39
+    },
+    "drop_raise": {
+     "planned": 8
+    },
+    "drop_return": {
+     "planned": 132
+    },
+    "negate_if": {
+     "planned": 94,
+     "duplicate": 20
+    },
+    "slice_lower": {
+     "planned": 8
+    },
+    "slice_upper": {
+     "planned": 13
+    },
+    "swallow_except": {
+     "planned": 28,
+     "duplicate": 2
+    }
+   }
+  },
+  {
+   "repo": "blast-radius",
+   "functions_with_mutants": 81,
+   "planned": 424,
+   "kept": 414,
+   "equivalent": 0,
+   "duplicate": 10,
+   "undecidable": 0,
+   "equivalent_share": 0.0,
+   "duplicate_share": 0.023585,
+   "by_operator": {
+    "binop": {
+     "planned": 26
+    },
+    "boolop": {
+     "planned": 48
+    },
+    "compare": {
+     "planned": 69,
+     "duplicate": 1
+    },
+    "const": {
+     "planned": 48
+    },
+    "drop_assert": {
+     "planned": 1
+    },
+    "drop_not": {
+     "planned": 28
+    },
+    "drop_raise": {
+     "planned": 1
+    },
+    "drop_return": {
+     "planned": 97
+    },
+    "negate_if": {
+     "planned": 71,
+     "duplicate": 8
+    },
+    "slice_lower": {
+     "planned": 9
+    },
+    "slice_upper": {
+     "planned": 17
+    },
+    "swallow_except": {
+     "planned": 9,
+     "duplicate": 1
+    }
+   }
+  },
+  {
+   "repo": "assay-drift",
+   "functions_with_mutants": 70,
+   "planned": 317,
+   "kept": 304,
+   "equivalent": 0,
+   "duplicate": 13,
+   "undecidable": 0,
+   "equivalent_share": 0.0,
+   "duplicate_share": 0.041009,
+   "by_operator": {
+    "binop": {
+     "planned": 27
+    },
+    "boolop": {
+     "planned": 28
+    },
+    "compare": {
+     "planned": 46
+    },
+    "const": {
+     "planned": 51
+    },
+    "drop_not": {
+     "planned": 21
+    },
+    "drop_raise": {
+     "planned": 10
+    },
+    "drop_return": {
+     "planned": 74
+    },
+    "negate_if": {
+     "duplicate": 13,
+     "planned": 41
+    },
+    "slice_lower": {
+     "planned": 7
+    },
+    "slice_upper": {
+     "planned": 8
+    },
+    "swallow_except": {
+     "planned": 4
+    }
+   }
+  },
+  {
+   "repo": "flake-detective",
+   "functions_with_mutants": 90,
+   "planned": 465,
+   "kept": 454,
+   "equivalent": 0,
+   "duplicate": 11,
+   "undecidable": 0,
+   "equivalent_share": 0.0,
+   "duplicate_share": 0.023656,
+   "by_operator": {
+    "binop": {
+     "planned": 42
+    },
+    "boolop": {
+     "planned": 47
+    },
+    "compare": {
+     "planned": 64,
+     "duplicate": 1
+    },
+    "const": {
+     "planned": 100
+    },
+    "drop_not": {
+     "planned": 28
+    },
+    "drop_raise": {
+     "planned": 11
+    },
+    "drop_return": {
+     "planned": 100
+    },
+    "negate_if": {
+     "duplicate": 10,
+     "planned": 58
+    },
+    "slice_lower": {
+     "planned": 4
+    },
+    "slice_upper": {
+     "planned": 2
+    },
+    "swallow_except": {
+     "planned": 9
+    }
+   }
+  },
+  {
+   "repo": "urdu-nlp-toolkit",
+   "functions_with_mutants": 111,
+   "planned": 648,
+   "kept": 616,
+   "equivalent": 0,
+   "duplicate": 32,
+   "undecidable": 0,
+   "equivalent_share": 0.0,
+   "duplicate_share": 0.049383,
+   "by_operator": {
+    "binop": {
+     "planned": 60
+    },
+    "boolop": {
+     "planned": 49
+    },
+    "compare": {
+     "planned": 100,
+     "duplicate": 2
+    },
+    "const": {
+     "planned": 86,
+     "duplicate": 3
+    },
+    "drop_not": {
+     "planned": 44
+    },
+    "drop_raise": {
+     "planned": 18
+    },
+    "drop_return": {
+     "planned": 138
+    },
+    "negate_if": {
+     "duplicate": 27,
+     "planned": 109
+    },
+    "slice_lower": {
+     "planned": 16
+    },
+    "slice_upper": {
+     "planned": 22
+    },
+    "swallow_except": {
+     "planned": 6
+    }
+   }
+  }
+ ]
+}
