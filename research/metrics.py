@@ -138,6 +138,13 @@ def audit_distributions(rows: list[dict]) -> dict:
         "covered_fraction": distribution(
             [r["audit"].get("covered_fraction") for r in done]
         ),
+        # Kill rate is measured only over functions a passing test reaches (`audit.py`
+        # mutates `[t for t in targets if t.covering_tests]`), so it is conditional on
+        # coverage and the two are not comparable to each other. Their product is the
+        # unconditional quantity - the share of the package's functions that are both
+        # reached and checked - and it is the number a reader should take away. The
+        # median kill rate of 0.85 and the median caught share are different claims.
+        "caught_share": distribution([r["audit"].get("caught_share") for r in done]),
         "proven_gaps": distribution(
             [float(r["audit"].get("proven_gaps") or 0) for r in done]
         ),

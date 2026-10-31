@@ -1,0 +1,6 @@
+{
+ "fig1_funnel": "From PyPI's 1,000 most-downloaded packages to the 112 that could be audited, one row per filter. Each row gives what the filter removed over what reached it. The audited share is 11.2% of all 1,000 [9.4%, 13.3%], Wilson 95%, and 20.5% of the 547 that ship a suite collecting at least one test.",
+ "fig2_kill_rate_ecdf": "Empirical distribution of mutation kill rate over the 112 audited packages. Median 0.850, quartiles 0.733 and 0.908, range 0.000 to 1.000. The left tail is the part a mean of 0.812 hides: at least one audited package killed no mutant at all.",
+ "fig3_coverage_vs_kill_rate": "Covered fraction against kill rate, one point per audited package (n=112), with dotted iso-contours of their product. Kill rate is measured over covered functions only, so it is conditional on the x axis and the two axes are not comparable to each other; the product is. Median caught share is 0.710 (quartiles 0.500 and 0.817), against a median kill rate of 0.850 - the gap between those two medians is what reporting kill rate alone conceals.",
+ "fig4_proven_gaps": "Proven gaps per audited package (n=112), counts of 11 and above collected in the last bar. The median package has 0; the maximum is 33. 51 of 112 packages have at least one (45.5% [36.6%, 54.8%], Wilson 95%), so the mean of 1.96 describes no package in the sample."
+}

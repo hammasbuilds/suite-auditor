@@ -18,8 +18,11 @@ the 547 that published an sdist containing tests. That funnel is the paper's fir
 the headline obstacle to large-scale mutation study of Python is not compute, it is that
 most distributions do not ship a runnable suite.
 
-Within the 112, median kill rate is 0.85 (IQR 0.73–0.91) and **45.5% [36.6%, 54.8%] carry
-at least one gap we can prove** — a surviving mutant with a witness: an argument set on
+Within the 112, median kill rate is 0.85 (IQR 0.73–0.91), but kill rate is measured over
+covered functions only; the unconditional **caught share** — the fraction of a package's
+functions both reached and checked — has a median of **0.71** (IQR 0.50–0.82), and
+**45.5% [36.6%, 54.8%] carry at least one gap we can
+prove** — a surviving mutant with a witness: an argument set on
 which the mutated function returns a different value, verified by hand before publication.
 Mutants that survive without such a witness are **refused with a reason** rather than
 reported, which is the design decision the comparison below turns on.
@@ -98,14 +101,58 @@ Within the 112:
 
 | | median | IQR | min | max |
 |---|---:|---|---:|---:|
-| kill rate | 0.850 | 0.733–0.908 | 0.000 | 1.000 |
+| kill rate (over covered functions) | 0.850 | 0.733–0.908 | 0.000 | 1.000 |
 | covered fraction | 0.861 | 0.682–0.957 | 0.019 | 1.000 |
+| **caught share** (their product) | **0.710** | 0.500–0.817 | 0.000 | 1.000 |
 | mutants scored | 100 | 36–183 | 1 | 1,669 |
 | proven gaps | 0 | 0–3 | 0 | 33 |
+
+**Kill rate and covered fraction are not siblings and must not be read as a pair.** Only
+functions a passing test reaches are mutated, so kill rate is measured over the covered
+subset and is *conditional on* the covered fraction. The two share no denominator and
+neither bounds the other. Two packages in this sample make the point concretely:
+`pyasn1-modules` and `jaraco-context` both score a **kill rate of 1.000** on covered
+fractions of **0.042** and **0.048**, so a perfect mutation score is reported while 96%
+of each package is never examined. Six packages cover under 20% of their functions, and
+five of those have a caught share below 0.125.
+
+The unconditional quantity is their product, the **caught share** — the fraction of a
+package's functions that are both reached by a test and checked by one. Its median is
+**0.710** against a median kill rate of 0.850, and its lower quartile is 0.500 against
+0.733. Reporting kill rate alone overstates how much of a package is actually audited by
+roughly fourteen points at the median and twenty-three at the lower quartile. Figure 3
+plots the two axes with iso-contours of their product, which is the only comparison
+between them that is defined.
 
 **45.5% [36.6%, 54.8%] of audited packages carry at least one proven gap.** The median
 package has none, so the distribution is the finding: proven gaps are concentrated, as the
 mutants-scored range (1 to 1,669) suggests they would be.
+
+## 3.1 Figures
+
+![Figure 1](../research/figures/fig1_funnel.png)
+
+**Figure 1.** From PyPI's 1,000 most-downloaded packages to the 112 that could be audited,
+one row per filter, each giving what the filter removed over what reached it.
+
+![Figure 2](../research/figures/fig2_kill_rate_ecdf.png)
+
+**Figure 2.** Empirical distribution of kill rate over the 112 audited packages, with
+quartiles marked. An ECDF rather than a histogram: the bin width of a histogram would be a
+free parameter doing argumentative work at the left tail, where the interesting packages
+are.
+
+![Figure 3](../research/figures/fig3_coverage_vs_kill_rate.png)
+
+**Figure 3.** Covered fraction against kill rate with dotted iso-contours of their
+product. Distance from the origin, not distance from a diagonal, is the thing to read: the
+axes are not comparable to each other because kill rate is conditional on coverage.
+
+![Figure 4](../research/figures/fig4_proven_gaps.png)
+
+**Figure 4.** Proven gaps per audited package, counts of 11 and above collected in the last
+bar. The median package has none and the maximum is 33, so the mean of 1.96 describes no
+package in the sample.
 
 # 4. Comparison with `cosmic-ray`
 
