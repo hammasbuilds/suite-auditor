@@ -19,7 +19,9 @@ What is computed here, from `docs/census-rows.json.gz` alone:
     behave like one population.
   * **selection bias, stated numerically.** The 112 are not a random sample of PyPI: they
     are the packages that ship a suite, whose suite passes alone, and that fit a 300s
-    budget. Each filter is a plausible correlate of test quality, so the audited sample is
+    budget - a budget 7 of a 12-package sample of the excluded turn out to fit when it is
+    raised to 1,800s, 4 of them inside the original 300s on a less loaded machine. Each
+    filter is a plausible correlate of test quality, so the audited sample is
     biased towards better-tested packages - which means the kill rates are an upper bound
     on the population, not an estimate of it. The size of each filter is reported so a
     reader can see how much selection happened.
@@ -44,7 +46,13 @@ STAGES = [
     ("sdist ships no test directory", "ships no tests"),
     ("clean suite collects no tests", "tests collect nothing"),
     ("clean suite did not finish", "suite did not finish in 120s"),
-    ("budget exceeded", "audit budget exceeded (300s)"),
+    # Three separate criteria, and the narrowest match has to come first: "memory budget
+    # exceeded: 4,718 MB over the 4,096 MB cap" contains the substring "budget exceeded",
+    # so a single time-budget stage silently absorbed four memory-cap exclusions and three
+    # from a longer budget, and published all 67 as "the 300-second budget".
+    ("memory budget exceeded", "memory cap exceeded (4,096 MB)"),
+    ("budget exceeded (300s)", "audit budget exceeded (300s)"),
+    ("budget exceeded", "audit budget exceeded (a longer budget)"),
     ("audit planned no mutants", "no mutable targets found"),
 ]
 
@@ -125,14 +133,22 @@ def distribution(values: list[float]) -> dict | None:
         return None
     n = len(values)
 
+    # One quantile definition throughout. `q(0.5)` was a nearest-rank quantile, which
+    # over an even sample returns the upper of the two middle values: 0.8500 for these
+    # 112 kill rates where `scripts/census_summary.py` reports `statistics.median` as
+    # 0.8481. The same quantity, published twice in one repository under one name with
+    # two values. `statistics.quantiles` interpolates, and agrees with the median.
     def q(p: float) -> float:
-        return round(values[min(n - 1, int(p * n))], 4)
+        if n < 2:
+            return round(values[0], 4)
+        cuts = statistics.quantiles(values, n=100, method="exclusive")
+        return round(cuts[min(98, max(0, round(p * 100) - 1))], 4)
 
     return {
         "n": n,
         "min": round(values[0], 4),
         "p25": q(0.25),
-        "median": q(0.5),
+        "median": round(statistics.median(values), 4),
         "p75": q(0.75),
         "p90": q(0.90),
         "max": round(values[-1], 4),
@@ -151,7 +167,7 @@ def audit_distributions(rows: list[dict]) -> dict:
         # coverage and the two are not comparable to each other. Their product is the
         # unconditional quantity - the share of the package's functions that are both
         # reached and checked - and it is the number a reader should take away. The
-        # median kill rate of 0.85 and the median caught share are different claims.
+        # median kill rate of 0.848 and the median caught share are different claims.
         "caught_share": distribution([r["audit"].get("caught_share") for r in done]),
         "proven_gaps": distribution([float(r["audit"].get("proven_gaps") or 0) for r in done]),
         "packages_with_a_proven_gap": wilson(

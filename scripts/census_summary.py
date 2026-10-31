@@ -37,8 +37,10 @@ ROOT = Path(__file__).resolve().parent.parent
 def _bucket(reason: str) -> str:
     """The reason, with the varying part cut off so like rows group together.
 
-    `budget exceeded (300s)` and `memory budget exceeded: 5,060 MB over ...` are one
-    reason each however many numbers they carry.
+    `memory budget exceeded: 5,060 MB over ...` is one reason however many numbers it
+    carries. The two time budgets are **not** grouped: a package that exceeded a 900s
+    budget says nothing about the 300s one, and a single row reading 63 was quoted as
+    "the 300-second budget excluded 63 packages" when 60 is the number.
     """
     for prefix in (
         "sdist ships no test directory",
@@ -48,7 +50,10 @@ def _bucket(reason: str) -> str:
         "audit planned no mutants",
         "audit produced no report",
         "audit scored none of its",
-        "budget exceeded",
+        "budget exceeded (300s)",
+        # No bare "budget exceeded" prefix: anything else falls through to its own
+        # literal reason, so a run at a different budget labels itself instead of
+        # hiding inside the 300-second row.
         "memory budget exceeded",
         "install failed",
         "candidate failed",

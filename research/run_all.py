@@ -82,7 +82,9 @@ def main() -> int:
     for name, (_pdf, png, caption) in {
         "fig1_funnel": figures.funnel_figure(funnel),
         "fig2_kill_rate_ecdf": figures.kill_rate_figure(distributions["kill_rate"], rates),
-        "fig3_coverage_vs_kill_rate": figures.coverage_figure(pairs, distributions["caught_share"]),
+        "fig3_coverage_vs_kill_rate": figures.coverage_figure(
+            pairs, distributions["caught_share"], distributions["kill_rate"]
+        ),
         "fig4_proven_gaps": figures.gaps_figure(
             distributions["proven_gaps"], distributions["packages_with_a_proven_gap"], gaps
         ),

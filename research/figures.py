@@ -9,7 +9,7 @@ The four here answer the four objections the README's three bare counts invite:
   1. **the funnel** - where 888 of 1,000 packages went, each stage labelled with what it
      removed. The headline "11.2% auditable" is a product of six filters and a reader
      should see all six.
-  2. **the kill-rate distribution** - an ECDF, not a bar. The median is 0.85 and the
+  2. **the kill-rate distribution** - an ECDF, not a bar. The median is 0.848 and the
      minimum is 0.0; a single number hides that one audited package killed nothing.
   3. **coverage against kill rate** - the two are measured independently and a package can
      be high on one and low on the other. The scatter shows whether they travel together.
@@ -181,7 +181,9 @@ def kill_rate_figure(distribution: dict, rates: list[float]) -> tuple[Path, Path
 # --- 3. coverage against kill rate ---------------------------------------------------
 
 
-def coverage_figure(pairs: list[tuple[float, float]], caught: dict) -> tuple[Path, Path, str]:
+def coverage_figure(
+    pairs: list[tuple[float, float]], caught: dict, kill: dict
+) -> tuple[Path, Path, str]:
     """Covered fraction against kill rate, with iso-contours of their product.
 
     An earlier draft of this figure drew the diagonal and invited the reader to look for
@@ -252,7 +254,11 @@ def coverage_figure(pairs: list[tuple[float, float]], caught: dict) -> tuple[Pat
         f"measured over covered functions only, so it is conditional on the x axis and "
         f"the two axes are not comparable to each other; the product is. Median caught "
         f"share is {caught['median']:.3f} (quartiles {caught['p25']:.3f} and "
-        f"{caught['p75']:.3f}), against a median kill rate of 0.850 - the gap between "
+        # Typed as 0.850 here while the ECDF's caption read its median from the
+        # distribution, so one caption followed a regenerated artefact and the other
+        # did not. Both now read the same dict.
+        f"{caught['p75']:.3f}), against a median kill rate of {kill['median']:.3f} - "
+        f"the gap between "
         f"those two medians is what reporting kill rate alone conceals."
     )
     return pdf, png, caption

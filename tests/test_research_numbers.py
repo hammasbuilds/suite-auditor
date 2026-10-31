@@ -113,6 +113,18 @@ def test_caught_share_is_the_product_of_the_other_two(rows):
 # --- the manuscript quotes what the research tree computed ---------------------------
 
 
+def at_the_quoted_precision(text: str, computed: float) -> str:
+    """Round the computed value to as many decimals as the manuscript printed.
+
+    An absolute tolerance of 5e-4 lands exactly on the boundary whenever the manuscript
+    quotes three decimals of a four-decimal artefact - 0.709 against 0.7085 - and then
+    passes or fails on the last bit of a float subtraction. The precision the manuscript
+    chose is the precision to compare at.
+    """
+    decimals = len(text.split(".")[1]) if "." in text else 0
+    return f"{computed:.{decimals}f}"
+
+
 @pytest.mark.parametrize(
     ("label", "key"),
     [
@@ -124,9 +136,9 @@ def test_caught_share_is_the_product_of_the_other_two(rows):
 )
 def test_median_column_matches_the_computed_median(paper, published, label, key):
     computed = published["distributions"][key]["median"]
-    quoted = number(cell(paper, label, 1))
-    assert abs(quoted - computed) < 5e-4, (
-        f"the manuscript's median for {label!r} is {quoted}, the ledger gives {computed}"
+    shown = cell(paper, label, 1).strip().strip("*")
+    assert at_the_quoted_precision(shown, computed) == shown, (
+        f"the manuscript's median for {label!r} is {shown}, the ledger gives {computed}"
     )
 
 
@@ -143,7 +155,10 @@ def test_caught_share_row_is_present_and_below_kill_rate(paper, published):
         f"kill rate times a covered fraction of at most 1, this cannot happen unless "
         f"the table rows have been swapped"
     )
-    assert abs(caught - published["distributions"]["caught_share"]["median"]) < 5e-4
+    shown = cell(paper, "caught share", 1).strip().strip("*")
+    computed = published["distributions"]["caught_share"]["median"]
+    decimals = len(shown.split(".")[1]) if "." in shown else 0
+    assert abs(caught - round(computed, decimals)) < 1e-9, (shown, computed)
 
 
 def test_the_conditional_claim_is_stated_not_merely_implied(paper):
@@ -199,4 +214,96 @@ def test_every_caption_states_its_denominator(published):
     for name, caption in captions.items():
         assert re.search(r"n=\d|\b\d{1,3}(?:,\d{3})*\b", caption), (
             f"{name}'s caption states no denominator: {caption!r}"
+        )
+
+
+# --- the funnel table, row by row -----------------------------------------------------
+
+
+def test_every_funnel_stage_in_the_paper_matches_the_artefact(paper, published):
+    """The gap that let a wrong count stand.
+
+    `test_median_column_matches_the_computed_median` checks the distribution table, and
+    nothing checked the funnel. The manuscript published 67 packages against a stage the
+    artefact now counts as 60, and the suite was green: the stale number was in a table
+    no test read. Each row is matched by its label and read by column position.
+    """
+    labels = {
+        "no sdist on PyPI": "no sdist on PyPI",
+        "ships no tests": "ships no tests",
+        "tests collect nothing": "tests collect nothing",
+        "suite did not finish in 120": "suite did not finish in 120s",
+        "memory cap exceeded": "memory cap exceeded (4,096 MB)",
+        "audit budget exceeded (300": "audit budget exceeded (300s)",
+        "audit budget exceeded (longer": "audit budget exceeded (a longer budget)",
+        "no mutable targets": "no mutable targets found",
+        "other": "other reason",
+    }
+    stages = published["funnel"]["stages"]
+    assert set(labels.values()) == set(stages), (
+        f"the funnel has stages {sorted(stages)} and this test knows "
+        f"{sorted(labels.values())}; a new stage needs a row in the manuscript"
+    )
+    for row_label, stage in labels.items():
+        quoted = number(cell(paper, row_label, 1))
+        assert quoted == stages[stage]["excluded"], (
+            f"the manuscript's {row_label!r} row says {quoted:.0f}, the artefact's "
+            f"{stage!r} stage counts {stages[stage]['excluded']}"
+        )
+
+    audited = number(cell(paper, "audited", 1))
+    assert audited == published["funnel"]["audited"]["k"]
+
+
+def test_the_funnel_rows_in_the_paper_sum_to_the_sample(paper, published):
+    """A classification published as a table has to add up on the page, not just in JSON."""
+    stages = published["funnel"]["stages"]
+    total = published["funnel"]["total"]
+    rows = [
+        "no sdist on PyPI",
+        "ships no tests",
+        "tests collect nothing",
+        "suite did not finish in 120",
+        "memory cap exceeded",
+        "audit budget exceeded (300",
+        "audit budget exceeded (longer",
+        "no mutable targets",
+        "other",
+        "audited",
+    ]
+    assert sum(number(cell(paper, r, 1)) for r in rows) == total, (
+        f"the manuscript's funnel rows do not sum to {total}"
+    )
+    staged = sum(s["excluded"] for s in stages.values())
+    assert staged + published["funnel"]["audited"]["k"] == total
+
+
+def test_the_conditional_share_column_is_the_artefact_s(paper, published):
+    """Column 3 is 'N of M'. Both halves are checked, because M is the stage's input.
+
+    A funnel row whose count is right and whose denominator is stale reads as a smaller
+    attrition than it was, and the denominators chain: each one is the previous stage's
+    output.
+    """
+    stages = published["funnel"]["stages"]
+    labels = {
+        "ships no tests": "ships no tests",
+        "tests collect nothing": "tests collect nothing",
+        "suite did not finish in 120": "suite did not finish in 120s",
+        "memory cap exceeded": "memory cap exceeded (4,096 MB)",
+        "audit budget exceeded (300": "audit budget exceeded (300s)",
+        "audit budget exceeded (longer": "audit budget exceeded (a longer budget)",
+        "no mutable targets": "no mutable targets found",
+        "other": "other reason",
+    }
+    for row_label, stage in labels.items():
+        text = cell(paper, row_label, 3)
+        share, _, denominator = text.partition(" of ")
+        body = stages[stage]["of_those_that_reached_this_stage"]
+        assert at_the_quoted_precision(share.strip(), body["rate"]) == share.strip(), (
+            f"{row_label!r}: the manuscript says {share.strip()}, the artefact {body['rate']}"
+        )
+        assert int(denominator.replace(",", "").strip()) == stages[stage]["reached_this_stage"], (
+            f"{row_label!r}: the manuscript's denominator is {denominator.strip()}, the "
+            f"artefact's stage input is {stages[stage]['reached_this_stage']}"
         )

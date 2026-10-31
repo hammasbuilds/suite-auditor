@@ -5,13 +5,14 @@
  "exclusions": {
   "sdist ships no test directory": 407,
   "clean suite collects no tests": 299,
-  "budget exceeded": 63,
+  "budget exceeded (300s)": 60,
   "no sdist published": 46,
   "audit planned no mutants": 30,
   "clean suite did not finish": 25,
   "audit scored none of its": 7,
   "memory budget exceeded": 4,
   "audit produced no report": 3,
+  "budget exceeded (900s)": 3,
   "install failed": 2,
   "candidate failed": 2
  },

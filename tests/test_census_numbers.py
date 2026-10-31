@@ -63,7 +63,21 @@ def test_the_table_accounts_for_every_package_considered() -> None:
     """
     s = _summary()
     section = _census_section()
-    table = [ln for ln in section.splitlines() if ln.startswith("|") and "---" not in ln]
+    # The funnel table only. The section also carries a second table - the 12
+    # budget-excluded packages re-audited at a raised budget - and summing both gave
+    # 1,012 of 1,000. A table is a contiguous run of lines, so take the first run whose
+    # header names the thousand rather than every pipe in the section.
+    table: list[str] = []
+    for line in section.splitlines():
+        if line.startswith("|"):
+            if "---" in line:
+                continue
+            if not table and "1,000" not in line:
+                continue
+            table.append(line)
+        elif table:
+            break
+    assert table and "1,000" in table[0], table[:1]
     numbers = []
     for line in table[1:]:  # the header row carries the denominator, not a count
         # `\**` on both sides: the audited row is bold, and a pattern that did not

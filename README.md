@@ -164,11 +164,12 @@ on its own cannot say what any single package scored:
 | **audited** | **112** |
 | sdist ships no test directory | 407 |
 | sdist ships tests, but the suite collects none | 299 |
-| audit over the 300s budget | 63 |
+| audit over the 300s budget | 60 |
 | no sdist published at all | 46 |
 | the auditor planned no mutants | 30 |
 | clean suite over the 120s budget | 25 |
 | planned mutants and scored none | 7 |
+| audit over the 900s budget | 3 |
 | memory budget exceeded | 4 |
 | audit produced no report | 3 |
 | install failed | 2 |
@@ -190,6 +191,28 @@ of those for one reason: the published sdist either ships no tests or ships test
 collect nothing. Any tool of this kind inherits that limit, and a benchmark that quietly
 dropped them would report a rate over the 11% of the ecosystem whose
 tests you can actually run.
+
+**The budget exclusions, re-measured.** 63 packages were excluded for exceeding a
+budget - the largest exclusion that more compute could recover, so 12 of them were
+re-audited at a 1,800s budget with the same code otherwise
+([docs/budget-recovery.json](https://github.com/hammasbuilds/suite-auditor/blob/main/docs/budget-recovery.json),
+one row per package):
+
+| of the 12 re-measured | |
+|---|---:|
+| **audited** | **7** |
+| over 1,800s as well | 1 |
+| over the 4,096 MB memory cap | 2 |
+| install timed out | 2 |
+
+Two things came out of it. The seven score like the included packages - median kill rate
+**0.848**, the same as the published median over 112, with 6 of 7 carrying at least one
+proven gap - so the budget exclusion limits what the census *covers* and is not visibly
+biasing its rate. And four of the seven finished in **171, 185, 194 and 203 seconds**,
+with a fifth at 302 - inside, or within 1%, of the 300-second budget that had excluded
+them. Same code, same packages, a less loaded machine. A wall-clock budget measures the
+machine as much as the project, so that row of the funnel is not a reproducible fact
+about those packages; a budget counted in mutants planned would be.
 
 **Sensitivity.** [docs/SENSITIVITY.md](https://github.com/hammasbuilds/suite-auditor/blob/main/docs/SENSITIVITY.md)
 plants gaps in a target's own tests and counts how many the prover proves:

@@ -106,10 +106,19 @@ and how much is an absence of evidence.
 | **ships no tests** | **407** | **0.407 [0.377, 0.438]** | 0.427 of 954 |
 | **tests collect nothing** | **299** | **0.299 [0.271, 0.328]** | 0.547 of 547 |
 | suite did not finish in 120 s | 25 | 0.025 [0.017, 0.037] | 0.101 of 248 |
-| audit budget exceeded (300 s) | 67 | 0.067 [0.053, 0.084] | 0.300 of 223 |
+| memory cap exceeded (4,096 MB) | 4 | 0.004 [0.002, 0.010] | 0.018 of 223 |
+| audit budget exceeded (300 s) | 60 | 0.060 [0.047, 0.076] | 0.274 of 219 |
+| audit budget exceeded (longer) | 3 | 0.003 [0.001, 0.009] | 0.019 of 159 |
 | no mutable targets | 30 | 0.030 [0.021, 0.043] | 0.192 of 156 |
 | other | 14 | 0.014 [0.008, 0.023] | 0.111 of 126 |
 | **audited** | **112** | **0.112 [0.094, 0.133]** | — |
+
+The three budget rows were one row reading **67** in an earlier draft of this table.
+`metrics.py` matched each exclusion reason by substring, and `memory budget exceeded:
+4,718 MB over the 4,096 MB cap` contains the substring `budget exceeded`, so four
+memory-cap exclusions and three from a longer budget were published as having exceeded a
+300-second *time* budget. A funnel is a classification, and a stage that absorbs a
+neighbouring criterion overstates itself by exactly as much as it understates the other.
 
 Both readings are given because they are different claims. "11.2% of the top 1,000 are
 auditable" is true; so is "20.5% [17.3%, 24.1%] of those shipping an sdist with tests are
@@ -119,16 +128,22 @@ Within the 112:
 
 | | median | IQR | min | max |
 |---|---:|---|---:|---:|
-| kill rate (over covered functions) | 0.850 | 0.733–0.908 | 0.000 | 1.000 |
-| covered fraction | 0.861 | 0.682–0.957 | 0.019 | 1.000 |
-| **caught share** (their product) | **0.710** | 0.500–0.817 | 0.000 | 1.000 |
-| mutants scored | 100 | 36–183 | 1 | 1,669 |
-| proven gaps | 0 | 0–3 | 0 | 33 |
+| kill rate (over covered functions) | 0.848 | 0.731–0.908 | 0.000 | 1.000 |
+| covered fraction | 0.859 | 0.681–0.956 | 0.019 | 1.000 |
+| **caught share** (their product) | **0.709** | 0.494–0.816 | 0.000 | 1.000 |
+| mutants scored | 97 | 35–181 | 1 | 1,669 |
+| proven gaps | 0 | 0–2.8 | 0 | 33 |
 
 **Kill rate and covered fraction are not siblings and must not be read as a pair.** Only
 functions a passing test reaches are mutated, so kill rate is measured over the covered
 subset and is *conditional on* the covered fraction. The two share no denominator and
 neither bounds the other. Two packages in this sample make the point concretely:
+These medians are `statistics.median`. An earlier draft took them from a nearest-rank
+quantile, which over an even sample returns the upper of the two middle values and gave
+0.850 and 0.861 — the same quantity the README published as 0.848 and 0.859 from the same
+112 rows. One repository reporting one median twice is a defect whichever value is right.
+The quartiles are `statistics.quantiles`, so the whole row now comes from one definition.
+
 `pyasn1-modules` and `jaraco-context` both score a **kill rate of 1.000** on covered
 fractions of **0.042** and **0.048**, so a perfect mutation score is reported while 96%
 of each package is never examined. Six packages cover under 20% of their functions, and
@@ -136,9 +151,9 @@ five of those have a caught share below 0.125.
 
 The unconditional quantity is their product, the **caught share** — the fraction of a
 package's functions that are both reached by a test and checked by one. Its median is
-**0.710** against a median kill rate of 0.850, and its lower quartile is 0.500 against
-0.733. Reporting kill rate alone overstates how much of a package is actually audited by
-roughly fourteen points at the median and twenty-three at the lower quartile. Figure 3
+**0.709** against a median kill rate of 0.848, and its lower quartile is 0.494 against
+0.731. Reporting kill rate alone overstates how much of a package is actually audited by
+roughly fourteen points at the median and twenty-four at the lower quartile. Figure 3
 plots the two axes with iso-contours of their product, which is the only comparison
 between them that is defined.
 
@@ -207,19 +222,55 @@ fair recall comparison needs a shared operator set, which neither tool offers.
 suite passes alone, and that fit a 300-second budget. Every one of those filters plausibly
 correlates with test quality, so the audited sample is biased **towards better-tested
 packages** and the kill rates are an **upper bound** on the population, not an estimate of
-it. There is nothing to adjust with: the excluded packages have no kill rate by
-construction. Only the 67 budget-exceeded and 25 did-not-finish packages are recoverable,
-and recovering them needs roughly an order of magnitude more compute.
+it. The excluded packages have no kill rate by construction, so there is nothing to
+adjust with — but the 63 budget-exceeded and 25 did-not-finish packages are recoverable at
+greater compute, and §5.1 recovers a sample of them rather than asserting what they would
+have scored.
 
-**A kill rate depends on the operator set** (§4), so the median 0.85 is this tool's
+**A kill rate depends on the operator set** (§4), so the median 0.848 is this tool's
 operator set on these packages and is not comparable to a figure from another tool.
 
 **Proven gaps are a lower bound.** The tool refuses what it cannot witness, so the 45.5%
 counts only provable gaps; the true share of packages with a real gap is higher by an
 unknown amount. This is the intended direction of error.
 
-**One interpreter, one platform, one time budget.** The 300-second budget excluded 67
-packages and is the largest single recoverable exclusion.
+**One interpreter, one platform, one time budget.** The 300-second budget excluded 60
+packages, and the budget rows together 63 — the largest single recoverable exclusion, and
+the subject of §5.1.
+
+## 5.1 Re-measuring the budget exclusions
+
+The claim that a time budget is "the largest recoverable exclusion" was worth testing
+rather than stating, so 12 of the 63 budget-exceeded packages were re-audited at a
+1,800-second budget, the same code otherwise. `scripts/target_census.py --only` takes the
+names, filtered against the external top-downloads list so that re-measuring a subset
+cannot become hand-picking one.
+
+**7 of the 12 completed.** The five that did not split three ways, which is itself the
+point: one exceeded even 1,800 s, two exceeded the 4,096 MB memory cap, and two failed to
+install inside the install timeout. A single "budget exceeded" label covers four
+different things.
+
+| | median | range |
+|---|---:|---|
+| kill rate, the 7 recovered | **0.848** | 0.669–0.909 |
+| kill rate, the 112 published | **0.848** | 0.000–1.000 |
+| covered fraction, the 7 recovered | 0.839 | 0.805–0.975 |
+| covered fraction, the 112 published | 0.859 | 0.019–1.000 |
+
+**The recovered packages score like the included ones.** Median kill rate 0.848 against
+the published 0.848; 6 of the 7 carry at least one proven gap, 21 in total, against 51 of
+112. The budget exclusion is therefore a limit on the census's *coverage* and not visibly
+a bias in its rate — which is the opposite of what the selection-bias paragraph above
+would predict, and is reported because it was measured rather than assumed.
+
+**The budget is partly a property of the machine, not of the project.** Four of the seven
+finished in 171, 185, 194 and 203 seconds, and a fifth in 302 — inside, or within 1%, of
+the 300-second budget that had excluded them. The same audits, the same code, a less
+loaded machine. A wall-clock budget is not a stable exclusion criterion, so the 60-package
+row of the funnel is not a reproducible fact about those 60 packages. A budget in work
+done — mutants planned, or test-runs executed — would be; this one is not, and that is a
+limitation of the census rather than of the tool.
 
 # 6. Reproducibility
 

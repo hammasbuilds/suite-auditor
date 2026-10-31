@@ -74,23 +74,59 @@
     },
     "reached_this_stage": 248
    },
-   "audit budget exceeded (300s)": {
-    "excluded": 67,
+   "memory cap exceeded (4,096 MB)": {
+    "excluded": 4,
     "of_all": {
-     "rate": 0.067,
-     "lo": 0.0531,
-     "hi": 0.0842,
+     "rate": 0.004,
+     "lo": 0.0016,
+     "hi": 0.0102,
      "n": 1000,
-     "k": 67
+     "k": 4
     },
     "of_those_that_reached_this_stage": {
-     "rate": 0.3004,
-     "lo": 0.2441,
-     "hi": 0.3636,
+     "rate": 0.0179,
+     "lo": 0.007,
+     "hi": 0.0452,
      "n": 223,
-     "k": 67
+     "k": 4
     },
     "reached_this_stage": 223
+   },
+   "audit budget exceeded (300s)": {
+    "excluded": 60,
+    "of_all": {
+     "rate": 0.06,
+     "lo": 0.0469,
+     "hi": 0.0765,
+     "n": 1000,
+     "k": 60
+    },
+    "of_those_that_reached_this_stage": {
+     "rate": 0.274,
+     "lo": 0.2192,
+     "hi": 0.3366,
+     "n": 219,
+     "k": 60
+    },
+    "reached_this_stage": 219
+   },
+   "audit budget exceeded (a longer budget)": {
+    "excluded": 3,
+    "of_all": {
+     "rate": 0.003,
+     "lo": 0.001,
+     "hi": 0.0088,
+     "n": 1000,
+     "k": 3
+    },
+    "of_those_that_reached_this_stage": {
+     "rate": 0.0189,
+     "lo": 0.0064,
+     "hi": 0.054,
+     "n": 159,
+     "k": 3
+    },
+    "reached_this_stage": 159
    },
    "no mutable targets found": {
     "excluded": 30,
@@ -148,10 +184,10 @@
   "kill_rate": {
    "n": 112,
    "min": 0.0,
-   "p25": 0.7333,
-   "median": 0.85,
-   "p75": 0.9083,
-   "p90": 0.9474,
+   "p25": 0.7312,
+   "median": 0.8481,
+   "p75": 0.9079,
+   "p90": 0.9509,
    "max": 1.0,
    "mean": 0.8116,
    "stdev": 0.1523
@@ -159,9 +195,9 @@
   "covered_fraction": {
    "n": 112,
    "min": 0.0185,
-   "p25": 0.6818,
-   "median": 0.8605,
-   "p75": 0.9571,
+   "p25": 0.6809,
+   "median": 0.8588,
+   "p75": 0.9556,
    "p90": 1.0,
    "max": 1.0,
    "mean": 0.7779,
@@ -170,10 +206,10 @@
   "caught_share": {
    "n": 112,
    "min": 0.0,
-   "p25": 0.5,
-   "median": 0.7095,
-   "p75": 0.817,
-   "p90": 0.8866,
+   "p25": 0.4937,
+   "median": 0.7085,
+   "p75": 0.8157,
+   "p90": 0.8869,
    "max": 1.0,
    "mean": 0.6389,
    "stdev": 0.2332
@@ -183,7 +219,7 @@
    "min": 0.0,
    "p25": 0.0,
    "median": 0.0,
-   "p75": 3.0,
+   "p75": 2.75,
    "p90": 5.0,
    "max": 33.0,
    "mean": 1.9554,
@@ -199,10 +235,10 @@
   "mutants_scored": {
    "n": 112,
    "min": 1.0,
-   "p25": 36.0,
-   "median": 100.0,
-   "p75": 183.0,
-   "p90": 285.0,
+   "p25": 35.25,
+   "median": 97.0,
+   "p75": 181.0,
+   "p90": 302.5,
    "max": 1669.0,
    "mean": 148.3393,
    "stdev": 210.3256
@@ -223,7 +259,9 @@
    "ships no tests",
    "tests collect nothing",
    "suite did not finish in 120s",
+   "memory cap exceeded (4,096 MB)",
    "audit budget exceeded (300s)",
+   "audit budget exceeded (a longer budget)",
    "no mutable targets found"
   ],
   "direction": "Each filter removes packages that ship no suite, whose suite fails or collects nothing alone, or whose suite is too slow to audit in the budget. All of those plausibly correlate with weaker testing, so the 112 are biased towards better-tested packages and their kill rates are an upper bound on the population rather than an estimate of it.",

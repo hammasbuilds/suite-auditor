@@ -1,0 +1,167 @@
+{
+ "what": "12 of the 63 packages the thousand-package census excluded for exceeding a budget, re-audited at a 1800s audit budget with the same code otherwise. Selected with scripts/target_census.py --only, filtered against the external top-downloads list.",
+ "audit_budget_seconds": 1800,
+ "original_audit_budget_seconds": 300,
+ "memory_cap_mb": 4096,
+ "rows": [
+  {
+   "package": "jinja2",
+   "version": "3.1.6",
+   "seconds": 826.7,
+   "resources": "peak 3,214 MB",
+   "clean_run": "80 collected, 1 already failing (deps: extra:test, requirements/dev.txt)",
+   "excluded": null,
+   "audit": {
+    "kill_rate": 0.8243161094224924,
+    "covered_fraction": 0.9143258426966292,
+    "caught_share": 0.7536935213961272,
+    "scored": 1645,
+    "covered_total": 651,
+    "audited_functions": 547,
+    "proven_gaps": 12
+   }
+  },
+  {
+   "package": "uvicorn",
+   "version": "0.54.0",
+   "seconds": 1802.5,
+   "resources": "1800s",
+   "clean_run": "1327 collected, 0 already failing (deps: group:dev)",
+   "excluded": "budget exceeded (1800s)"
+  },
+  {
+   "package": "pyopenssl",
+   "version": "26.4.0",
+   "seconds": 302.5,
+   "resources": "peak 2,798 MB",
+   "clean_run": "428 collected, 0 already failing (deps: extra:test)",
+   "excluded": null,
+   "audit": {
+    "kill_rate": 0.8482142857142857,
+    "covered_fraction": 0.975103734439834,
+    "caught_share": 0.8270969176052163,
+    "scored": 672,
+    "covered_total": 235,
+    "audited_functions": 197,
+    "proven_gaps": 1
+   }
+  },
+  {
+   "package": "joserfc",
+   "version": "1.7.7",
+   "seconds": 432.7,
+   "resources": "peak 452 MB",
+   "clean_run": "295 collected, 0 already failing (deps: group:dev)",
+   "excluded": null,
+   "audit": {
+    "kill_rate": 0.8774834437086093,
+    "covered_fraction": 0.8384615384615385,
+    "caught_share": 0.7357361181864494,
+    "scored": 906,
+    "covered_total": 327,
+    "audited_functions": 291,
+    "proven_gaps": 3
+   }
+  },
+  {
+   "package": "rich-rst",
+   "version": "2.2.0",
+   "seconds": 1616.9,
+   "resources": "4,718 MB over the 4,096 MB cap",
+   "clean_run": "997 collected, 0 already failing (deps: extra:test)",
+   "excluded": "memory budget exceeded: 4,718 MB over the 4,096 MB cap"
+  },
+  {
+   "package": "mistune",
+   "version": "3.4.0",
+   "seconds": 434.1,
+   "resources": "6,234 MB over the 4,096 MB cap",
+   "clean_run": "1324 collected, 0 already failing (deps: group:test)",
+   "excluded": "memory budget exceeded: 6,234 MB over the 4,096 MB cap"
+  },
+  {
+   "package": "bleach",
+   "version": "6.4.0",
+   "seconds": null,
+   "resources": null,
+   "clean_run": null,
+   "excluded": "candidate failed: TimeoutExpired: Command '['uv', 'pip', 'install', '-q', '--python', 'D:\\\\_census_scratch\\\\sa-census-6uaeh30y\\\\venv\\\\Scripts\\\\python.exe', '-r'"
+  },
+  {
+   "package": "aiofile",
+   "version": "3.12.3",
+   "seconds": null,
+   "resources": null,
+   "clean_run": null,
+   "excluded": "candidate failed: TimeoutExpired: Command '['uv', 'pip', 'install', '-q', '--python', 'D:\\\\_census_scratch\\\\sa-census-3u59cpfr\\\\venv\\\\Scripts\\\\python.exe', '--g"
+  },
+  {
+   "package": "rich-toolkit",
+   "version": "0.20.6",
+   "seconds": 203.1,
+   "resources": "peak 302 MB",
+   "clean_run": "6 collected, 1 already failing (deps: group:dev)",
+   "excluded": null,
+   "audit": {
+    "kill_rate": 0.6694214876033058,
+    "covered_fraction": 0.8128342245989305,
+    "caught_share": 0.5441286958058956,
+    "scored": 484,
+    "covered_total": 152,
+    "audited_functions": 140,
+    "proven_gaps": 2
+   }
+  },
+  {
+   "package": "bytecode",
+   "version": "0.19.1",
+   "seconds": 193.9,
+   "resources": "peak 637 MB",
+   "clean_run": "168 collected, 0 already failing (deps: group:test, group:dev)",
+   "excluded": null,
+   "audit": {
+    "kill_rate": 0.8356481481481481,
+    "covered_fraction": 0.9636363636363636,
+    "caught_share": 0.8052609427609427,
+    "scored": 432,
+    "covered_total": 159,
+    "audited_functions": 132,
+    "proven_gaps": 1
+   }
+  },
+  {
+   "package": "factory-boy",
+   "version": "3.3.3",
+   "seconds": 170.8,
+   "resources": "peak 294 MB",
+   "clean_run": "314 collected, 0 already failing (deps: extra:test)",
+   "excluded": null,
+   "audit": {
+    "kill_rate": 0.9088397790055248,
+    "covered_fraction": 0.8050847457627118,
+    "caught_share": 0.7316930424197021,
+    "scored": 362,
+    "covered_total": 190,
+    "audited_functions": 157,
+    "proven_gaps": 0
+   }
+  },
+  {
+   "package": "agate",
+   "version": "1.14.2",
+   "seconds": 185.1,
+   "resources": "peak 253 MB",
+   "clean_run": "194 collected, 1 already failing (deps: extra:test)",
+   "excluded": null,
+   "audit": {
+    "kill_rate": 0.8746031746031746,
+    "covered_fraction": 0.8198757763975155,
+    "caught_share": 0.7170659568175096,
+    "scored": 630,
+    "covered_total": 264,
+    "audited_functions": 217,
+    "proven_gaps": 2
+   }
+  }
+ ]
+}
