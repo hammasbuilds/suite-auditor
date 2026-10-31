@@ -144,7 +144,24 @@ def interpreter(target: Path) -> str:
     return sys.executable
 
 
+def _pin_temp() -> None:
+    """Send temp to the scratch drive, using target_census's helper.
+
+    This script copies whole repositories into temp - a pristine copy per plant - and
+    inherited C: because it never called the pin that `target_census.py` already defines
+    for exactly this reason. Its docstring there records C: filling to zero bytes.
+    """
+    import sys
+    from pathlib import Path as _Path
+
+    sys.path.insert(0, str(_Path(__file__).resolve().parent))
+    from target_census import _pin_temp_to_scratch_drive
+
+    _pin_temp_to_scratch_drive()
+
+
 def main() -> int:
+    _pin_temp()
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--target", type=Path, default=ROOT / "examples" / "pricing")
     ap.add_argument("--per-function", type=int, default=8)
