@@ -316,38 +316,82 @@ TCE_RATE = ROOT / "research" / "results" / "tce_rate.json"
 
 @pytest.mark.skipif(not TCE_RATE.exists(), reason="research/results/tce_rate.json is absent")
 def test_section_3_2_quotes_the_measured_tce_rates(paper):
-    """The two headline numbers, and the operator the duplicates concentrate in.
+    """The two headline numbers, and the operator each rate concentrates in.
 
-    Section 3.2 publishes a zero. A zero is the number most likely to be left in place
-    after a measurement changes, because nothing about it looks stale.
+    Section 3.2 published a zero in its first revision, over five repositories written
+    by one author. Nineteen third-party packages turned it into 0.062%. A zero is the
+    number most likely to be left in place after a measurement changes, because nothing
+    about it looks stale.
     """
     measured = json.loads(TCE_RATE.read_text(encoding="utf-8"))
     totals = measured["totals"]
     section = paper[paper.index("## 3.2 How many") : paper.index("# 4. Comparison")]
 
-    assert f"{totals['planned']:,} mutants" in section, totals["planned"]
-    assert f"**{totals['equivalent']} of {totals['planned']:,} — 0.00%**" in section
-    assert f"**{totals['duplicate']} of {totals['planned']:,} — " in section
+    assert f"**{totals['planned']:,} mutants**" in section, totals["planned"]
+    assert f"**{totals['equivalent']} of {totals['planned']:,} — " in section
+    assert f"{totals['equivalent_share'] * 100:.3f}%" in section, totals["equivalent_share"]
+    assert f"**{totals['duplicate']:,} of {totals['planned']:,} — " in section
     assert f"{totals['duplicate_share'] * 100:.2f}%" in section, totals["duplicate_share"]
+    assert f"{len(measured['repositories'])} sources" in section
 
     by_operator = {}
     for repo in measured["repositories"]:
         for operator, counts in repo.get("by_operator", {}).items():
-            row = by_operator.setdefault(operator, {"planned": 0, "duplicate": 0})
-            row["planned"] += counts.get("planned", 0)
-            row["duplicate"] += counts.get("duplicate", 0)
+            row = by_operator.setdefault(operator, {"planned": 0, "duplicate": 0, "equivalent": 0})
+            for key in row:
+                row[key] += counts.get(key, 0)
 
-    worst = max(by_operator, key=lambda k: by_operator[k]["duplicate"])
-    row = by_operator[worst]
-    assert f"`{worst}`" in section, worst
-    assert f"| {row['planned']:,} | **{row['duplicate']}** |" in section, row
-    share = row["duplicate"] / row["planned"]
-    assert f"**{share * 100:.1f}%**" in section, f"{share * 100:.1f}"
+    for key, places in (("duplicate", 1), ("equivalent", 2)):
+        worst = max(by_operator, key=lambda k: by_operator[k][key])
+        row = by_operator[worst]
+        share = row[key] / row["planned"]
+        assert f"`{worst}`" in section, (key, worst)
+        assert f"**{row[key]:,} — {share * 100:.{places}f}%**" in section, (
+            key,
+            worst,
+            f"{row[key]:,} — {share * 100:.{places}f}%",
+        )
 
-    zeroes = {k: v for k, v in by_operator.items() if v["duplicate"] == 0}
-    assert f"the other {_WORDS[len(zeroes)]}" in section, (
-        f"{len(zeroes)} operators have no duplicates and the table says otherwise"
+    # The "the other N" row: its label must count the operators the table does not list
+    # by name, and its counts must be their sum. Written after the first version of this
+    # check conflated that row with "operators producing neither", which are different
+    # sets - the row covers seven operators and only four produce neither.
+    listed = {k for k in by_operator if f"| `{k}` |" in section}
+    rest = {k: v for k, v in by_operator.items() if k not in listed}
+    assert listed, "no operator row was found in the table"
+    assert f"the other {_WORDS[len(rest)]}" in section, (
+        f"the table names {len(listed)} operators, leaving {len(rest)}, and its summary "
+        f"row says otherwise"
     )
+    assert f"| {sum(v['planned'] for v in rest.values()):,} |" in section
+    assert f"| {sum(v['duplicate'] for v in rest.values())} — " in section
+
+    clean = {k for k, v in by_operator.items() if not v["duplicate"] and not v["equivalent"]}
+    assert f"{_WORDS[len(clean)]} of the twelve operators producing neither" in paper, (
+        f"{len(clean)} operators produce neither an equivalent nor a duplicate mutant"
+    )
+
+
+def test_the_corpus_is_not_only_this_author_s_own_code(paper):
+    """The correction that changed the headline, asserted so it cannot be undone.
+
+    Five repositories by one author reported 0% equivalent. Nineteen packages installed
+    from PyPI reported 0.066%. The section has to say the corpus is mostly third-party,
+    because the first version of it did not and was wrong as a result.
+    """
+    measured = json.loads(TCE_RATE.read_text(encoding="utf-8"))
+    kinds = measured.get("by_kind", {})
+    assert "installed package" in kinds, "the measurement no longer covers installed packages"
+    third_party = kinds["installed package"]["sources"]
+    assert third_party >= 10, third_party
+    section = paper[paper.index("## 3.2 How many") : paper.index("# 4. Comparison")]
+    # The count in words, spelled from the data rather than matched as a fixed phrase:
+    # adding a package to the sweep must move the sentence too.
+    assert f"**{_WORDS[third_party]} third-party packages installed from PyPI**" in section, (
+        f"the corpus holds {third_party} installed packages"
+    )
+    own = kinds["repository"]
+    assert f"**0 of {own['planned']:,} equivalent**" in section, own
 
 
 _WORDS = {
@@ -364,6 +408,14 @@ _WORDS = {
     10: "ten",
     11: "eleven",
     12: "twelve",
+    13: "thirteen",
+    14: "fourteen",
+    15: "fifteen",
+    16: "sixteen",
+    17: "seventeen",
+    18: "eighteen",
+    19: "nineteen",
+    20: "twenty",
 }
 
 
@@ -376,7 +428,7 @@ def test_the_bound_on_the_filtered_median_is_arithmetic_not_assertion():
     k = summary["kill_rate_median"]
     all_killed = (k - d) / (1 - d)
     none_killed = k / (1 - d)
-    assert f"{all_killed:.3f}" == "0.842", f"{all_killed:.4f}"
-    assert f"{none_killed:.3f}" == "0.879", f"{none_killed:.4f}"
+    assert f"{all_killed:.3f}" == "0.839", f"{all_killed:.4f}"
+    assert f"{none_killed:.3f}" == "0.896", f"{none_killed:.4f}"
     paper = PAPER.read_text(encoding="utf-8")
     assert f"**[{all_killed:.3f}, {none_killed:.3f}]**" in paper

@@ -283,7 +283,14 @@ class TestWriteJson:
 
     def test_the_cli_creates_the_directory_it_is_given(self, tmp_path: Path) -> None:
         """The other half of the pair, so the guarantee lives somewhere."""
-        source = (ROOT / "src" / "suite_auditor" / "cli.py").read_text(encoding="utf-8")
+        # The repository's own source, which is not beside an installed wheel: CI's
+        # second job copies `tests/` alone next to the installed distribution. Reading
+        # a file out of `src/` is a checkout-only check, and skipping says so instead
+        # of raising FileNotFoundError from inside an assertion.
+        cli = ROOT / "src" / "suite_auditor" / "cli.py"
+        if not cli.is_file():
+            pytest.skip("src/ is not shipped with the tests")
+        source = cli.read_text(encoding="utf-8")
         assert "out.mkdir(parents=True, exist_ok=True)" in source, (
             "the CLI no longer creates --out, so write_json must"
         )

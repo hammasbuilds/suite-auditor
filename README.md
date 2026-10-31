@@ -197,24 +197,32 @@ set must not hold mutants that cannot be killed or mutants counted twice. Trivia
 Compiler Equivalence (Papadakis et al., ICSE 2015) settles both with the compiler: a
 mutant that compiles to the original's program is equivalent, two that compile to each
 other's are duplicates. It has been measured for C and Java and not for Python. Over
-**2,467 mutants** from these twelve operators across five real packages
+**43,557 mutants** from these twelve operators across 24 sources - five repositories and
+nineteen packages installed from PyPI
 ([research/results/tce_rate.json](https://github.com/hammasbuilds/suite-auditor/blob/main/research/results/tce_rate.json)):
 
 | | C (Papadakis et al.) | **Python (here)** |
 |---|---:|---:|
-| equivalent | > 7% | **0.00%** — 0 of 2,467 |
-| duplicate | > 21% | **3.57%** — 88 of 2,467 |
+| equivalent | > 7% | **0.062%** - 27 of 43,557 |
+| duplicate | > 21% | **5.38%** - 2,344 of 43,557 |
 
-The zero is a result rather than a silence: planted folded-constant mutants (`60 * 60`
-for `3600`) are detected on every test run, so the detector is known to work. Mutating
-the AST of a language whose compiler only folds constants does not produce trivially
-equivalent mutants.
+**Both rates are one operator each, not a property of the language.**
 
-The 3.57% is one operator. `negate_if` wraps an `if` test in `not`, so from
-`if not items:` it writes `if not not items:` — which compiles to exactly what `drop_not`
-writes, `if items:`. **78 of its 373 mutants, 20.9%, duplicate another operator's**;
-eight of the twelve operators produce none at all. The tool now filters before scoring
-and reports the counts in its JSON output.
+- `swallow_except` replaces an `except` body with `pass`. On a handler whose body is
+  `return None` that is the same program, because falling off the end of a function
+  returns `None`. **26 of its 606 mutants, 4.29%** - and 26 of the 27 equivalent mutants
+  found anywhere. They are unkillable by construction, so each was a guaranteed survivor
+  depressing the kill rate of its function.
+- `negate_if` wraps an `if` test in `not`, so from `if not items:` it writes
+  `if not not items:` - exactly what `drop_not` writes, `if items:`. **2,137 of its
+  9,062 mutants, 23.6%.**
+- Four of the twelve operators produce neither.
+
+The first version of this measurement covered the five repositories alone and reported
+**0 of 2,467 equivalent**, which is what a 0.062% rate predicts for a sample that size.
+Five repositories by one author are not a sample of Python; the nineteen PyPI packages
+are what turned the zero into a number. The tool now filters before scoring and reports
+the counts in its JSON output.
 
 **The budget exclusions, re-measured.** 63 packages were excluded for exceeding a
 budget - the largest exclusion that more compute could recover, so 12 of them were

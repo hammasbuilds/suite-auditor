@@ -37,7 +37,10 @@ RESULTS = ROOT / "research" / "results"
 
 def measure(repo: Path, cap: int) -> dict:
     """Every target in one repository, mutated and partitioned."""
-    totals = Counter()
+    # Seeded, not left to accumulate. A directory with no mutable function at all -
+    # `certifi` is one, four files of constants - produced a Counter with no keys, and
+    # the summary line crashed on KeyError rather than printing a row of zeroes.
+    totals = Counter({k: 0 for k in ("planned", "kept", "equivalent", "duplicate", "undecidable")})
     by_operator: dict[str, Counter] = {}
     functions = 0
     try:
@@ -78,14 +81,30 @@ def measure(repo: Path, cap: int) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--repo", action="append", required=True, type=Path)
+    parser.add_argument("--repo", action="append", default=[], type=Path)
+    parser.add_argument(
+        "--package-dir",
+        action="append",
+        default=[],
+        type=Path,
+        help=(
+            "an installed package directory, measured the same way. Five repositories "
+            "written by one author are not a sample of Python, and the first run over "
+            "third-party code changed the headline: `packaging` contains an equivalent "
+            "mutant and none of the five did."
+        ),
+    )
     parser.add_argument("--cap", type=int, default=8, help="mutants per function")
     parser.add_argument("--out", type=Path, default=RESULTS / "tce_rate.json")
     args = parser.parse_args()
 
+    if not args.repo and not args.package_dir:
+        parser.error("give at least one --repo or --package-dir")
+
     rows = []
-    for repo in args.repo:
+    for repo in [*args.repo, *args.package_dir]:
         row = measure(repo, args.cap)
+        row["kind"] = "repository" if repo in args.repo else "installed package"
         rows.append(row)
         if "error" in row:
             print(f"{row['repo']:22s} {row['error']}")
@@ -97,6 +116,20 @@ def main() -> int:
         )
 
     measured = [r for r in rows if "error" not in r]
+    by_kind = {}
+    for kind in ("repository", "installed package"):
+        group = [r for r in measured if r.get("kind") == kind]
+        if not group:
+            continue
+        p_ = sum(r["planned"] for r in group)
+        by_kind[kind] = {
+            "sources": len(group),
+            "planned": p_,
+            "equivalent": sum(r["equivalent"] for r in group),
+            "duplicate": sum(r["duplicate"] for r in group),
+            "equivalent_share": round(sum(r["equivalent"] for r in group) / p_, 6) if p_ else None,
+            "duplicate_share": round(sum(r["duplicate"] for r in group) / p_, 6) if p_ else None,
+        }
     planned = sum(r["planned"] for r in measured)
     equivalent = sum(r["equivalent"] for r in measured)
     duplicate = sum(r["duplicate"] for r in measured)
@@ -121,6 +154,7 @@ def main() -> int:
             "equivalent_share": round(equivalent / planned, 6) if planned else None,
             "duplicate_share": round(duplicate / planned, 6) if planned else None,
         },
+        "by_kind": by_kind,
         "repositories": rows,
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)

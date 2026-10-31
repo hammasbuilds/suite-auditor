@@ -17,12 +17,30 @@
   "swallow_except"
  ],
  "totals": {
-  "planned": 2467,
-  "equivalent": 0,
-  "duplicate": 88,
+  "planned": 43557,
+  "equivalent": 27,
+  "duplicate": 2344,
   "undecidable": 0,
-  "equivalent_share": 0.0,
-  "duplicate_share": 0.035671
+  "equivalent_share": 0.00062,
+  "duplicate_share": 0.053815
+ },
+ "by_kind": {
+  "repository": {
+   "sources": 5,
+   "planned": 2467,
+   "equivalent": 0,
+   "duplicate": 88,
+   "equivalent_share": 0.0,
+   "duplicate_share": 0.035671
+  },
+  "installed package": {
+   "sources": 19,
+   "planned": 41090,
+   "equivalent": 27,
+   "duplicate": 2256,
+   "equivalent_share": 0.000657,
+   "duplicate_share": 0.054904
+  }
  },
  "repositories": [
   {
@@ -71,7 +89,8 @@
      "planned": 28,
      "duplicate": 2
     }
-   }
+   },
+   "kind": "repository"
   },
   {
    "repo": "blast-radius",
@@ -123,7 +142,8 @@
      "planned": 9,
      "duplicate": 1
     }
-   }
+   },
+   "kind": "repository"
   },
   {
    "repo": "assay-drift",
@@ -170,7 +190,8 @@
     "swallow_except": {
      "planned": 4
     }
-   }
+   },
+   "kind": "repository"
   },
   {
    "repo": "flake-detective",
@@ -218,7 +239,8 @@
     "swallow_except": {
      "planned": 9
     }
-   }
+   },
+   "kind": "repository"
   },
   {
    "repo": "urdu-nlp-toolkit",
@@ -267,7 +289,935 @@
     "swallow_except": {
      "planned": 6
     }
-   }
+   },
+   "kind": "repository"
+  },
+  {
+   "repo": "packaging",
+   "functions_with_mutants": 417,
+   "planned": 1905,
+   "kept": 1753,
+   "equivalent": 1,
+   "duplicate": 151,
+   "undecidable": 0,
+   "equivalent_share": 0.000525,
+   "duplicate_share": 0.079265,
+   "by_operator": {
+    "binop": {
+     "planned": 55
+    },
+    "boolop": {
+     "planned": 166
+    },
+    "compare": {
+     "planned": 349,
+     "duplicate": 8
+    },
+    "const": {
+     "planned": 161
+    },
+    "drop_assert": {
+     "planned": 10
+    },
+    "drop_not": {
+     "planned": 156,
+     "duplicate": 1
+    },
+    "drop_raise": {
+     "planned": 95
+    },
+    "drop_return": {
+     "planned": 482
+    },
+    "negate_if": {
+     "planned": 372,
+     "duplicate": 141
+    },
+    "slice_lower": {
+     "planned": 7
+    },
+    "slice_upper": {
+     "planned": 31,
+     "duplicate": 1
+    },
+    "swallow_except": {
+     "planned": 21,
+     "equivalent": 1
+    }
+   },
+   "kind": "installed package"
+  },
+  {
+   "repo": "requests",
+   "functions_with_mutants": 208,
+   "planned": 815,
+   "kept": 755,
+   "equivalent": 0,
+   "duplicate": 60,
+   "undecidable": 0,
+   "equivalent_share": 0.0,
+   "duplicate_share": 0.07362,
+   "by_operator": {
+    "binop": {
+     "planned": 17
+    },
+    "boolop": {
+     "planned": 78
+    },
+    "compare": {
+     "planned": 142,
+     "duplicate": 2
+    },
+    "const": {
+     "planned": 63
+    },
+    "drop_assert": {
+     "planned": 13
+    },
+    "drop_not": {
+     "planned": 47
+    },
+    "drop_raise": {
+     "planned": 39
+    },
+    "drop_return": {
+     "planned": 189
+    },
+    "negate_if": {
+     "planned": 178,
+     "duplicate": 53
+    },
+    "slice_lower": {
+     "planned": 9
+    },
+    "slice_upper": {
+     "planned": 12
+    },
+    "swallow_except": {
+     "planned": 28,
+     "duplicate": 5
+    }
+   },
+   "kind": "installed package"
+  },
+  {
+   "repo": "urllib3",
+   "functions_with_mutants": 406,
+   "planned": 1610,
+   "kept": 1486,
+   "equivalent": 2,
+   "duplicate": 122,
+   "undecidable": 0,
+   "equivalent_share": 0.001242,
+   "duplicate_share": 0.075776,
+   "by_operator": {
+    "binop": {
+     "planned": 45
+    },
+    "boolop": {
+     "planned": 133
+    },
+    "compare": {
+     "planned": 257,
+     "duplicate": 4
+    },
+    "const": {
+     "planned": 159
+    },
+    "drop_assert": {
+     "planned": 6
+    },
+    "drop_not": {
+     "planned": 98,
+     "duplicate": 1
+    },
+    "drop_raise": {
+     "planned": 141
+    },
+    "drop_return": {
+     "planned": 350
+    },
+    "negate_if": {
+     "planned": 354,
+     "duplicate": 113
+    },
+    "slice_lower": {
+     "planned": 16,
+     "duplicate": 1
+    },
+    "slice_upper": {
+     "planned": 9,
+     "duplicate": 1
+    },
+    "swallow_except": {
+     "planned": 42,
+     "equivalent": 2,
+     "duplicate": 2
+    }
+   },
+   "kind": "installed package"
+  },
+  {
+   "repo": "rich",
+   "functions_with_mutants": 692,
+   "planned": 2618,
+   "kept": 2489,
+   "equivalent": 2,
+   "duplicate": 127,
+   "undecidable": 0,
+   "equivalent_share": 0.000764,
+   "duplicate_share": 0.04851,
+   "by_operator": {
+    "binop": {
+     "planned": 230
+    },
+    "boolop": {
+     "planned": 211
+    },
+    "compare": {
+     "planned": 388,
+     "duplicate": 6
+    },
+    "const": {
+     "planned": 422
+    },
+    "drop_assert": {
+     "planned": 40
+    },
+    "drop_not": {
+     "planned": 133,
+     "duplicate": 1
+    },
+    "drop_raise": {
+     "planned": 47
+    },
+    "drop_return": {
+     "planned": 602
+    },
+    "negate_if": {
+     "duplicate": 115,
+     "planned": 449
+    },
+    "slice_lower": {
+     "planned": 25
+    },
+    "slice_upper": {
+     "planned": 32,
+     "duplicate": 1
+    },
+    "swallow_except": {
+     "duplicate": 4,
+     "planned": 39,
+     "equivalent": 2
+    }
+   },
+   "kind": "installed package"
+  },
+  {
+   "repo": "pygments",
+   "functions_with_mutants": 715,
+   "planned": 3360,
+   "kept": 3250,
+   "equivalent": 2,
+   "duplicate": 108,
+   "undecidable": 0,
+   "equivalent_share": 0.000595,
+   "duplicate_share": 0.032143,
+   "by_operator": {
+    "binop": {
+     "planned": 275
+    },
+    "boolop": {
+     "planned": 234
+    },
+    "compare": {
+     "planned": 574,
+     "duplicate": 1
+    },
+    "const": {
+     "planned": 526,
+     "duplicate": 11
+    },
+    "drop_assert": {
+     "planned": 10
+    },
+    "drop_not": {
+     "planned": 79,
+     "duplicate": 1
+    },
+    "drop_raise": {
+     "planned": 73
+    },
+    "drop_return": {
+     "planned": 577,
+     "duplicate": 1
+    },
+    "negate_if": {
+     "planned": 782,
+     "duplicate": 92
+    },
+    "slice_lower": {
+     "planned": 88
+    },
+    "slice_upper": {
+     "planned": 104,
+     "duplicate": 2
+    },
+    "swallow_except": {
+     "planned": 38,
+     "equivalent": 2
+    }
+   },
+   "kind": "installed package"
+  },
+  {
+   "repo": "docutils",
+   "functions_with_mutants": 1533,
+   "planned": 6252,
+   "kept": 5910,
+   "equivalent": 3,
+   "duplicate": 339,
+   "undecidable": 0,
+   "equivalent_share": 0.00048,
+   "duplicate_share": 0.054223,
+   "by_operator": {
+    "binop": {
+     "planned": 523
+    },
+    "boolop": {
+     "planned": 345
+    },
+    "compare": {
+     "planned": 936,
+     "duplicate": 5
+    },
+    "const": {
+     "planned": 911,
+     "duplicate": 3
+    },
+    "drop_assert": {
+     "planned": 44
+    },
+    "drop_not": {
+     "planned": 369,
+     "duplicate": 1
+    },
+    "drop_raise": {
+     "planned": 270
+    },
+    "drop_return": {
+     "planned": 1016
+    },
+    "negate_if": {
+     "planned": 1461,
+     "duplicate": 313
+    },
+    "slice_lower": {
+     "planned": 146,
+     "duplicate": 1
+    },
+    "slice_upper": {
+     "planned": 98,
+     "duplicate": 7
+    },
+    "swallow_except": {
+     "planned": 133,
+     "duplicate": 9,
+     "equivalent": 3
+    }
+   },
+   "kind": "installed package"
+  },
+  {
+   "repo": "markdown_it",
+   "functions_with_mutants": 216,
+   "planned": 968,
+   "kept": 941,
+   "equivalent": 2,
+   "duplicate": 25,
+   "undecidable": 0,
+   "equivalent_share": 0.002066,
+   "duplicate_share": 0.025826,
+   "by_operator": {
+    "binop": {
+     "planned": 97
+    },
+    "boolop": {
+     "planned": 87
+    },
+    "compare": {
+     "planned": 142
+    },
+    "const": {
+     "planned": 129
+    },
+    "drop_assert": {
+     "planned": 5
+    },
+    "drop_not": {
+     "planned": 65
+    },
+    "drop_raise": {
+     "planned": 22
+    },
+    "drop_return": {
+     "planned": 195
+    },
+    "negate_if": {
+     "planned": 156,
+     "duplicate": 25
+    },
+    "slice_lower": {
+     "planned": 29
+    },
+    "slice_upper": {
+     "planned": 26
+    },
+    "swallow_except": {
+     "planned": 15,
+     "equivalent": 2
+    }
+   },
+   "kind": "installed package"
+  },
+  {
+   "repo": "more_itertools",
+   "functions_with_mutants": 243,
+   "planned": 1083,
+   "kept": 1031,
+   "equivalent": 1,
+   "duplicate": 51,
+   "undecidable": 0,
+   "equivalent_share": 0.000923,
+   "duplicate_share": 0.047091,
+   "by_operator": {
+    "binop": {
+     "planned": 111
+    },
+    "boolop": {
+     "planned": 38
+    },
+    "compare": {
+     "planned": 174,
+     "duplicate": 4
+    },
+    "const": {
+     "planned": 189
+    },
+    "drop_assert": {
+     "planned": 2
+    },
+    "drop_not": {
+     "planned": 26
+    },
+    "drop_raise": {
+     "planned": 74
+    },
+    "drop_return": {
+     "planned": 237,
+     "duplicate": 1
+    },
+    "negate_if": {
+     "duplicate": 43,
+     "planned": 177
+    },
+    "slice_lower": {
+     "planned": 13
+    },
+    "slice_upper": {
+     "planned": 10
+    },
+    "swallow_except": {
+     "planned": 32,
+     "duplicate": 3,
+     "equivalent": 1
+    }
+   },
+   "kind": "installed package"
+  },
+  {
+   "repo": "charset_normalizer",
+   "functions_with_mutants": 130,
+   "planned": 607,
+   "kept": 585,
+   "equivalent": 0,
+   "duplicate": 22,
+   "undecidable": 0,
+   "equivalent_share": 0.0,
+   "duplicate_share": 0.036244,
+   "by_operator": {
+    "binop": {
+     "planned": 23
+    },
+    "boolop": {
+     "planned": 45
+    },
+    "compare": {
+     "planned": 100
+    },
+    "const": {
+     "planned": 146
+    },
+    "drop_assert": {
+     "planned": 1
+    },
+    "drop_not": {
+     "planned": 36
+    },
+    "drop_raise": {
+     "planned": 15
+    },
+    "drop_return": {
+     "planned": 127
+    },
+    "negate_if": {
+     "planned": 98,
+     "duplicate": 22
+    },
+    "slice_lower": {
+     "planned": 5
+    },
+    "slice_upper": {
+     "planned": 5
+    },
+    "swallow_except": {
+     "planned": 6
+    }
+   },
+   "kind": "installed package"
+  },
+  {
+   "repo": "pathspec",
+   "functions_with_mutants": 85,
+   "planned": 383,
+   "kept": 356,
+   "equivalent": 0,
+   "duplicate": 27,
+   "undecidable": 0,
+   "equivalent_share": 0.0,
+   "duplicate_share": 0.070496,
+   "by_operator": {
+    "binop": {
+     "planned": 4
+    },
+    "boolop": {
+     "planned": 28
+    },
+    "compare": {
+     "planned": 75,
+     "duplicate": 1
+    },
+    "const": {
+     "planned": 31
+    },
+    "drop_assert": {
+     "planned": 17
+    },
+    "drop_not": {
+     "planned": 26
+    },
+    "drop_raise": {
+     "planned": 27
+    },
+    "drop_return": {
+     "planned": 81
+    },
+    "negate_if": {
+     "planned": 83,
+     "duplicate": 26
+    },
+    "slice_lower": {
+     "planned": 4
+    },
+    "slice_upper": {
+     "planned": 4
+    },
+    "swallow_except": {
+     "planned": 3
+    }
+   },
+   "kind": "installed package"
+  },
+  {
+   "repo": "certifi",
+   "functions_with_mutants": 0,
+   "planned": 0,
+   "kept": 0,
+   "equivalent": 0,
+   "duplicate": 0,
+   "undecidable": 0,
+   "equivalent_share": null,
+   "duplicate_share": null,
+   "by_operator": {},
+   "kind": "installed package"
+  },
+  {
+   "repo": "idna",
+   "functions_with_mutants": 45,
+   "planned": 209,
+   "kept": 205,
+   "equivalent": 0,
+   "duplicate": 4,
+   "undecidable": 0,
+   "equivalent_share": 0.0,
+   "duplicate_share": 0.019139,
+   "by_operator": {
+    "binop": {
+     "planned": 14
+    },
+    "boolop": {
+     "planned": 13
+    },
+    "compare": {
+     "planned": 29
+    },
+    "const": {
+     "planned": 34,
+     "duplicate": 1
+    },
+    "drop_not": {
+     "duplicate": 1,
+     "planned": 19
+    },
+    "drop_raise": {
+     "planned": 20
+    },
+    "drop_return": {
+     "planned": 41
+    },
+    "negate_if": {
+     "planned": 28,
+     "duplicate": 2
+    },
+    "slice_lower": {
+     "planned": 4
+    },
+    "slice_upper": {
+     "planned": 4
+    },
+    "swallow_except": {
+     "planned": 3
+    }
+   },
+   "kind": "installed package"
+  },
+  {
+   "repo": "yaml",
+   "functions_with_mutants": 265,
+   "planned": 1223,
+   "kept": 1126,
+   "equivalent": 0,
+   "duplicate": 97,
+   "undecidable": 0,
+   "equivalent_share": 0.0,
+   "duplicate_share": 0.079313,
+   "by_operator": {
+    "binop": {
+     "planned": 50
+    },
+    "boolop": {
+     "planned": 95
+    },
+    "compare": {
+     "planned": 196,
+     "duplicate": 3
+    },
+    "const": {
+     "planned": 136
+    },
+    "drop_assert": {
+     "planned": 2
+    },
+    "drop_not": {
+     "planned": 119,
+     "duplicate": 1
+    },
+    "drop_raise": {
+     "planned": 87
+    },
+    "drop_return": {
+     "planned": 225
+    },
+    "negate_if": {
+     "duplicate": 93,
+     "planned": 282
+    },
+    "slice_lower": {
+     "planned": 17
+    },
+    "slice_upper": {
+     "planned": 12
+    },
+    "swallow_except": {
+     "planned": 2
+    }
+   },
+   "kind": "installed package"
+  },
+  {
+   "repo": "readme_renderer",
+   "functions_with_mutants": 8,
+   "planned": 47,
+   "kept": 40,
+   "equivalent": 0,
+   "duplicate": 7,
+   "undecidable": 0,
+   "equivalent_share": 0.0,
+   "duplicate_share": 0.148936,
+   "by_operator": {
+    "binop": {
+     "planned": 1
+    },
+    "boolop": {
+     "planned": 1
+    },
+    "compare": {
+     "planned": 9
+    },
+    "const": {
+     "planned": 3
+    },
+    "drop_not": {
+     "planned": 5
+    },
+    "drop_raise": {
+     "planned": 2
+    },
+    "drop_return": {
+     "planned": 10
+    },
+    "negate_if": {
+     "planned": 13,
+     "duplicate": 7
+    },
+    "swallow_except": {
+     "planned": 3
+    }
+   },
+   "kind": "installed package"
+  },
+  {
+   "repo": "pluggy",
+   "functions_with_mutants": 64,
+   "planned": 227,
+   "kept": 209,
+   "equivalent": 0,
+   "duplicate": 18,
+   "undecidable": 0,
+   "equivalent_share": 0.0,
+   "duplicate_share": 0.079295,
+   "by_operator": {
+    "binop": {
+     "planned": 12
+    },
+    "boolop": {
+     "planned": 17
+    },
+    "compare": {
+     "planned": 45,
+     "duplicate": 1
+    },
+    "const": {
+     "planned": 19
+    },
+    "drop_assert": {
+     "planned": 11
+    },
+    "drop_not": {
+     "planned": 9
+    },
+    "drop_raise": {
+     "planned": 13
+    },
+    "drop_return": {
+     "planned": 53
+    },
+    "negate_if": {
+     "planned": 38,
+     "duplicate": 16
+    },
+    "slice_lower": {
+     "planned": 1
+    },
+    "slice_upper": {
+     "planned": 2,
+     "duplicate": 1
+    },
+    "swallow_except": {
+     "planned": 7
+    }
+   },
+   "kind": "installed package"
+  },
+  {
+   "repo": "twine",
+   "functions_with_mutants": 96,
+   "planned": 349,
+   "kept": 321,
+   "equivalent": 1,
+   "duplicate": 27,
+   "undecidable": 0,
+   "equivalent_share": 0.002865,
+   "duplicate_share": 0.077364,
+   "by_operator": {
+    "binop": {
+     "planned": 9
+    },
+    "boolop": {
+     "planned": 18
+    },
+    "compare": {
+     "planned": 49,
+     "duplicate": 1
+    },
+    "const": {
+     "planned": 29,
+     "equivalent": 1
+    },
+    "drop_assert": {
+     "planned": 3
+    },
+    "drop_not": {
+     "planned": 24
+    },
+    "drop_raise": {
+     "planned": 36
+    },
+    "drop_return": {
+     "planned": 89
+    },
+    "negate_if": {
+     "duplicate": 26,
+     "planned": 79
+    },
+    "slice_lower": {
+     "planned": 3
+    },
+    "swallow_except": {
+     "planned": 10
+    }
+   },
+   "kind": "installed package"
+  },
+  {
+   "repo": "keyring",
+   "functions_with_mutants": 134,
+   "planned": 390,
+   "kept": 357,
+   "equivalent": 1,
+   "duplicate": 32,
+   "undecidable": 0,
+   "equivalent_share": 0.002564,
+   "duplicate_share": 0.082051,
+   "by_operator": {
+    "binop": {
+     "planned": 9
+    },
+    "boolop": {
+     "planned": 21
+    },
+    "compare": {
+     "planned": 45
+    },
+    "const": {
+     "planned": 36
+    },
+    "drop_assert": {
+     "planned": 2
+    },
+    "drop_not": {
+     "planned": 24
+    },
+    "drop_raise": {
+     "planned": 51
+    },
+    "drop_return": {
+     "planned": 108
+    },
+    "negate_if": {
+     "duplicate": 32,
+     "planned": 75
+    },
+    "slice_lower": {
+     "planned": 1
+    },
+    "swallow_except": {
+     "planned": 18,
+     "equivalent": 1
+    }
+   },
+   "kind": "installed package"
+  },
+  {
+   "repo": "mypy",
+   "functions_with_mutants": 4552,
+   "planned": 19044,
+   "kept": 17993,
+   "equivalent": 12,
+   "duplicate": 1039,
+   "undecidable": 0,
+   "equivalent_share": 0.00063,
+   "duplicate_share": 0.054558,
+   "by_operator": {
+    "binop": {
+     "planned": 667
+    },
+    "boolop": {
+     "planned": 1908
+    },
+    "compare": {
+     "planned": 3224,
+     "duplicate": 30
+    },
+    "const": {
+     "planned": 1772,
+     "duplicate": 26
+    },
+    "drop_assert": {
+     "planned": 863
+    },
+    "drop_not": {
+     "planned": 1462,
+     "duplicate": 13
+    },
+    "drop_raise": {
+     "planned": 354
+    },
+    "drop_return": {
+     "planned": 4242
+    },
+    "negate_if": {
+     "planned": 4064,
+     "duplicate": 940
+    },
+    "slice_lower": {
+     "planned": 195,
+     "duplicate": 3
+    },
+    "slice_upper": {
+     "planned": 143,
+     "duplicate": 20
+    },
+    "swallow_except": {
+     "planned": 150,
+     "equivalent": 12,
+     "duplicate": 7
+    }
+   },
+   "kind": "installed package"
+  },
+  {
+   "repo": "pytest",
+   "functions_with_mutants": 0,
+   "planned": 0,
+   "kept": 0,
+   "equivalent": 0,
+   "duplicate": 0,
+   "undecidable": 0,
+   "equivalent_share": null,
+   "duplicate_share": null,
+   "by_operator": {},
+   "kind": "installed package"
   }
  ]
 }

@@ -76,9 +76,11 @@ of the top 1,000 cannot be audited at all.
 1. The **auditability funnel** over PyPI's top 1,000, with Wilson intervals at each stage
    and both unconditional and conditional readings (§3).
 2. **Trivial Compiler Equivalence transferred to Python**, with the measurement the
-   literature does not have: 0% equivalent and 3.57% duplicate over 2,467 mutants,
-   against over 7% and over 21% for C, and the duplicates concentrated at 20.9% in a
-   single operator (§3.2).
+   literature does not have: **0.062% equivalent and 5.38% duplicate over 43,557
+   mutants** from 24 sources, against over 7% and over 21% for C — and both rates
+   concentrated in a single operator each, 4.29% equivalent for `swallow_except` and
+   23.6% duplicate for `negate_if`, with four of the twelve operators producing neither
+   (§3.2).
 3. **Proof-backed gap reporting** — a surviving mutant is a finding only with a witness,
    and refusals carry reasons (§2).
 4. A comparison with `cosmic-ray` locating a gap outside its operator set, and the
@@ -200,59 +202,81 @@ be killed and of mutants counted twice. Papadakis et al. [@tce2015] settle both 
 compiler rather than with analysis: compile every mutant, and if one compiles to the
 original's binary it is **equivalent**; if two compile to each other's they are
 **duplicates**. On large C programs they discard over 7% as equivalent and over 21% as
-duplicates, and report that the detection rate against hand-analysed ground truth is about
-30% for C against about 54% for Java — a gap they attribute to mutation characteristics
-being language-dependent.
+duplicates, and report a detection rate against hand-analysed ground truth of about 30%
+for C against about 54% for Java — a gap they attribute to mutation characteristics being
+language-dependent.
 
 Python is not in that series, and the reason usually given — CPython has no optimising
-compiler, so nothing collapses two programs into one form — is a hypothesis. We tested it.
+compiler, so nothing collapses two programs into one form — is a hypothesis.
 `src/suite_auditor/tce.py` compiles each mutant and canonicalises the result: the
-instruction stream with every operand resolved to the value it names, the function's name
-and docstring, and the exception table, with filenames, line numbers and position tables
-dropped. Over **2,467 mutants** from this tool's twelve operators across five real Python
-packages:
+instruction stream with every operand resolved to the value it names, plus the function's
+name, its docstring and its exception table, with filenames, line numbers and position
+tables dropped. Not `co_code`: CPython folds `60 * 60` to `3600` and then leaves the
+unused `60` in `co_consts`, so the folded mutant and the literal original have identical
+instructions over different tables and different operands, and comparing bytes calls them
+different — which is the textbook equivalent mutant, missed.
+
+Over **43,557 mutants** from this tool's twelve operators across 24 sources: five
+repositories and **nineteen third-party packages installed from PyPI**.
 
 | | C [@tce2015] | **Python (this work)** |
 |---|---:|---:|
-| equivalent | > 7% | **0 of 2,467 — 0.00%** |
-| duplicate | > 21% | **88 of 2,467 — 3.57%** |
+| equivalent | > 7% | **27 of 43,557 — 0.062%** |
+| duplicate | > 21% | **2,344 of 43,557 — 5.38%** |
 
-**The zero is a result, and it is only a result because the detector was shown to work.**
-`compile()` folds `60 * 60` to `3600`, and a planted mutant that replaces the literal with
-the product is detected as equivalent; so is folding inside a larger expression. Those
-plants, and the converse — that a genuinely different mutant is never called equivalent —
-run on every suite run. What produces the zero is that these operators mutate the AST, and
-the one normalisation CPython performs before emitting bytecode is constant folding, which
-an AST-level edit reaches only by arriving at the original's value. Mutation on a language
-whose compiler does not optimise does not generate trivially equivalent mutants.
+Both are smaller than C by two orders of magnitude and one respectively, and neither is
+zero. The first run of this measurement covered only the five repositories and reported
+**0 of 2,467 equivalent**, which is what a rate of 0.062% predicts for a sample that size
+(1.5 expected) and is not evidence that this author's code differs. The nineteen
+third-party packages are in the corpus because five repositories by one author are not a
+sample of Python, and adding them is what turned a zero into a number.
 
-**The 3.57% is not diffuse. It is one operator.**
+**Neither rate is a property of Python. Both are properties of one operator each.**
 
-| operator | mutants | duplicates | share |
+| operator | mutants | equivalent | duplicate |
 |---|---:|---:|---:|
-| `negate_if` | 373 | **78** | **20.9%** |
-| `swallow_except` | 56 | 3 | 5.4% |
-| `compare` | 368 | 4 | 1.1% |
-| `const` | 367 | 3 | 0.8% |
-| the other eight | 1,303 | **0** | 0% |
+| `swallow_except` | 606 | **26 — 4.29%** | 33 — 5.4% |
+| `negate_if` | 9,062 | 0 | **2,137 — 23.6%** |
+| `const` | 5,133 | 1 — 0.02% | 44 — 0.9% |
+| `slice_upper` | 554 | 0 | 33 — 6.0% |
+| `compare` | 7,102 | 0 | 70 — 1.0% |
+| the other seven | 21,100 | **0** | 27 — 0.1% |
 
-`negate_if` wraps an `if` test in `not`. Applied to `if not items:` it produces
-`if not not items:`, which compiles to exactly what `drop_not` produces from the same
-line — `if items:`. Applied to `if x is None:` it produces `if not x is None:`, which is
-`compare`'s `if x is not None:`. One in five of that operator's mutants is a program the
-set already contains, and a kill rate over the unfiltered set weights those functions
-twice.
+`swallow_except` replaces an `except` body with `pass`. Applied to a handler whose body
+is `return None` it writes a program CPython compiles identically, because falling off
+the end of a function returns `None`. The instance in `packaging` is the whole mechanism:
+
+```python
+try:
+    return __import__("_manylinux")
+except ImportError:
+    return None  # mutated to: pass
+```
+
+26 of the 27 equivalent mutants are that shape. The twenty-seventh is `const` in `twine`:
+`hashlib.blake2b(digest_size=256 // 8)` mutated to `257 // 8`, and CPython folds both to
+`32` before emitting a constant. All of them are unkillable by construction — no test can
+distinguish them — so every one was a guaranteed survivor depressing the kill rate of
+whatever function it was in.
+
+`negate_if` wraps an `if` test in `not`. From `if not items:` it writes
+`if not not items:`, which compiles to exactly what `drop_not` writes from the same line,
+`if items:`; from `if x is None:` it writes `if not x is None:`, which is `compare`'s
+`if x is not None:`. Nearly a quarter of that operator's mutants are a program the set
+already contains.
 
 **What this changes, and what it does not.** The tool now filters before scoring and
-publishes the counts in its JSON, so a reader can see which set a rate was taken over. The
-112 published audits were run before the filter existed, and re-running a thousand-package
-census is not affordable, so the effect on §3's medians is given as a bound rather than a
-correction. A duplicate is killed exactly when its twin is, so removing $d$ of $N$ mutants
-of which $k$ were killed takes $K/N$ to $(K-k)/(N-d)$: at $d/N = 0.0357$ and a median kill
-rate of 0.848, the filtered median lies in **[0.842, 0.879]** — the endpoints being all
-duplicates killed and none killed. The direction is not determined and the interval is
-narrow enough that no claim in §3 turns on it, which is why it is published as an interval
-rather than used to restate the medians.
+publishes the counts in its JSON output, so a reader can see which set a rate was taken
+over. The 112 published audits were run before the filter existed, and re-running a
+thousand-package census is not affordable, so the effect on §3's medians is given as a
+bound rather than a correction. A duplicate is killed exactly when its twin is, so
+removing $d$ of $N$ mutants of which $k$ were killed takes $K/N$ to $(K-k)/(N-d)$: at
+$d/N = 0.0538$ and a median kill rate of 0.848, the filtered median lies in
+**[0.839, 0.896]**, the endpoints being all duplicates killed and none killed. Equivalent
+mutants move it the other way and unambiguously: every one is a survivor, so removing
+0.062% of mutants that were all counted as unkilled raises the rate very slightly. The
+interval is narrow enough that no claim in §3 turns on it, which is why it is published
+as an interval rather than used to restate the medians.
 
 # 4. Comparison with `cosmic-ray`
 
@@ -297,9 +321,9 @@ have scored.
 **A kill rate depends on the operator set** (§4), so the median 0.848 is this tool's
 operator set on these packages and is not comparable to a figure from another tool.
 
-**The published rates were measured before the duplicate filter.** §3.2 bounds the
-effect at [0.842, 0.879] around a median of 0.848 and does not resolve it. A census run
-after the filter would resolve it, and has not been run.
+**The published rates were measured before the TCE filter.** §3.2 bounds the effect at
+[0.839, 0.896] around a median of 0.848 and does not resolve it. A census run after the
+filter would resolve it, and has not been run.
 
 **Proven gaps are a lower bound.** The tool refuses what it cannot witness, so the 45.5%
 counts only provable gaps; the true share of packages with a real gap is higher by an

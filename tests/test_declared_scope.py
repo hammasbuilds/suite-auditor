@@ -22,6 +22,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from suite_auditor.mutate import declared_packages, find_targets, in_scope  # noqa: E402
@@ -157,6 +159,12 @@ class TestScopeApplied:
 
     def test_this_repository_sees_only_its_own_package(self) -> None:
         """The case that found it: `targets/` must not be audited as ours."""
+        # The repository's own source, which is not beside an installed wheel: CI's
+        # second job copies `tests/` alone next to the installed distribution. Walking
+        # `src/` is a checkout-only check, and skipping says so instead
+        # of raising FileNotFoundError from inside an assertion.
+        if not (REPO / "src" / "suite_auditor").is_dir():
+            pytest.skip("src/ is not shipped with the tests")
         scope = declared_packages(REPO)
         assert scope == [REPO / "src" / "suite_auditor"]
         paths = {t.path.split("/")[0] for t in find_targets(REPO)}

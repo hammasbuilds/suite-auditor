@@ -16,9 +16,22 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
-from target_census import MAX_INFRA_RETRIES, _is_infra_failure  # noqa: E402
+# `scripts/` is not part of the wheel, and CI's second job copies only `tests/` next to
+# an installed distribution. These two modules import `target_census` from `scripts/` at
+# module level, so that job failed at *collection* with ModuleNotFoundError - a hard
+# error, not a skip, and it took the whole job down rather than the two files. Importing
+# under a guard turns it into the skip every other repo-only test in this suite already
+# uses. The import stays at module level so the tests still run in a checkout.
+
+target_census = pytest.importorskip(
+    "target_census", reason="scripts/ is not shipped with the tests"
+)
+MAX_INFRA_RETRIES = target_census.MAX_INFRA_RETRIES
+_is_infra_failure = target_census._is_infra_failure
 
 DISK_FULL = "install failed:   Caused by: failed to write to file "
 TIMEOUT = "candidate failed: TimeoutExpired: Command '['uv', 'pip', 'install', '-q'"
