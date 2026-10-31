@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 from target_census import MAX_INFRA_RETRIES, _is_infra_failure  # noqa: E402
 
-DISK_FULL = ("install failed:   Caused by: failed to write to file ")
+DISK_FULL = "install failed:   Caused by: failed to write to file "
 TIMEOUT = "candidate failed: TimeoutExpired: Command '['uv', 'pip', 'install', '-q'"
 REAL = "sdist has no test directory"
 
@@ -35,8 +35,7 @@ def row(excluded: str, retries: int | None = None) -> dict:
 def retried(rows: list[dict]) -> list[dict]:
     """The selection the census makes on resume."""
     return [
-        r for r in rows
-        if _is_infra_failure(r) and r.get("infra_retries", 0) < MAX_INFRA_RETRIES
+        r for r in rows if _is_infra_failure(r) and r.get("infra_retries", 0) < MAX_INFRA_RETRIES
     ]
 
 

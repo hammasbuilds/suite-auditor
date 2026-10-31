@@ -62,8 +62,13 @@ def wilson(successes: int, n: int, z: float = 1.96) -> dict | None:
     d = 1 + z * z / n
     centre = (p + z * z / (2 * n)) / d
     half = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d
-    return {"rate": round(p, 4), "lo": round(max(0.0, centre - half), 4),
-            "hi": round(min(1.0, centre + half), 4), "n": n, "k": successes}
+    return {
+        "rate": round(p, 4),
+        "lo": round(max(0.0, centre - half), 4),
+        "hi": round(min(1.0, centre + half), 4),
+        "n": n,
+        "k": successes,
+    }
 
 
 def audited(rows: list[dict]) -> list[dict]:
@@ -124,8 +129,13 @@ def distribution(values: list[float]) -> dict | None:
         return round(values[min(n - 1, int(p * n))], 4)
 
     return {
-        "n": n, "min": round(values[0], 4), "p25": q(0.25), "median": q(0.5),
-        "p75": q(0.75), "p90": q(0.90), "max": round(values[-1], 4),
+        "n": n,
+        "min": round(values[0], 4),
+        "p25": q(0.25),
+        "median": q(0.5),
+        "p75": q(0.75),
+        "p90": q(0.90),
+        "max": round(values[-1], 4),
         "mean": round(statistics.fmean(values), 4),
         "stdev": round(statistics.stdev(values), 4) if n > 1 else None,
     }
@@ -135,9 +145,7 @@ def audit_distributions(rows: list[dict]) -> dict:
     done = audited(rows)
     return {
         "kill_rate": distribution([r["audit"].get("kill_rate") for r in done]),
-        "covered_fraction": distribution(
-            [r["audit"].get("covered_fraction") for r in done]
-        ),
+        "covered_fraction": distribution([r["audit"].get("covered_fraction") for r in done]),
         # Kill rate is measured only over functions a passing test reaches (`audit.py`
         # mutates `[t for t in targets if t.covering_tests]`), so it is conditional on
         # coverage and the two are not comparable to each other. Their product is the
@@ -145,15 +153,11 @@ def audit_distributions(rows: list[dict]) -> dict:
         # reached and checked - and it is the number a reader should take away. The
         # median kill rate of 0.85 and the median caught share are different claims.
         "caught_share": distribution([r["audit"].get("caught_share") for r in done]),
-        "proven_gaps": distribution(
-            [float(r["audit"].get("proven_gaps") or 0) for r in done]
-        ),
+        "proven_gaps": distribution([float(r["audit"].get("proven_gaps") or 0) for r in done]),
         "packages_with_a_proven_gap": wilson(
             sum(1 for r in done if r["audit"].get("proven_gaps")), len(done)
         ),
-        "mutants_scored": distribution(
-            [float(r["audit"].get("scored") or 0) for r in done]
-        ),
+        "mutants_scored": distribution([float(r["audit"].get("scored") or 0) for r in done]),
     }
 
 

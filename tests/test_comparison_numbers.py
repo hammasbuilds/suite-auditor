@@ -114,7 +114,7 @@ def test_no_function_went_unreached() -> None:
 
 
 def test_the_disagreeing_input_count_is_the_audits() -> None:
-    """"6 of the 64 argument sets disagree" is a measurement, not a flourish."""
+    """ "6 of the 64 argument sets disagree" is a measurement, not a flourish."""
     audit = _audit()
     gap = next(r for r in audit["results"] if r["verdict"] == "proven-gap")
     match = re.search(r"(\d+) of (\d+) inputs disagree", gap["detail"])

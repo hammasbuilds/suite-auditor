@@ -44,33 +44,43 @@ def package(repo: Path, where: str) -> None:
 class TestDeclaredPackages:
     def test_hatch(self, tmp_path: Path) -> None:
         package(tmp_path, "src/mine")
-        write(tmp_path, "pyproject.toml",
-              '[tool.hatch.build.targets.wheel]\npackages = ["src/mine"]\n')
+        write(
+            tmp_path,
+            "pyproject.toml",
+            '[tool.hatch.build.targets.wheel]\npackages = ["src/mine"]\n',
+        )
         assert declared_packages(tmp_path) == [tmp_path / "src/mine"]
 
     def test_hatch_only_include(self, tmp_path: Path) -> None:
         package(tmp_path, "src/mine")
-        write(tmp_path, "pyproject.toml",
-              '[tool.hatch.build.targets.wheel]\nonly-include = ["src/mine"]\n')
+        write(
+            tmp_path,
+            "pyproject.toml",
+            '[tool.hatch.build.targets.wheel]\nonly-include = ["src/mine"]\n',
+        )
         assert declared_packages(tmp_path) == [tmp_path / "src/mine"]
 
     def test_setuptools_find_where(self, tmp_path: Path) -> None:
         package(tmp_path, "src/mine")
-        write(tmp_path, "pyproject.toml",
-              '[tool.setuptools.packages.find]\nwhere = ["src"]\n')
+        write(tmp_path, "pyproject.toml", '[tool.setuptools.packages.find]\nwhere = ["src"]\n')
         assert declared_packages(tmp_path) == [tmp_path / "src"]
 
     def test_setuptools_package_dir(self, tmp_path: Path) -> None:
         package(tmp_path, "lib/mine")
-        write(tmp_path, "pyproject.toml",
-              '[tool.setuptools]\npackages = ["mine"]\n\n'
-              '[tool.setuptools.package-dir]\n"" = "lib"\n')
+        write(
+            tmp_path,
+            "pyproject.toml",
+            '[tool.setuptools]\npackages = ["mine"]\n\n[tool.setuptools.package-dir]\n"" = "lib"\n',
+        )
         assert declared_packages(tmp_path) == [tmp_path / "lib/mine", tmp_path / "lib"]
 
     def test_poetry(self, tmp_path: Path) -> None:
         package(tmp_path, "src/mine")
-        write(tmp_path, "pyproject.toml",
-              '[tool.poetry]\nname = "mine"\npackages = [{include = "mine", from = "src"}]\n')
+        write(
+            tmp_path,
+            "pyproject.toml",
+            '[tool.poetry]\nname = "mine"\npackages = [{include = "mine", from = "src"}]\n',
+        )
         assert declared_packages(tmp_path) == [tmp_path / "src/mine"]
 
     def test_flit(self, tmp_path: Path) -> None:
@@ -97,8 +107,11 @@ class TestDeclaredPackages:
     def test_a_declaration_naming_something_absent_is_ignored(self, tmp_path: Path) -> None:
         """It describes a build step, not a source tree."""
         package(tmp_path, "src/mine")
-        write(tmp_path, "pyproject.toml",
-              '[tool.hatch.build.targets.wheel]\npackages = ["src/mine", "src/generated"]\n')
+        write(
+            tmp_path,
+            "pyproject.toml",
+            '[tool.hatch.build.targets.wheel]\npackages = ["src/mine", "src/generated"]\n',
+        )
         assert declared_packages(tmp_path) == [tmp_path / "src/mine"]
 
     def test_a_declaration_pointing_outside_the_repo_is_ignored(self, tmp_path: Path) -> None:
@@ -106,20 +119,29 @@ class TestDeclaredPackages:
         outside.mkdir(exist_ok=True)
         repo = tmp_path / "repo"
         package(repo, "src/mine")
-        write(repo, "pyproject.toml",
-              '[tool.hatch.build.targets.wheel]\npackages = ["src/mine", "../elsewhere"]\n')
+        write(
+            repo,
+            "pyproject.toml",
+            '[tool.hatch.build.targets.wheel]\npackages = ["src/mine", "../elsewhere"]\n',
+        )
         assert declared_packages(repo) == [repo / "src/mine"]
 
 
 class TestScopeApplied:
     def test_a_vendored_project_is_not_counted(self, tmp_path: Path) -> None:
         package(tmp_path, "src/mine")
-        write(tmp_path, "pyproject.toml",
-              '[tool.hatch.build.targets.wheel]\npackages = ["src/mine"]\n')
+        write(
+            tmp_path,
+            "pyproject.toml",
+            '[tool.hatch.build.targets.wheel]\npackages = ["src/mine"]\n',
+        )
         # Somebody else's package, vendored as a fixture.
         package(tmp_path, "targets/theirs/src/theirs")
-        write(tmp_path, "targets/theirs/src/theirs/more.py",
-              "def g():\n    return 2\n\n\ndef h():\n    return 3\n")
+        write(
+            tmp_path,
+            "targets/theirs/src/theirs/more.py",
+            "def g():\n    return 2\n\n\ndef h():\n    return 3\n",
+        )
         names = {t.name for t in find_targets(tmp_path)}
         assert names == {"f"}, f"vendored functions were counted: {names}"
 

@@ -38,7 +38,8 @@ def make_junction(link: Path, target: Path) -> bool:
         return False
     out = subprocess.run(
         ["cmd", "/c", "mklink", "/J", str(link), str(target)],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     return out.returncode == 0 and link.exists()
 

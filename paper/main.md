@@ -48,8 +48,26 @@ that scoring every file in a corpus is intractable [@mindthegap]. A GitHub minin
 finds mutation testing in practice diverging from the tools in the literature, with
 adoption driven by industry.
 
-What is missing is the denominator. Studies report on the projects they could audit; none
-reports how many they could not, or why. That number turns out to be most of them.
+**The denominator, and a claim this paper used to make about it.** An earlier draft said
+that no study reports how many projects it could *not* audit, or why. That is false, and
+it is the third absence-based claim in this author's related work to fail on a second
+literature pass; the other two were a novelty claim about executing dependency updates to
+detect behavioural breakage, and one about measuring in-domain against out-of-domain
+language identification. Teralizer
+[@teralizer] reports exactly such a funnel: of 632 RepoReapers projects **1.7% completed
+its pipeline**, with the attrition attributed per stage, and its stage percentages are
+given against both the full pool and the stage input — the two readings this paper also
+reports. Build-attrition studies make the same move outside mutation testing, one
+reporting 38% of snapshots buildable and another 62% of commits per project not
+compilable.
+
+The honest gap is narrower. Those funnels are Java, and they are reported in service of
+another contribution — a generalisation pipeline, a build-reproducibility study — rather
+than as the result. What this paper adds is the funnel **as the finding**, over a sample
+drawn by PyPI download rank rather than by GitHub stars, with a Wilson interval at every
+stage, and with the kill rates read back through it so the selection bias the funnel
+creates is attached to the numbers it biases (§5). The number itself is the point: most
+of the top 1,000 cannot be audited at all.
 
 **Contributions.**
 
@@ -216,8 +234,17 @@ figure here rebuilds from the repository without the 19 MB raw census.
 - [@mindthegap] *Mind the Gap: The Difference Between Coverage and Mutation Score Can Guide Testing Efforts.* arXiv:2309.02395.
 - *Static and Dynamic Comparison of Mutation Testing Tools for Python.* SBQS.
 - *cosmic-ray* — mutation testing for Python. <https://github.com/sixty-north/cosmic-ray>
+- [@teralizer] Glock, Bauer & Pinzger. *Teralizer: Semantics-Based Test Generalization
+  from Conventional Unit Tests to Property-Based Tests.* arXiv:2512.14475, December 2025.
+  Cited for its eligibility funnel; quoted from the abstract, which states the 632
+  projects and the 1.7% completion rate.
 
 > **Citation status.** The references were located by literature search and quoted from
-> search summaries, not read in full. In particular the claim in §1 that no comparable
-> study reports its excluded denominator rests on the absence of such a study in that
-> search and needs one confirmatory pass before submission.
+> search summaries, not read in full. The one claim flagged here for a confirmatory pass
+> — that no comparable study reports its excluded denominator — was given that pass and
+> **did not survive it**: Teralizer [@teralizer] reports a per-stage funnel over 632
+> projects against both denominators, and §1 now cites it and states a narrower gap. That
+> makes three absence-based claims across these papers that a second search overturned
+> and none that it confirmed, which is a fact about the method rather than about any one
+> claim: an absence found by literature search is not a result here, and the remaining
+> references still need reading in full before submission.

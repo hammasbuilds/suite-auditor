@@ -102,8 +102,7 @@ def test_caught_share_is_the_product_of_the_other_two(rows):
     checked = 0
     for row in metrics.audited(rows):
         audit = row["audit"]
-        k, c, s = (audit.get("kill_rate"), audit.get("covered_fraction"),
-                   audit.get("caught_share"))
+        k, c, s = (audit.get("kill_rate"), audit.get("covered_fraction"), audit.get("caught_share"))
         if None in (k, c, s):
             continue
         assert abs(k * c - s) < 1e-9, f"{row.get('name')}: {k} x {c} != {s}"
@@ -116,8 +115,12 @@ def test_caught_share_is_the_product_of_the_other_two(rows):
 
 @pytest.mark.parametrize(
     ("label", "key"),
-    [("kill rate", "kill_rate"), ("covered fraction", "covered_fraction"),
-     ("caught share", "caught_share"), ("proven gaps", "proven_gaps")],
+    [
+        ("kill rate", "kill_rate"),
+        ("covered fraction", "covered_fraction"),
+        ("caught share", "caught_share"),
+        ("proven gaps", "proven_gaps"),
+    ],
 )
 def test_median_column_matches_the_computed_median(paper, published, label, key):
     computed = published["distributions"][key]["median"]
@@ -178,8 +181,9 @@ def test_the_two_named_perfect_kill_rate_packages_are_real(rows, paper):
 # --- the figures exist and are referenced --------------------------------------------
 
 
-@pytest.mark.parametrize("name", ["fig1_funnel", "fig2_kill_rate_ecdf",
-                                  "fig3_coverage_vs_kill_rate", "fig4_proven_gaps"])
+@pytest.mark.parametrize(
+    "name", ["fig1_funnel", "fig2_kill_rate_ecdf", "fig3_coverage_vs_kill_rate", "fig4_proven_gaps"]
+)
 def test_each_figure_is_drawn_and_cited(paper, name):
     for suffix in (".png", ".pdf"):
         assert (FIGURES / f"{name}{suffix}").is_file(), f"{name}{suffix} was not drawn"
@@ -189,7 +193,8 @@ def test_each_figure_is_drawn_and_cited(paper, name):
 def test_every_caption_states_its_denominator(published):
     """A figure cannot reach a paper without its n - the house rule across all four."""
     captions = json.loads(
-        (ROOT / "research" / "results" / "captions.json").read_text(encoding="utf-8"))
+        (ROOT / "research" / "results" / "captions.json").read_text(encoding="utf-8")
+    )
     assert len(captions) == 4
     for name, caption in captions.items():
         assert re.search(r"n=\d|\b\d{1,3}(?:,\d{3})*\b", caption), (

@@ -111,8 +111,13 @@ def cmd_coverage(args: argparse.Namespace) -> int:
             "and (when there is no src/ at all) in .py files at the repo root."
         )
     roots = package_roots(repo, [t.path for t in targets])
-    trace = build_map(repo, test, python=python, extra_paths=roots,
-                      pytest_args=list(getattr(args, "pytest_arg", None) or []))
+    trace = build_map(
+        repo,
+        test,
+        python=python,
+        extra_paths=roots,
+        pytest_args=list(getattr(args, "pytest_arg", None) or []),
+    )
     cov, health = trace.cov, trace.health
     if not cov:
         if not health.ran:
@@ -164,8 +169,10 @@ def cmd_coverage(args: argparse.Namespace) -> int:
         print("    configuration (its addopts -m/-k settings), so the unreached list is")
         print("    relative to the tests that ran, not to the suite. To include them:")
         # The exact command, in the = form, because a bare -m is read as one of ours.
-        print(f"      suite-auditor coverage {args.repo} "
-              f'--pytest-arg=-m --pytest-arg="slow or not slow"')
+        print(
+            f"      suite-auditor coverage {args.repo} "
+            f'--pytest-arg=-m --pytest-arg="slow or not slow"'
+        )
 
     if broken:
         print("\n  only failing tests reach these (fix the tests first):")
@@ -249,7 +256,7 @@ def _common(p: argparse.ArgumentParser) -> None:
         "many tests the target's own addopts deselected and suggests re-running with the "
         "marker enabled; this is how. Use the = form for anything that starts with a "
         "dash, because argparse reads a bare -m as an option of ours: "
-        "--pytest-arg=-m --pytest-arg=\"slow or not slow\"",
+        '--pytest-arg=-m --pytest-arg="slow or not slow"',
     )
 
 

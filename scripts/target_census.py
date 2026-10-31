@@ -36,10 +36,10 @@ from __future__ import annotations
 import argparse
 import io
 import json
-import shutil
 import os
 import pathlib
 import re
+import shutil
 import subprocess
 import sys
 import tarfile
@@ -50,8 +50,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-TOP = ("https://raw.githubusercontent.com/hugovk/top-pypi-packages/main/"
-       "top-pypi-packages.min.json")
+TOP = "https://raw.githubusercontent.com/hugovk/top-pypi-packages/main/top-pypi-packages.min.json"
 # Matches a test FILE inside a test directory. Matching the directory entry
 # instead was a bug: most sdists list only files, so every project whose
 # tarball omits directory entries looked like it shipped no tests at all -
@@ -109,8 +108,11 @@ def audited_rows(results: list[dict]) -> list[dict]:
     scored_nothing(), published its medians over 110. Named so a test can hold the
     count to the predicate instead of re-implementing it.
     """
-    return [r for r in results
-            if isinstance(r, dict) and "audit" in r and not scored_nothing(r["audit"])]
+    return [
+        r
+        for r in results
+        if isinstance(r, dict) and "audit" in r and not scored_nothing(r["audit"])
+    ]
 
 
 def scored_nothing(audit: dict) -> str | None:
@@ -268,7 +270,6 @@ def test_dir(root: Path) -> Path | None:
     return None
 
 
-
 TEST_GROUP = re.compile(r"test|dev|check|^ci$", re.I)
 NOT_TEST_GROUP = re.compile(r"doc|bench|emscripten|lint|release|min|publish|typing", re.I)
 
@@ -285,6 +286,7 @@ def declared_groups(root: Path) -> list[str]:
         return []
     try:
         import tomllib
+
         data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
     except Exception:  # noqa: BLE001
         return []
@@ -298,9 +300,13 @@ def install_test_deps(root: Path, py: Path, pip) -> list[str]:
     """Install every test-ish group and extra. Returns what was actually applied."""
     applied = []
     for group in declared_groups(root):
-        done = subprocess.run(["uv", "pip", "install", "-q", "--python", str(py),
-                               "--group", group], cwd=root,
-                              capture_output=True, text=True, timeout=900)
+        done = subprocess.run(
+            ["uv", "pip", "install", "-q", "--python", str(py), "--group", group],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=900,
+        )
         if done.returncode == 0 and "was not found" not in (done.stderr or ""):
             applied.append(f"group:{group}")
     if not applied:
@@ -308,8 +314,14 @@ def install_test_deps(root: Path, py: Path, pip) -> list[str]:
             if pip(f"{root}[{extra}]").returncode == 0:
                 applied.append(f"extra:{extra}")
                 break
-    for req in ("test-requirements.txt", "requirements-test.txt", "dev-requirements.txt",
-                "requirements-dev.txt", "requirements/test.txt", "requirements/dev.txt"):
+    for req in (
+        "test-requirements.txt",
+        "requirements-test.txt",
+        "dev-requirements.txt",
+        "requirements-dev.txt",
+        "requirements/test.txt",
+        "requirements/dev.txt",
+    ):
         path = root / req
         if path.exists() and pip("-r", str(path)).returncode == 0:
             applied.append(req)
@@ -317,8 +329,9 @@ def install_test_deps(root: Path, py: Path, pip) -> list[str]:
     return applied
 
 
-def prepare(root: Path, package: str, version: str, tests: Path,
-            clean_seconds: int = CLEAN_RUN_SECONDS) -> tuple[Path | None, str]:
+def prepare(
+    root: Path, package: str, version: str, tests: Path, clean_seconds: int = CLEAN_RUN_SECONDS
+) -> tuple[Path | None, str]:
     """A venv with the project installed, but only if its clean suite really runs.
 
     Without this the audit "succeeded" on every project and measured nothing: no
@@ -340,12 +353,17 @@ def prepare(root: Path, package: str, version: str, tests: Path,
         why = (made.stderr or made.stdout or "").strip().splitlines()
         return None, f"could not create a venv: {why[-1][:110] if why else 'no output'}"
     py = venv / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
+
     # Install from the unpacked sdist, not from PyPI, so the project's own declared
     # test extras resolve. Installing only the published package left every suite
     # without its pytest plugins, and the clean run failed for all of them.
     def pip(*spec: str) -> subprocess.CompletedProcess:
-        return subprocess.run(["uv", "pip", "install", "-q", "--python", str(py), *spec],
-                              capture_output=True, text=True, timeout=900)
+        return subprocess.run(
+            ["uv", "pip", "install", "-q", "--python", str(py), *spec],
+            capture_output=True,
+            text=True,
+            timeout=900,
+        )
 
     base = pip(str(root), "pytest")
     if base.returncode:
@@ -359,9 +377,11 @@ def prepare(root: Path, package: str, version: str, tests: Path,
     # killed a whole thousand-candidate run at its first slow project. The clean run
     # is a gate, so it gets a shorter time cap than the audit it guards.
     outcome, detail, text = run_with_budgets(
-        [str(py), "-m", "pytest", str(tests), "-q", "-x", "--no-header",
-         "-p", "no:cacheprovider"],
-        seconds=clean_seconds, memory_mb=CLEAN_RUN_MEMORY_MB, cwd=root)
+        [str(py), "-m", "pytest", str(tests), "-q", "-x", "--no-header", "-p", "no:cacheprovider"],
+        seconds=clean_seconds,
+        memory_mb=CLEAN_RUN_MEMORY_MB,
+        cwd=root,
+    )
     if outcome == "timeout":
         return None, f"clean suite did not finish inside {clean_seconds}s"
     if outcome == "memory":
@@ -378,8 +398,10 @@ def prepare(root: Path, package: str, version: str, tests: Path,
     # then "killed" stops meaning anything.
     if failed > max(5, collected * 0.2):
         return None, f"clean suite mostly broken: {failed} of {collected} failing"
-    return py, (f"{collected} collected, {failed} already failing"
-                + (f" (deps: {', '.join(extras_used)})" if extras_used else ""))
+    return py, (
+        f"{collected} collected, {failed} already failing"
+        + (f" (deps: {', '.join(extras_used)})" if extras_used else "")
+    )
 
 
 def _tree_rss_mb(root_pid: int) -> float:
@@ -394,8 +416,12 @@ def _tree_rss_mb(root_pid: int) -> float:
         "$_.ParentProcessId.ToString() + ',' + $_.WorkingSetSize.ToString() }"
     )
     try:
-        out = subprocess.run(["powershell", "-NoProfile", "-Command", query],
-                             capture_output=True, text=True, timeout=30).stdout
+        out = subprocess.run(
+            ["powershell", "-NoProfile", "-Command", query],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        ).stdout
     except (OSError, subprocess.TimeoutExpired):
         return 0.0
     parent: dict[int, int] = {}
@@ -418,8 +444,9 @@ def _tree_rss_mb(root_pid: int) -> float:
     return total / 1048576
 
 
-def run_with_budgets(cmd: list[str], seconds: int, memory_mb: int,
-                     cwd: Path | None = None) -> tuple[str, str, str]:
+def run_with_budgets(
+    cmd: list[str], seconds: int, memory_mb: int, cwd: Path | None = None
+) -> tuple[str, str, str]:
     """Run a command under both a time and a memory budget.
 
     Returns (outcome, detail, output) where outcome is "ok", "timeout" or "memory".
@@ -427,8 +454,15 @@ def run_with_budgets(cmd: list[str], seconds: int, memory_mb: int,
     partial output of a stopped run is still what says how far it got.
     """
     chunks: list[str] = []
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                            text=True, cwd=cwd, encoding="utf-8", errors="replace")
+    proc = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        cwd=cwd,
+        encoding="utf-8",
+        errors="replace",
+    )
 
     def drain() -> None:
         assert proc.stdout is not None
@@ -443,15 +477,13 @@ def run_with_budgets(cmd: list[str], seconds: int, memory_mb: int,
     outcome, detail = "ok", ""
     while proc.poll() is None:
         if time.time() > deadline:
-            subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"],
-                           capture_output=True)
+            subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"], capture_output=True)
             outcome, detail = "timeout", f"{seconds}s"
             break
         used = _tree_rss_mb(proc.pid)
         peak = max(peak, used)
         if used > memory_mb:
-            subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"],
-                           capture_output=True)
+            subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"], capture_output=True)
             outcome, detail = "memory", f"{used:,.0f} MB over the {memory_mb:,} MB cap"
             break
         time.sleep(4)
@@ -464,24 +496,46 @@ def run_with_budgets(cmd: list[str], seconds: int, memory_mb: int,
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--packages", type=int, default=60)
-    ap.add_argument("--budget", type=int, default=900,
-                    help="seconds a single project's audit may take (900)")
+    ap.add_argument(
+        "--budget", type=int, default=900, help="seconds a single project's audit may take (900)"
+    )
     ap.add_argument("--per-function", type=int, default=5)
     ap.add_argument("--jobs", default="4")
-    ap.add_argument("--memory-mb", type=int, default=4096,
-                    help="memory a single project's audit may use, whole process tree "
-                         "(4096). One suite reached 15.4 GB on a 31.6 GB machine "
-                         "inside its time budget")
-    ap.add_argument("--clean-seconds", type=int, default=CLEAN_RUN_SECONDS,
-                    help=f"time the clean suite may take ({CLEAN_RUN_SECONDS}). A "
-                         "project slower than this is excluded: the audit reruns the "
-                         "suite once per mutant, so a slow suite is unaffordable here "
-                         "and spending the full budget on it starves the rest")
-    ap.add_argument("--resume", action="store_true",
-                    help="keep rows already in --out and process only the rest. This "
-                         "census has been restarted repeatedly for harness fixes, and "
-                         "each restart previously discarded every completed candidate")
+    ap.add_argument(
+        "--memory-mb",
+        type=int,
+        default=4096,
+        help="memory a single project's audit may use, whole process tree "
+        "(4096). One suite reached 15.4 GB on a 31.6 GB machine "
+        "inside its time budget",
+    )
+    ap.add_argument(
+        "--clean-seconds",
+        type=int,
+        default=CLEAN_RUN_SECONDS,
+        help=f"time the clean suite may take ({CLEAN_RUN_SECONDS}). A "
+        "project slower than this is excluded: the audit reruns the "
+        "suite once per mutant, so a slow suite is unaffordable here "
+        "and spending the full budget on it starves the rest",
+    )
+    ap.add_argument(
+        "--resume",
+        action="store_true",
+        help="keep rows already in --out and process only the rest. This "
+        "census has been restarted repeatedly for harness fixes, and "
+        "each restart previously discarded every completed candidate",
+    )
     ap.add_argument("--out", default="target-census.json")
+    ap.add_argument(
+        "--only",
+        default=None,
+        help="comma-separated package names, or @file with one per line. "
+        "Restricts the run to those of the top-downloads list, keeping "
+        "the external ranking as the source of truth rather than "
+        "letting a hand-written list become the sample. Added to "
+        "re-measure the 67 projects the 300s budget excluded, which is "
+        "the largest recoverable exclusion in the published funnel",
+    )
     args = ap.parse_args()
 
     SCRATCH.mkdir(parents=True, exist_ok=True)
@@ -491,7 +545,29 @@ def main() -> int:
         print(f"swept {swept} scratch tree(s) left by an earlier run")
     print(f"scratch: {SCRATCH}")
     names = top_packages(args.packages)
-    print(f"{len(names)} packages from the external top-downloads list\n")
+    print(f"{len(names)} packages from the external top-downloads list")
+    if args.only:
+        text = (
+            Path(args.only[1:]).read_text(encoding="utf-8")
+            if args.only.startswith("@")
+            else args.only
+        )
+        wanted = {n.strip() for n in text.replace("\n", ",").split(",") if n.strip()}
+        # Filtered against the external list rather than used as the list. A name that
+        # is not in the top-downloads sample would otherwise enter the census by being
+        # typed here, which is the hand-picking this script exists to remove.
+        missing = wanted - set(names)
+        names = [n for n in names if n in wanted]
+        print(
+            f"  --only: {len(names)} of them selected"
+            + (
+                f", {len(missing)} name(s) not in the list and ignored: "
+                f"{', '.join(sorted(missing))}"
+                if missing
+                else ""
+            )
+        )
+    print()
     out = Path(args.out)
     results: list[dict] = []
     # package -> how many times an infrastructure failure has already been retried.
@@ -520,8 +596,10 @@ def main() -> int:
                 row["empty_audit"] = row.pop("audit")
                 stale += 1
         if stale:
-            print(f"reclassified {stale} resumed row(s) that recorded an audit which "
-                  f"scored no mutants: they are exclusions, not measurements")
+            print(
+                f"reclassified {stale} resumed row(s) that recorded an audit which "
+                f"scored no mutants: they are exclusions, not measurements"
+            )
     # Bounded. An infrastructure failure is retried because it says nothing about the
     # package - but a retry that fails the same way on a machine where the cause is fixed
     # is no longer about the machine, and retrying it on every resume means the census
@@ -530,27 +608,33 @@ def main() -> int:
     # as an exclusion that names the environment, which is an honest answer, and the
     # count is kept with it so a reader can see how often it was tried.
     retry = [
-        r for r in results
+        r
+        for r in results
         if isinstance(r, dict)
         and _is_infra_failure(r)
         and r.get("infra_retries", 0) < MAX_INFRA_RETRIES
     ]
     exhausted = [
-        r for r in results
+        r
+        for r in results
         if isinstance(r, dict)
         and _is_infra_failure(r)
         and r.get("infra_retries", 0) >= MAX_INFRA_RETRIES
     ]
     if retry:
-        print(f"retrying {len(retry):,} candidates whose exclusion was an infrastructure "
-              f"failure, not a finding")
+        print(
+            f"retrying {len(retry):,} candidates whose exclusion was an infrastructure "
+            f"failure, not a finding"
+        )
         for row in retry:
             carried[row["package"]] = row.get("infra_retries", 0) + 1
         results = [r for r in results if r not in retry]
     if exhausted:
-        print(f"{len(exhausted):,} candidate(s) failed on this machine "
-              f"{MAX_INFRA_RETRIES} times and are left as they are: "
-              + ", ".join(sorted(r.get("package", "?") for r in exhausted)))
+        print(
+            f"{len(exhausted):,} candidate(s) failed on this machine "
+            f"{MAX_INFRA_RETRIES} times and are left as they are: "
+            + ", ".join(sorted(r.get("package", "?") for r in exhausted))
+        )
     done_names = {r["package"] for r in results if isinstance(r, dict) and "package" in r}
     if done_names:
         print(f"resuming: {len(done_names):,} candidates already processed")
@@ -577,8 +661,9 @@ def main() -> int:
                 out.write_text(json.dumps(results, indent=1), encoding="utf-8")
                 continue
             row["version"], url = sd
-            with tempfile.TemporaryDirectory(prefix="sa-census-", dir=SCRATCH,
-                                                ignore_cleanup_errors=True) as tmp:
+            with tempfile.TemporaryDirectory(
+                prefix="sa-census-", dir=SCRATCH, ignore_cleanup_errors=True
+            ) as tmp:
                 root = unpack(url, Path(tmp))
                 if root is None:
                     row["excluded"] = "sdist ships no test directory"
@@ -596,11 +681,24 @@ def main() -> int:
                     # --out is a DIRECTORY; it writes AUDIT.md and audit.json into it.
                     report_dir = Path(tmp) / "report"
                     report = report_dir / "audit.json"
-                    cmd = [sys.executable, "-m", "suite_auditor", "audit", str(root),
-                           "--test", str(tests.relative_to(root)),
-                           "--python", str(py),
-                           "--per-function", str(args.per_function),
-                           "-j", str(args.jobs), "-q", "--out", str(report_dir)]
+                    cmd = [
+                        sys.executable,
+                        "-m",
+                        "suite_auditor",
+                        "audit",
+                        str(root),
+                        "--test",
+                        str(tests.relative_to(root)),
+                        "--python",
+                        str(py),
+                        "--per-function",
+                        str(args.per_function),
+                        "-j",
+                        str(args.jobs),
+                        "-q",
+                        "--out",
+                        str(report_dir),
+                    ]
                     t0 = time.time()
                     try:
                         outcome, detail, _ = run_with_budgets(cmd, args.budget, args.memory_mb)
@@ -609,15 +707,19 @@ def main() -> int:
                         if outcome == "memory":
                             row["excluded"] = f"memory budget exceeded: {detail}"
                             results.append(row)
-                            print(f"  [{i}/{len(names)}] {name:24} excluded: {row['excluded'][:46]}",
-                                  flush=True)
+                            print(
+                                f"  [{i}/{len(names)}] {name:24} excluded: {row['excluded'][:46]}",
+                                flush=True,
+                            )
                             out.write_text(json.dumps(results, indent=1), encoding="utf-8")
                             continue
                         if outcome == "timeout":
                             row["excluded"] = f"budget exceeded ({args.budget}s)"
                             results.append(row)
-                            print(f"  [{i}/{len(names)}] {name:24} excluded: {row['excluded'][:46]}",
-                                  flush=True)
+                            print(
+                                f"  [{i}/{len(names)}] {name:24} excluded: {row['excluded'][:46]}",
+                                flush=True,
+                            )
                             out.write_text(json.dumps(results, indent=1), encoding="utf-8")
                             continue
                         if report.exists():
@@ -647,14 +749,19 @@ def main() -> int:
         results.append(row)
         state = row.get("excluded", "audited")
         rate = (time.time() - started) / measured
-        print(f"  [{i}/{len(names)}] {name:24} {state[:46]:46} "
-              f"{rate:.0f}s/pkg  {measured}/{todo} measured "
-              f"~{rate * (todo - measured) / 60:.0f}min left", flush=True)
+        print(
+            f"  [{i}/{len(names)}] {name:24} {state[:46]:46} "
+            f"{rate:.0f}s/pkg  {measured}/{todo} measured "
+            f"~{rate * (todo - measured) / 60:.0f}min left",
+            flush=True,
+        )
         out.write_text(json.dumps(results, indent=1), encoding="utf-8")
 
     audited = audited_rows(results)
-    print(f"\n{len(audited)} of {len(results)} projects audited; "
-          f"{len(results) - len(audited)} excluded, each with its reason in {out}")
+    print(
+        f"\n{len(audited)} of {len(results)} projects audited; "
+        f"{len(results) - len(audited)} excluded, each with its reason in {out}"
+    )
     return 0
 
 

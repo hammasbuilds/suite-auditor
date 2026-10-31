@@ -2,6 +2,14 @@
 
     .venv-research/Scripts/python research/run_all.py
 
+`.venv-research` is not in the repository (every `.venv*` is ignored) and holds only
+matplotlib. It had rotted away here entirely, so this command - the one the paper cites as
+the way its figures rebuild - failed on a missing interpreter while the committed figures
+looked fine. Create it with:
+
+    uv venv .venv-research --python 3.12
+    uv pip install --python .venv-research/Scripts/python matplotlib==3.11.2
+
 Reads `docs/census-rows.json.gz` only - in the repository - so every number and every
 figure rebuilds without re-running the thousand-package audit.
 
@@ -30,32 +38,38 @@ def write(name: str, payload) -> Path:
 def main() -> int:
     rows = metrics.load()
     done = metrics.audited(rows)
-    print(f"{len(rows):,} rows, {len(done):,} audited, "
-          f"{len(rows) - len(done):,} excluded\n")
+    print(f"{len(rows):,} rows, {len(done):,} audited, {len(rows) - len(done):,} excluded\n")
 
     funnel = metrics.funnel(rows)
     distributions = metrics.audit_distributions(rows)
     bias = metrics.selection_bias(rows)
-    write("auditability", {"funnel": funnel, "distributions": distributions,
-                           "selection_bias": bias})
+    write(
+        "auditability", {"funnel": funnel, "distributions": distributions, "selection_bias": bias}
+    )
 
     print("funnel:")
     for label, stage in funnel["stages"].items():
-        print(f"  {label:34}{stage['excluded']:>5} of {stage['reached_this_stage']:>5}  "
-              f"({stage['of_those_that_reached_this_stage']['rate']:.1%} of those that "
-              f"reached it)")
+        print(
+            f"  {label:34}{stage['excluded']:>5} of {stage['reached_this_stage']:>5}  "
+            f"({stage['of_those_that_reached_this_stage']['rate']:.1%} of those that "
+            f"reached it)"
+        )
     a = funnel["audited"]
-    print(f"  {'audited':34}{a['k']:>5} of {a['n']:>5}  "
-          f"({a['rate']:.1%} [{a['lo']:.1%}, {a['hi']:.1%}])\n")
+    print(
+        f"  {'audited':34}{a['k']:>5} of {a['n']:>5}  "
+        f"({a['rate']:.1%} [{a['lo']:.1%}, {a['hi']:.1%}])\n"
+    )
 
     # The rows the figures draw, taken from the same `audited` predicate the funnel used
     # rather than re-filtered here, so a figure cannot be drawn over a different sample
     # than the table above it.
-    rates = [r["audit"]["kill_rate"] for r in done
-             if r["audit"].get("kill_rate") is not None]
-    pairs = [(r["audit"]["covered_fraction"], r["audit"]["kill_rate"]) for r in done
-             if r["audit"].get("covered_fraction") is not None
-             and r["audit"].get("kill_rate") is not None]
+    rates = [r["audit"]["kill_rate"] for r in done if r["audit"].get("kill_rate") is not None]
+    pairs = [
+        (r["audit"]["covered_fraction"], r["audit"]["kill_rate"])
+        for r in done
+        if r["audit"].get("covered_fraction") is not None
+        and r["audit"].get("kill_rate") is not None
+    ]
     gaps = [float(r["audit"].get("proven_gaps") or 0) for r in done]
 
     assert len(rates) == distributions["kill_rate"]["n"], (
@@ -65,15 +79,13 @@ def main() -> int:
     )
 
     captions = {}
-    for name, (pdf, png, caption) in {
+    for name, (_pdf, png, caption) in {
         "fig1_funnel": figures.funnel_figure(funnel),
-        "fig2_kill_rate_ecdf": figures.kill_rate_figure(
-            distributions["kill_rate"], rates),
-        "fig3_coverage_vs_kill_rate": figures.coverage_figure(
-            pairs, distributions["caught_share"]),
+        "fig2_kill_rate_ecdf": figures.kill_rate_figure(distributions["kill_rate"], rates),
+        "fig3_coverage_vs_kill_rate": figures.coverage_figure(pairs, distributions["caught_share"]),
         "fig4_proven_gaps": figures.gaps_figure(
-            distributions["proven_gaps"],
-            distributions["packages_with_a_proven_gap"], gaps),
+            distributions["proven_gaps"], distributions["packages_with_a_proven_gap"], gaps
+        ),
     }.items():
         captions[name] = caption
         print(f"  {png.name}")

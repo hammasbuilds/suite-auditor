@@ -79,16 +79,38 @@ def funnel_figure(funnel: dict) -> tuple[Path, Path, str]:
 
     fig, ax = plt.subplots(figsize=(7.4, 4.4))
     y = range(len(labels))
-    ax.barh(list(y), reached, height=0.64, color="#DDDDDD", edgecolor="white",
-            linewidth=0.6, label="still in play")
-    ax.barh(list(y), lost, height=0.64, color=EXCLUDED, edgecolor="white",
-            linewidth=0.6, hatch="//", label="removed here")
-    ax.barh([len(labels) - 1], [audited["k"]], height=0.64, color=KEPT,
-            edgecolor="white", linewidth=0.6, label="audited")
+    ax.barh(
+        list(y),
+        reached,
+        height=0.64,
+        color="#DDDDDD",
+        edgecolor="white",
+        linewidth=0.6,
+        label="still in play",
+    )
+    ax.barh(
+        list(y),
+        lost,
+        height=0.64,
+        color=EXCLUDED,
+        edgecolor="white",
+        linewidth=0.6,
+        hatch="//",
+        label="removed here",
+    )
+    ax.barh(
+        [len(labels) - 1],
+        [audited["k"]],
+        height=0.64,
+        color=KEPT,
+        edgecolor="white",
+        linewidth=0.6,
+        label="audited",
+    )
 
-    for i, (r, l) in enumerate(zip(reached, lost)):
-        text = f"{l:,} of {r:,}" if l else f"{r:,}"
-        ax.text(r + 14, i, text, va="center", fontsize=8.5)
+    for i, (stage_reached, stage_lost) in enumerate(zip(reached, lost, strict=True)):
+        text = f"{stage_lost:,} of {stage_reached:,}" if stage_lost else f"{stage_reached:,}"
+        ax.text(stage_reached + 14, i, text, va="center", fontsize=8.5)
 
     ax.set_yticks(list(y))
     ax.set_yticklabels(labels, fontsize=9)
@@ -126,12 +148,18 @@ def kill_rate_figure(distribution: dict, rates: list[float]) -> tuple[Path, Path
     ax.step(xs, ys, where="post", color=BLUE, linewidth=1.8)
     ax.plot(xs, ys, linestyle="none", marker="o", markersize=2.4, color=BLUE, alpha=0.55)
 
-    for key, style, label in (("p25", ":", "p25"), ("median", "--", "median"),
-                              ("p75", ":", "p75")):
+    for key, style, label in (("p25", ":", "p25"), ("median", "--", "median"), ("p75", ":", "p75")):
         value = distribution[key]
         ax.axvline(value, color=GREY, linestyle=style, linewidth=1.1)
-        ax.text(value, 1.02, f"{label}\n{value:.3f}", ha="center", va="bottom",
-                fontsize=8, color="#333333")
+        ax.text(
+            value,
+            1.02,
+            f"{label}\n{value:.3f}",
+            ha="center",
+            va="bottom",
+            fontsize=8,
+            color="#333333",
+        )
 
     ax.set_xlabel("mutation kill rate")
     ax.set_ylabel("fraction of audited packages at or below")
@@ -153,8 +181,7 @@ def kill_rate_figure(distribution: dict, rates: list[float]) -> tuple[Path, Path
 # --- 3. coverage against kill rate ---------------------------------------------------
 
 
-def coverage_figure(pairs: list[tuple[float, float]],
-                    caught: dict) -> tuple[Path, Path, str]:
+def coverage_figure(pairs: list[tuple[float, float]], caught: dict) -> tuple[Path, Path, str]:
     """Covered fraction against kill rate, with iso-contours of their product.
 
     An earlier draft of this figure drew the diagonal and invited the reader to look for
@@ -176,19 +203,40 @@ def coverage_figure(pairs: list[tuple[float, float]],
     xs = [i / 400 for i in range(5, 401)]
     for level in (0.25, 0.5, 0.75, 0.9):
         ys = [level / x for x in xs]
-        keep = [(x, y) for x, y in zip(xs, ys) if y <= 1.0]
+        keep = [(x, y) for x, y in zip(xs, ys, strict=True) if y <= 1.0]
         if not keep:
             continue
-        ax.plot([x for x, _ in keep], [y for _, y in keep], color=GREY,
-                linestyle=":", linewidth=1.0)
+        ax.plot(
+            [x for x, _ in keep], [y for _, y in keep], color=GREY, linestyle=":", linewidth=1.0
+        )
         x0, y0 = keep[0]
-        ax.text(min(x0 + 0.01, 0.97), min(y0, 0.99), f"{level:.2f}", fontsize=7.5,
-                color="#555555", va="top")
+        ax.text(
+            min(x0 + 0.01, 0.97),
+            min(y0, 0.99),
+            f"{level:.2f}",
+            fontsize=7.5,
+            color="#555555",
+            va="top",
+        )
 
-    ax.scatter(covered, killed, s=26, color=BLUE, alpha=0.62, edgecolor="white",
-               linewidth=0.5, label="one audited package")
-    ax.plot([], [], color=GREY, linestyle=":", linewidth=1.0,
-            label="constant caught share (coverage x kill rate)")
+    ax.scatter(
+        covered,
+        killed,
+        s=26,
+        color=BLUE,
+        alpha=0.62,
+        edgecolor="white",
+        linewidth=0.5,
+        label="one audited package",
+    )
+    ax.plot(
+        [],
+        [],
+        color=GREY,
+        linestyle=":",
+        linewidth=1.0,
+        label="constant caught share (coverage x kill rate)",
+    )
 
     ax.set_xlabel("covered fraction (functions a passing test reaches)")
     ax.set_ylabel("kill rate (mutants noticed, over covered functions only)")
@@ -213,8 +261,7 @@ def coverage_figure(pairs: list[tuple[float, float]],
 # --- 4. proven gaps ------------------------------------------------------------------
 
 
-def gaps_figure(distribution: dict, share: dict,
-                counts: list[float]) -> tuple[Path, Path, str]:
+def gaps_figure(distribution: dict, share: dict, counts: list[float]) -> tuple[Path, Path, str]:
     """Proven gaps per package, as a count histogram with the zero bar kept visible.
 
     The mean is 1.96 and the median is 0. That gap is the whole point of the figure: most
@@ -225,11 +272,23 @@ def gaps_figure(distribution: dict, share: dict,
     clipped = [min(c, 11) for c in counts]
 
     fig, ax = plt.subplots(figsize=(6.8, 4.0))
-    ax.hist(clipped, bins=edges, align="left", rwidth=0.82, color=ORANGE,
-            edgecolor="white", linewidth=0.7)
+    ax.hist(
+        clipped,
+        bins=edges,
+        align="left",
+        rwidth=0.82,
+        color=ORANGE,
+        edgecolor="white",
+        linewidth=0.7,
+    )
     ax.axvline(distribution["mean"], color=GREY, linestyle="--", linewidth=1.2)
-    ax.text(distribution["mean"], ax.get_ylim()[1] * 0.92,
-            f" mean {distribution['mean']:.2f}", fontsize=8.5, color="#333333")
+    ax.text(
+        distribution["mean"],
+        ax.get_ylim()[1] * 0.92,
+        f" mean {distribution['mean']:.2f}",
+        fontsize=8.5,
+        color="#333333",
+    )
     ax.set_xticks(edges[:-1])
     ax.set_xticklabels([str(e) for e in edges[:-2]] + ["11+"], fontsize=8.5)
     ax.set_xlabel("proven gaps found in the package")

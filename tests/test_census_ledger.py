@@ -101,8 +101,7 @@ def test_the_figures_the_readme_quotes_come_out_of_the_ledger(rows):
 
     recomputed = summarise(rows)
     audited = [
-        r for r in rows
-        if not r.get("excluded") and not scored_nothing(r.get("audit") or {})
+        r for r in rows if not r.get("excluded") and not scored_nothing(r.get("audit") or {})
     ]
     assert recomputed["audited"] == len(audited)
     gaps = [(r.get("audit") or {}).get("proven_gaps", 0) for r in audited]

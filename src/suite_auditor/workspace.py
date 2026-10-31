@@ -344,7 +344,9 @@ class Scratch:
         try:
             first = self.root / "w0" / self.repo.name
             shutil.copytree(
-                self.repo, first, symlinks=True,
+                self.repo,
+                first,
+                symlinks=True,
                 ignore=_ignore_for(self.repo, self.skipped_junctions),
             )
             self.copies.append(first)

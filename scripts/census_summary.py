@@ -148,10 +148,14 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--census", type=Path, default=ROOT / "docs" / "target-census.json")
     ap.add_argument("--out", type=Path, default=ROOT / "docs" / "census-summary.json")
-    ap.add_argument("--ledger", type=Path, default=ROOT / "docs" / "census-rows.json.gz",
-                    help="per-project rows without the per-mutant detail, committed, so "
-                         "every published figure can be recomputed from the repository "
-                         "and a changed row shows up as a diff")
+    ap.add_argument(
+        "--ledger",
+        type=Path,
+        default=ROOT / "docs" / "census-rows.json.gz",
+        help="per-project rows without the per-mutant detail, committed, so "
+        "every published figure can be recomputed from the repository "
+        "and a changed row shows up as a diff",
+    )
     args = ap.parse_args()
     if not args.census.exists():
         raise SystemExit(f"no census at {args.census} - run scripts/target_census.py first")
@@ -174,8 +178,10 @@ def main() -> int:
     shown = dict(summary)
     shown.pop("audited_packages")
     print(json.dumps(shown, indent=1))
-    print(f"\nwritten to {args.out.name}, and {len(lines)} row(s) to {args.ledger.name} "
-          f"({args.ledger.stat().st_size / 1024:.0f} KB)")
+    print(
+        f"\nwritten to {args.out.name}, and {len(lines)} row(s) to {args.ledger.name} "
+        f"({args.ledger.stat().st_size / 1024:.0f} KB)"
+    )
     return 0
 
 

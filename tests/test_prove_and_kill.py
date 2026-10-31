@@ -74,7 +74,7 @@ class TestProve:
         assert result.detail == "f(1) was 2, now 3"
 
     def test_agreement_is_unproven_not_killed(self, differ) -> None:
-        """"Possibly equivalent" is a different claim from "the suite noticed"."""
+        """ "Possibly equivalent" is a different claim from "the suite noticed"."""
         result = _prove(target(), "return x + 1", "binop", [], "")
         assert result.verdict is Verdict.UNPROVEN
         assert result.witness is None
@@ -110,8 +110,14 @@ class TestProve:
         has nothing to do with the mutant.
         """
         t = Target(
-            path="src/pkg/mod.py", name="f", source="def f():\n    return 1\n",
-            header="", sys_path=r"D:\repo\src", package="pkg", lineno=1, end_lineno=2,
+            path="src/pkg/mod.py",
+            name="f",
+            source="def f():\n    return 1\n",
+            header="",
+            sys_path=r"D:\repo\src",
+            package="pkg",
+            lineno=1,
+            end_lineno=2,
         )
         _prove(t, "return 2", "const", [], "")
         args = differ["calls"][0][0]
@@ -182,6 +188,7 @@ class TestKill:
 
     def test_an_oserror_from_the_tree_kill_is_swallowed(self, monkeypatch) -> None:
         """This runs while tearing down a timed-out mutant; it must not raise."""
+
         def boom(*a, **k):  # noqa: ANN002, ANN003, ANN202
             raise OSError("no taskkill here")
 

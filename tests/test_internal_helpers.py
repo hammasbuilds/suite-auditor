@@ -208,7 +208,13 @@ class TestResultRow:
     def test_the_row_carries_what_the_report_reads(self) -> None:
         row = result().as_row()
         assert set(row) == {
-            "target", "kind", "verdict", "mutant", "witness", "strength", "provenance",
+            "target",
+            "kind",
+            "verdict",
+            "mutant",
+            "witness",
+            "strength",
+            "provenance",
             "detail",
         }
 
@@ -239,7 +245,10 @@ class TestHealthJson:
 
     def test_a_failing_run_names_the_tests(self) -> None:
         health = SuiteHealth(
-            ran=True, exit_code=1, passed=8, failed=2,
+            ran=True,
+            exit_code=1,
+            passed=8,
+            failed=2,
             failing=("tests/t.py::a", "tests/t.py::b"),
             deselected=14,
         )
