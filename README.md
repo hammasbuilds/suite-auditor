@@ -279,6 +279,41 @@ plus 2 refusals with their reason.
 **Speed.** Every mutant is a pytest start-up: toolz's 418 mutants took 3.4 minutes with 4
 workers on a quiet 16-core Windows machine and 11.5 minutes when it was loaded.
 
+### A third of the proven gaps are the same gap
+
+Compiling mutants finds the ones that are the same *program* (5.38% duplicates, above). Two mutants can compile
+differently and still be caught by exactly the same inputs - a comparison flipped one way and a constant nudged the
+other, both of which only show up on an empty list - and the report then shows two gaps where a reader sees one
+defect.
+
+`compare` now records *which* inputs prove a gap rather than only how many, so the kill sets of one function's
+mutants can be compared: mutant A **subsumes** B when every input catching A also catches B, after Ammann, Delamaro
+& Offutt (ICST 2014). The gaps no other gap subsumes are the **dominators**, and that is what a count of distinct
+defects should be taken over.
+
+The ceiling comes first. Kill sets index one function's argument pool, so only gaps in the same function compare at
+all and a gap alone in its function can never be a restatement. Over four repositories:
+
+| repository | mutants | gaps | functions with a gap | with 2+ | eligible | restatements | distinct |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| flake-detective | 293 | 20 | 13 | 4 | 11 | 6 | 14 |
+| blast-radius | 138 | 12 | 7 | 2 | 7 | 5 | 7 |
+| assay-drift | 291 | 2 | 2 | 0 | 0 | 0 | 2 |
+| suite-auditor | 325 | 18 | 8 | 5 | 15 | 8 | 10 |
+| **total** | **1,047** | **52** | **30** | **11** | **33** | **19** | **33** |
+
+So 33 of the 52 gaps (63.5%) were eligible to collapse, and **19 of 52 (36.5%) are restatements**. `audit.json`
+carries both counts: subsumption is relative to the input pool, so the dominator count is a lower bound on distinct
+behaviours and the raw count an upper bound, and neither alone is the number.
+
+The 5.38% and the 36.5% are **not comparable** - one is over mutants before scoring, the other over proven gaps
+after it. What composes is the pipeline, not the rates.
+
+The algorithm has one silent trap. The empty set is a subset of every set, so a mutant no input distinguishes would
+subsume the whole pool and collapse any number of distinct gaps to one, and nothing about that looks like an error -
+the count just improves. `tests/test_subsume.py` plants an unkillable mutant among three distinguishable ones and
+checks the answer stays three. Rebuild with `python research/subsumption_rate.py --repo ...`.
+
 ## Tech stack
 
 - Python 3.11+, **no runtime dependencies** (`ast`, `sys.settrace`, `subprocess`)

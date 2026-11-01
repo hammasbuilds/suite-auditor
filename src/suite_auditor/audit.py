@@ -33,7 +33,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from queue import Queue
 
-from suite_auditor import tce
+from suite_auditor import subsume, tce
 from suite_auditor.coverage import build_map, calls_for, tests_for
 from suite_auditor.differential import compare
 from suite_auditor.inputs import argument_sets, harvest_for, witness_strength
@@ -304,7 +304,23 @@ def audit_target(
         else:
             results.append(_prove(target, mutant, kind, argsets, python))
         tick()
+    _mark_restatements(results)
     return results
+
+
+def _mark_restatements(results: list[Result]) -> None:
+    """Flag the proven gaps of one function that another proven gap already implies.
+
+    Done per function rather than per package, because kill sets are indices into one
+    function's argument pool: index 3 of one function's pool has nothing to do with index
+    3 of another's, and comparing across functions would merge gaps at random.
+    """
+    gaps = [r for r in results if r.verdict == Verdict.PROVEN_GAP and r.signature]
+    if len(gaps) < 2:
+        return
+    part = subsume.partition({r.mutant: frozenset(r.signature) for r in gaps})
+    for result in gaps:
+        result.subsumed_by = part.subsumed.get(result.mutant, "")
 
 
 def _prove(target: Target, mutant: str, kind: str, argsets, python: str) -> Result:
@@ -334,6 +350,7 @@ def _prove(target: Target, mutant: str, kind: str, argsets, python: str) -> Resu
             detail=diff["detail"],
             strength=witness_strength(w),
             provenance=diff.get("provenance", ""),
+            signature=tuple(diff.get("signature", ())),
         )
     return Result(
         target.key,
@@ -582,6 +599,28 @@ def audit(
                 f"{len(per_fn)} of {len(plan)} functions. "
                 "Rates below are over what was scored."
             )
+
+    # Counted over the results that exist, so a run the budget cut short reports the
+    # inflation of what it scored rather than of what it planned.
+    proven = [r for r in out.results if r.verdict == Verdict.PROVEN_GAP]
+    with_signature = [r for r in proven if r.signature]
+    out.subsumption = {
+        "proven": len(proven),
+        # A gap found before this landed, or one whose proof came from a path that keeps
+        # no signature, cannot be placed in the hierarchy. Counted rather than assumed
+        # distinct: a denominator that quietly includes the unplaceable ones would make
+        # the inflation look smaller than it is.
+        "placed": len(with_signature),
+        "unplaceable": len(proven) - len(with_signature),
+        "distinct": sum(1 for r in with_signature if not r.subsumed_by),
+        "restatements": sum(1 for r in with_signature if r.subsumed_by),
+    }
+    placed = out.subsumption["placed"]
+    distinct = out.subsumption["distinct"]
+    out.subsumption["inflation"] = round(placed / distinct, 4) if distinct else None
+    out.subsumption["restated_share"] = (
+        round(out.subsumption["restatements"] / placed, 4) if placed else None
+    )
 
     out.seconds = time.time() - t0
     return out

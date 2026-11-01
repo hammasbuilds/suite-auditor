@@ -85,6 +85,27 @@ class Result:
     provenance: str = ""
     """Where the witness input came from: observed, recombined or generated."""
 
+    signature: tuple[int, ...] = ()
+    """Which inputs of the shared pool prove this gap - the mutant's kill set.
+
+    Empty for everything but a proven gap. Kept as the set rather than its size because
+    that is what decides whether two gaps are the same gap: see `subsume`.
+    """
+
+    subsumed_by: str = ""
+    """Another proven gap of the same function whose kill set is a strict subset.
+
+    Any input that catches that one catches this one, so this gap restates it. Recorded
+    rather than dropped: the raw count is an upper bound on distinct behaviours and the
+    dominator count a lower bound, and a report that showed only one of them would be
+    claiming a precision neither has.
+    """
+
+    @property
+    def distinct(self) -> bool:
+        """A proven gap that no other proven gap of this function already implies."""
+        return self.verdict == Verdict.PROVEN_GAP and not self.subsumed_by
+
     def as_row(self) -> dict:
         return {
             "target": self.target,
@@ -94,6 +115,8 @@ class Result:
             "witness": self.witness,
             "strength": self.strength,
             "provenance": self.provenance,
+            "signature": list(self.signature),
+            "subsumed_by": self.subsumed_by,
             "detail": self.detail[:300],
         }
 
@@ -120,6 +143,15 @@ class Audit:
     partial audit is; the function count alone read "3 of 3" after 3 of 17 mutants."""
 
     tce: dict = field(default_factory=dict)
+
+    subsumption: dict = field(default_factory=dict)
+    """How many proven gaps are distinct, once the ones another gap implies are folded in.
+
+    `tce` removes mutants nothing could tell apart. This removes gaps a reader could not
+    tell apart: two mutants caught by the same inputs are one defect seen twice. The raw
+    count is an upper bound on distinct behaviours and this is a lower bound, so both are
+    reported - see `subsume`.
+    """
     """What Trivial Compiler Equivalence removed before scoring, as counts.
 
     `planned`, `kept`, `equivalent`, `duplicate`, `undecidable`. Published rather than

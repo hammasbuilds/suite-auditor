@@ -213,6 +213,8 @@ class TestResultRow:
             "verdict",
             "mutant",
             "witness",
+            "signature",
+            "subsumed_by",
             "strength",
             "provenance",
             "detail",

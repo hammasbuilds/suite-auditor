@@ -1,0 +1,113 @@
+{
+ "what": "Proven gaps over local repositories, split into distinct ones and restatements of another gap of the same function, after Ammann, Delamaro & Offutt (ICST 2014). Reports the eligibility ceiling as well as the collapse: kill sets are only comparable within one function.",
+ "totals": {
+  "mutants_scored": 1047,
+  "proven_gaps": 52,
+  "placed_in_the_hierarchy": 52,
+  "unplaceable": 0,
+  "functions_with_a_gap": 30,
+  "functions_with_two_or_more": 11,
+  "gaps_eligible_for_collapse": 33,
+  "restatements": 19,
+  "restatements_recomputed_from_the_export": 19,
+  "distinct": 33,
+  "eligible_share": 0.6346,
+  "collapse_share": 0.3654,
+  "repositories_scored": 4,
+  "repositories_failed": 0
+ },
+ "by_repository": {
+  "flake-detective": {
+   "mutants_scored": 293,
+   "proven_gaps": 20,
+   "placed_in_the_hierarchy": 20,
+   "unplaceable": 0,
+   "functions_with_a_gap": 13,
+   "functions_with_two_or_more": 4,
+   "gaps_eligible_for_collapse": 11,
+   "eligible_share": 0.55,
+   "restatements": 6,
+   "restatements_recomputed_from_the_export": 6,
+   "distinct": 14,
+   "collapse_share": 0.3,
+   "engine_counts": {
+    "proven": 20,
+    "placed": 20,
+    "unplaceable": 0,
+    "distinct": 14,
+    "restatements": 6,
+    "inflation": 1.4286,
+    "restated_share": 0.3
+   }
+  },
+  "blast-radius": {
+   "mutants_scored": 138,
+   "proven_gaps": 12,
+   "placed_in_the_hierarchy": 12,
+   "unplaceable": 0,
+   "functions_with_a_gap": 7,
+   "functions_with_two_or_more": 2,
+   "gaps_eligible_for_collapse": 7,
+   "eligible_share": 0.5833,
+   "restatements": 5,
+   "restatements_recomputed_from_the_export": 5,
+   "distinct": 7,
+   "collapse_share": 0.4167,
+   "engine_counts": {
+    "proven": 12,
+    "placed": 12,
+    "unplaceable": 0,
+    "distinct": 7,
+    "restatements": 5,
+    "inflation": 1.7143,
+    "restated_share": 0.4167
+   }
+  },
+  "assay-drift": {
+   "mutants_scored": 291,
+   "proven_gaps": 2,
+   "placed_in_the_hierarchy": 2,
+   "unplaceable": 0,
+   "functions_with_a_gap": 2,
+   "functions_with_two_or_more": 0,
+   "gaps_eligible_for_collapse": 0,
+   "eligible_share": 0.0,
+   "restatements": 0,
+   "restatements_recomputed_from_the_export": 0,
+   "distinct": 2,
+   "collapse_share": 0.0,
+   "engine_counts": {
+    "proven": 2,
+    "placed": 2,
+    "unplaceable": 0,
+    "distinct": 2,
+    "restatements": 0,
+    "inflation": 1.0,
+    "restated_share": 0.0
+   }
+  },
+  "suite-auditor": {
+   "mutants_scored": 325,
+   "proven_gaps": 18,
+   "placed_in_the_hierarchy": 18,
+   "unplaceable": 0,
+   "functions_with_a_gap": 8,
+   "functions_with_two_or_more": 5,
+   "gaps_eligible_for_collapse": 15,
+   "eligible_share": 0.8333,
+   "restatements": 8,
+   "restatements_recomputed_from_the_export": 8,
+   "distinct": 10,
+   "collapse_share": 0.4444,
+   "engine_counts": {
+    "proven": 18,
+    "placed": 18,
+    "unplaceable": 0,
+    "distinct": 10,
+    "restatements": 8,
+    "inflation": 1.8,
+    "restated_share": 0.4444
+   }
+  }
+ }
+}

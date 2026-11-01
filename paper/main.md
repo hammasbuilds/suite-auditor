@@ -23,7 +23,7 @@ covered functions only; the unconditional **caught share** — the fraction of a
 functions both reached and checked — has a median of **0.71** (IQR 0.49–0.82), and
 **45.5% [36.6%, 54.8%] carry at least one gap we can
 prove** — a surviving mutant with a witness: an argument set on which the original and the
-mutant are **both executed and return different values**. Mutants that survive without
+mutant are **both executed and return different values**. A reported gap count is also an overcount, and by more than the mutant set is. Compiling mutants discards 5.38% of them as duplicates before anything is scored; comparing *which inputs* prove each gap discards a further **19 of 52 proven gaps (36.5%)** as restatements of another gap of the same function, over four repositories and 1,047 scored mutants. Mutants that survive without
 such a witness are **refused with a reason** rather than reported, which is the design
 decision the comparison below turns on. The witness is a machine check on every one of
 the 219 gaps; one gap was additionally confirmed by hand, by installing the mutant and
@@ -278,6 +278,85 @@ mutants move it the other way and unambiguously: every one is a survivor, so rem
 interval is narrow enough that no claim in §3 turns on it, which is why it is published
 as an interval rather than used to restate the medians.
 
+## 3.3 How many of these *gaps* are the same gap?
+
+§3.2 removes mutants that are the same program. Two mutants can compile to different
+bytecode and still be caught by exactly the same inputs — a comparison flipped one way and
+a constant nudged the other, both of which only show up on an empty list — and §3.2 keeps
+both. The report then shows two gaps where a reader would see one defect, and the headline
+gap count is inflated by an amount nobody has measured.
+
+Subsumption is the semantic form of the same question, from Ammann, Delamaro & Offutt
+[@subsumption2014] and the subsumption graphs of Kurtz et al. [@subsumption-graphs]. Write
+$K(m)$ for the set of inputs that distinguish mutant $m$ from the original. Mutant $A$
+**subsumes** $B$ when $K(A) \subseteq K(B)$: every input that catches $A$ also catches $B$,
+so $B$ tells a reader nothing $A$ did not. A set with no such pair left in it is **minimal**,
+and the mutants at the top of the hierarchy — subsumed by no other — are the **dominators**.
+That set is what a count of distinct gaps should be taken over.
+
+This tool is unusually well placed to compute it. Classic mutation testing has to define
+$K(m)$ over the project's test suite, where a test is one bit. Here every mutant of one
+function is compared against the original over the *same* pool of argument sets (§2), so
+$K(m)$ is a set of concrete inputs and the relation is computed at input granularity rather
+than test granularity. `compare` now returns which inputs prove a gap rather than only how
+many: two mutants each caught by one input are the same gap if it is the same input and two
+gaps if it is not, and a count cannot tell those apart.
+
+**The ceiling comes first.** Kill sets index one function's argument pool, so only gaps in
+the same function can be compared at all, and a gap alone in its function can never be a
+restatement. If gaps did not cluster by function the collapse would be near zero whatever
+the kill sets looked like, and reporting the collapse without the bound would make a
+structural fact look like a measurement about kill sets. Over four repositories —
+1,047 mutants scored, 52 proven gaps, every one of them placeable — the gaps fall in 30
+functions, of which **11 hold two or more**. So 33 of 52 gaps (63.5%) were eligible to
+collapse, and that is the most subsumption could ever have removed here.
+
+**It removes more than half of what it could.**
+
+| repository | mutants | gaps | functions with a gap | with 2+ | eligible | restatements | distinct |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| flake-detective | 293 | 20 | 13 | 4 | 11 | 6 | 14 |
+| blast-radius | 138 | 12 | 7 | 2 | 7 | 5 | 7 |
+| assay-drift | 291 | 2 | 2 | 0 | 0 | 0 | 2 |
+| suite-auditor | 325 | 18 | 8 | 5 | 15 | 8 | 10 |
+| **total** | **1,047** | **52** | **30** | **11** | **33** | **19** | **33** |
+
+**19 of 52 proven gaps — 36.5% — are restatements of another gap of the same function.**
+Of the 33 eligible, 19 collapse and 14 survive as dominators. The count is recomputed from
+the exported kill sets by `research/subsumption_rate.py` as well as read off the engine's
+own `subsumed_by` field, and the two agree at 19: one quantity produced by two code paths
+with nothing comparing them is how a wrong number survives, and here they are compared.
+
+Two numeric coincidences in that row, flagged because each looks like a derivation and is
+not. **Eligible (33) and distinct (33) are equal by accident** — 19 single-gap functions
+contribute 19 dominators, the 33 eligible contribute 14 more, and 19 + 14 happens to be 33.
+And **the 19 ineligible gaps and the 19 restatements are equal by accident** too. Neither
+pair is computed from the other.
+
+**Both filters, and what each denominator is.** §3.2 discards 5.38% of *mutants* as
+duplicates before anything is scored, syntactically, across functions. §3.3 discards 36.5%
+of *proven gaps* after scoring, semantically, within a function. The denominators are
+different populations at different stages and the percentages are not comparable; what
+composes is the pipeline, not the rates. The larger figure is the later one because a
+mutant has to survive the suite and then be proven to reach it, and the survivors of one
+function tend to be the handful of mutants its weakest branch admits — which is exactly the
+population most likely to be caught by one shared input.
+
+**Two things this does not claim.** Dynamic subsumption is relative to the input pool,
+exactly as in the source paper it is relative to a test set: two mutants with identical kill
+sets here may be distinguishable by an input the pool does not contain, so merging them can
+err in the direction of merging too much. Computing the relation over all inputs is
+undecidable, which is why the dynamic form exists. So the dominator count is a **lower
+bound** on the number of distinct behaviours and the raw count an **upper bound**, and
+`audit.json` carries both rather than either alone.
+
+And the algorithm has one silent trap, which is tested from both sides in
+`tests/test_subsume.py`. The empty set is a subset of every set, so a mutant that no input
+distinguishes would subsume the entire pool and collapse any number of distinct gaps to one.
+Nothing about that failure looks like an error — the count simply gets better — so
+`subsumes` requires a non-empty left-hand side, and a test plants an unkillable mutant
+among three distinguishable ones and checks the answer stays three rather than becoming one.
+
 # 4. Comparison with `cosmic-ray`
 
 Same machine, same virtualenv, `xmltodict` 1.0.4 (19 functions, 119 tests):
@@ -413,3 +492,5 @@ figure here rebuilds from the repository without the 19 MB raw census.
 > and none that it confirmed, which is a fact about the method rather than about any one
 > claim: an absence found by literature search is not a result here, and the remaining
 > references still need reading in full before submission.
+- [@subsumption2014] Ammann, P., Delamaro, M. E. and Offutt, J. *Establishing Theoretical Minimal Sets of Mutants.* ICST 2014. Dynamic subsumption: a mutant set is minimal with respect to a test set exactly when no distinct pair in it has one mutant subsuming the other. <https://doi.org/10.1109/ICST.2014.13>
+- [@subsumption-graphs] Kurtz, B., Ammann, P., Delamaro, M. E., Offutt, J. and Deng, L. *Mutant Subsumption Graphs.* ICSTW 2014. The hierarchy the dominators sit at the top of. <https://doi.org/10.1109/ICSTW.2014.20>

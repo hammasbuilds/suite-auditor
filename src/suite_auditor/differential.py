@@ -386,7 +386,13 @@ def compare(
     if _looks_nondeterministic(old) or _looks_nondeterministic(new):
         for row in rows:
             row["nondeterministic"] = True
-    for row, a in zip(rows, sets, strict=False):
+    for index, (row, a) in enumerate(zip(rows, sets, strict=False)):
+        # The position in the shared argument pool. Every mutant of one function is
+        # compared over the same pool, so this index means the same input across mutants
+        # and the kill sets `subsume` compares are commensurable. Without it the only
+        # cross-mutant quantity would be a count, and two mutants caught by different
+        # single inputs would be indistinguishable from two caught by the same one.
+        row["index"] = index
         row["args"] = a.display()
         row["provenance"] = a.provenance
         row["old_s"] = f"{row['old'][0]}: {row['old'][1]}"
@@ -475,6 +481,10 @@ def compare(
             "status": "differs",
             "detail": f"{len(disagreements)} of {len(rows)} inputs disagree",
             "witness": {"args": w["args"], "old": w["old_s"], "new": w["new_s"]},
+            # Which inputs prove it, not how many. This is the mutant's kill set, and
+            # `subsume` needs the set rather than its size: two mutants each caught by
+            # one input are the same gap if it is the same input and two gaps if not.
+            "signature": sorted(r["index"] for r in proof),
             "provenance": w["provenance"],
             "tried": len(rows),
             "exercised": len(exercised),
