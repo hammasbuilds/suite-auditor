@@ -237,10 +237,14 @@ one row per package):
 | over the 4,096 MB memory cap | 2 |
 | install timed out | 2 |
 
-Two things came out of it. The seven score like the included packages - median kill rate
-**0.848**, the same as the published median over 112, with 6 of 7 carrying at least one
-proven gap - so the budget exclusion limits what the census *covers* and is not visibly
-biasing its rate. And four of the seven finished in **171, 185, 194 and 203 seconds**,
+Two things came out of it. Nothing in the seven points away from the included packages -
+median kill rate **0.848**, the same as the published median over 112, with a
+distribution-free interval of [0.824, 0.877] from seven points - though seven points can
+only fail to find a difference, not show there is none, and one figure goes the other
+way: 6 of 7 carry at least one proven gap against 51 of 112, 85.7% against 45.5%, Fisher
+two-sided *p* = 0.054. So the budget exclusion limits what the census *covers*, and
+whether it also biases the rate is unresolved. And four of the seven finished in
+**171, 185, 194 and 203 seconds**,
 with a fifth at 302 - inside, or within 1%, of the 300-second budget that had excluded
 them. Same code, same packages, a less loaded machine. A wall-clock budget measures the
 machine as much as the project, so that row of the funnel is not a reproducible fact

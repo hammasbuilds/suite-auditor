@@ -111,7 +111,8 @@ def test_the_manuscript_quotes_these_numbers():
         "1,800-second",
         "**7 of the 12 completed.**",
         "171, 185, 194 and 203 seconds",
-        "6 of the 7 carry at least one proven gap, 21 in total",
+        "6 of the 7 recovered",
+        "21 gaps in total",
     ):
         assert fragment in section, fragment
 
@@ -123,3 +124,55 @@ def test_the_quoted_durations_are_the_measured_ones(audited):
     inside = sorted(r["seconds"] for r in audited if r["seconds"] < 300)
     quoted = ", ".join(f"{s:.0f}" for s in inside[:-1]) + f" and {inside[-1]:.0f} seconds"
     assert quoted in paper, (quoted, inside)
+
+
+def test_the_proven_gap_comparison_is_reported_as_a_difference(audited):
+    """6 of 7 against 51 of 112 is not agreement, and a draft read it as agreement.
+
+    85.7% against 45.5%, Fisher two-sided p = 0.054. The section quoted both counts
+    beside a claim that the recovered packages "score like the included ones", which
+    the kill rate supports weakly and this figure contradicts. Recomputed here so the
+    numbers in that paragraph cannot drift back into agreeing.
+    """
+    import math
+
+    summary = json.loads(SUMMARY.read_text(encoding="utf-8"))
+    with_gaps = sum(1 for r in audited if r["audit"]["proven_gaps"])
+    recovered_share = with_gaps / len(audited)
+    published_share = summary["projects_with_a_proven_gap"] / summary["audited"]
+    assert recovered_share > published_share, (recovered_share, published_share)
+
+    a, b = with_gaps, len(audited) - with_gaps
+    c = summary["projects_with_a_proven_gap"]
+    d = summary["audited"] - c
+    total = a + b + c + d
+
+    def table(w, x, y, z):
+        return math.comb(w + x, w) * math.comb(y + z, y) / math.comb(total, w + y)
+
+    observed = table(a, b, c, d)
+    p = sum(
+        q
+        for x in range(max(0, (a + c) - (c + d)), min(a + b, a + c) + 1)
+        if (q := table(x, a + b - x, a + c - x, (c + d) - (a + c - x))) <= observed + 1e-12
+    )
+
+    paper = (PAPER).read_text(encoding="utf-8")
+    section = paper[paper.index("## 5.1 Re-measuring") :].split("\n# ")[0]
+    assert f"{recovered_share * 100:.1f}% against {published_share * 100:.1f}%" in section
+    assert f"*p* = {p:.3f}" in section, f"{p:.3f}"
+
+
+def test_the_order_statistic_interval_is_the_one_quoted(audited):
+    """Section 5.1 quotes [0.824, 0.877] at 87.5% coverage from seven points."""
+    import math
+
+    rates = sorted(r["audit"]["kill_rate"] for r in audited)
+    assert len(rates) == 7, len(rates)
+    low, high = rates[1], rates[5]
+    coverage = sum(math.comb(7, k) for k in range(2, 6)) / 2**7
+    paper = PAPER.read_text(encoding="utf-8")
+    section = paper[paper.index("## 5.1 Re-measuring") :].split("\n# ")[0]
+    assert f"[{low:.3f}, {high:.3f}]" in section, (low, high)
+    assert f"{coverage * 100:.1f}% coverage" in section, coverage
+    assert low <= json.loads(SUMMARY.read_text(encoding="utf-8"))["kill_rate_median"] <= high

@@ -353,11 +353,24 @@ different things.
 | covered fraction, the 7 recovered | 0.839 | 0.805–0.975 |
 | covered fraction, the 112 published | 0.859 | 0.019–1.000 |
 
-**The recovered packages score like the included ones.** Median kill rate 0.848 against
-the published 0.848; 6 of the 7 carry at least one proven gap, 21 in total, against 51 of
-112. The budget exclusion is therefore a limit on the census's *coverage* and not visibly
-a bias in its rate — which is the opposite of what the selection-bias paragraph above
-would predict, and is reported because it was measured rather than assumed.
+**Nothing in the seven points away from the included population — which is weaker than
+saying they match.** The median kill rate is 0.848 against the published 0.848, and a
+distribution-free interval from the 2nd and 6th of seven order statistics is
+[0.824, 0.877] at 87.5% coverage, which contains it. Seven points cannot establish that
+two populations agree; they can fail to find a difference, and that is all this is. The
+selection-bias paragraph above predicts the excluded packages are worse tested, and this
+sample does not show it — at a sample size where it would have to be a large effect to
+show at all.
+
+**One figure points the other way and is reported as such.** 6 of the 7 recovered
+packages carry at least one proven gap, 21 gaps in total, against 51 of 112 among the
+audited — 85.7% against 45.5%, Fisher two-sided *p* = 0.054. An earlier draft of this
+section quoted those two counts side by side as if they supported the agreement above;
+they do not. If anything the recovered packages have *more* provable gaps, which is the
+direction the selection-bias argument predicts and the kill rate did not show, and seven
+projects is not enough to say which reading is right. The one claim both figures support
+is the modest one: the budget exclusion limits what the census *covers*, and whether it
+also biases the rate is unresolved by this sample.
 
 **The budget is partly a property of the machine, not of the project.** Four of the seven
 finished in 171, 185, 194 and 203 seconds, and a fifth in 302 — inside, or within 1%, of
