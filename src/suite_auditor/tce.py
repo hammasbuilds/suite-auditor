@@ -66,6 +66,13 @@ _SEMANTIC = (
 # Present from 3.11. Carries the try/except ranges, so it is semantics, not debug data.
 _EXCEPTION_TABLE = "co_exceptiontable"
 
+# Jump opcodes, as *opcodes*. Two mistakes are easy here and this module made both:
+# `dis.hasjump` exists only from 3.13, so reading it raised AttributeError on 3.10-3.12
+# - and every one of these lists holds integer opcodes, so testing `item.opname in ...`
+# against them is always False and silently skips the jump-target normalisation instead
+# of failing. `dis.hasjabs` is empty from 3.11 and absent in no supported version.
+_JUMPS = frozenset(getattr(dis, "hasjrel", ())) | frozenset(getattr(dis, "hasjabs", ()))
+
 
 class Unfingerprintable(Exception):
     """The source does not compile, or holds a constant with no canonical form.
@@ -121,7 +128,7 @@ def _canonical_code(code: CodeType) -> str:
         if isinstance(item.argval, CodeType):
             stream.append(f"{item.opname}({_canonical_code(item.argval)})")
             continue
-        if item.opname in dis.hasjump or item.opname in getattr(dis, "hasjrel", ()):
+        if item.opcode in _JUMPS:
             target = index_of.get(item.argval)
             stream.append(f"{item.opname}(->{target if target is not None else item.argval})")
             continue

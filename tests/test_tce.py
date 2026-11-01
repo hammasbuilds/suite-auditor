@@ -251,3 +251,48 @@ def test_a_realistic_function_yields_the_duplicate_the_paper_names():
     duplicate_source, operator, duplicates_what = result["duplicate"][0]
     assert "if not not items:" in duplicate_source
     assert {operator, duplicates_what} == {"negate_if", "drop_not"}
+
+
+# --- the jump branch, which shipped dead -----------------------------------------------
+
+
+def test_jump_opcodes_were_actually_found():
+    """`_JUMPS` must not be empty, and must hold opcodes rather than names.
+
+    The first version read `dis.hasjump`, which exists only from 3.13 - so on 3.10 to
+    3.12 it raised AttributeError, and on 3.13+ it compared `item.opname`, a string,
+    against a list of integer opcodes, which is always False. The jump-target
+    normalisation this module documents never ran, in any version.
+    """
+    from suite_auditor.tce import _JUMPS
+
+    assert _JUMPS, "no jump opcodes found; the normalisation below cannot fire"
+    assert all(isinstance(op, int) for op in _JUMPS), sorted(_JUMPS)[:5]
+
+
+def test_the_jump_branch_fires_on_a_function_with_a_jump():
+    """Not just that the set is non-empty: that this code path is taken.
+
+    A test that only checked `_JUMPS` would pass with the branch still unreachable.
+    """
+    import dis
+
+    from suite_auditor.tce import _JUMPS
+
+    source = "def f(x):\n    if x > 0:\n        return 1\n    return 2\n"
+    code = compile(source, "<t>", "exec")
+    inner = next(c for c in code.co_consts if hasattr(c, "co_code"))
+    jumps = [i for i in dis.get_instructions(inner) if i.opcode in _JUMPS]
+    assert jumps, "this function was supposed to contain a jump"
+
+
+def test_a_jump_over_a_region_that_changed_length_still_matches():
+    """What the normalisation buys: offsets move, instruction positions do not.
+
+    Two spellings of the same program whose jump crosses a differently-encoded
+    constant. With jump targets left as raw byte offsets these can differ; expressed as
+    positions in the instruction list they do not.
+    """
+    a = "def f(x):\n    if x:\n        return 3600\n    return 0\n"
+    b = "def f(x):\n    if x:\n        return 60 * 60\n    return 0\n"
+    assert fingerprint(a) == fingerprint(b)
