@@ -224,8 +224,8 @@ repositories and **nineteen third-party packages installed from PyPI**.
 | equivalent | > 7% | **27 of 43,557 — 0.062%** |
 | duplicate | > 21% | **2,344 of 43,557 — 5.38%** |
 
-Both are smaller than C by two orders of magnitude and one respectively, and neither is
-zero. The first run of this measurement covered only the five repositories and reported
+Both are smaller than C — the equivalent share by a factor of about a hundred, the
+duplicate share by about four — and neither is zero. The first run of this measurement covered only the five repositories and reported
 **0 of 2,467 equivalent**, which is what a rate of 0.062% predicts for a sample that size
 (1.5 expected) and is not evidence that this author's code differs. The nineteen
 third-party packages are in the corpus because five repositories by one author are not a
