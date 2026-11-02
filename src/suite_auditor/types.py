@@ -59,6 +59,42 @@ class Target:
     itself worth reporting and costs nothing to find out.
     """
 
+    receiver_class: str = ""
+    """For a method: the class it is defined in. Empty for a plain function.
+
+    A method cannot be called without its instance, and faking one proves nothing in
+    either direction - so before this existed every method survivor was reported
+    `unproven`, which was 62.7% of all refusals over the 112-package census, across 88 of
+    those packages. With the class named, the prover can import it and construct a real
+    receiver."""
+
+    receiver_init: str = ""
+    """Source of the class's `__init__`, dedented, or "" when it defines none.
+
+    Kept as source rather than as generated argument sets because the pool of literals to
+    draw from comes from the covering tests, which are not known at discovery time."""
+
+    receiver_fields: tuple[str, ...] = ()
+    """Annotated class-level field names, in order, for a class with no `__init__`.
+
+    A dataclass has its `__init__` generated at runtime, so there is no AST to read
+    parameters from, and `Class()` fails on one with required fields. The annotations are
+    the parameter list in that case."""
+
+    @property
+    def method_of(self) -> str:
+        """The class name when this target is a method, else ""."""
+        return self.receiver_class
+
+    @property
+    def module(self) -> str:
+        """The dotted module this target lives in, for importing its class."""
+        stem = self.path.rsplit("/", 1)[-1]
+        stem = stem[:-3] if stem.endswith(".py") else stem
+        if stem == "__init__":
+            return self.package
+        return f"{self.package}.{stem}" if self.package else stem
+
     @property
     def key(self) -> str:
         return f"{self.path}::{self.name}"

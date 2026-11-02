@@ -1,0 +1,80 @@
+{
+ "what": "What instance construction recovers. Every method survivor used to be reported `method` without further question, so the before column is known by construction and no second run is needed.",
+ "census_before": {
+  "unproven_survivors": 3179,
+  "method": 1993,
+  "share": 0.627,
+  "note": "research/unproven_reach.json, over the 112-package census, measured before instance construction existed. These repositories are not that population; re-running the census is what would put the two side by side."
+ },
+ "totals": {
+  "repositories": 4,
+  "repositories_scored": 4,
+  "repositories_failed": 0,
+  "method_mutants_scored": 173,
+  "method_survivors": 43,
+  "a_receiver_was_built": 43,
+  "still_refused_for_want_of_a_receiver": 0,
+  "newly_proven": 1,
+  "outcomes": {
+   "killed by the suite": 130,
+   "no_input": 31,
+   "equivalent": 11,
+   "proven": 1
+  },
+  "share_with_a_receiver": 1.0,
+  "partitions": true
+ },
+ "per_repository": {
+  "flake-detective": {
+   "method_mutants_scored": 20,
+   "outcomes": {
+    "no_input": 12,
+    "killed by the suite": 8
+   },
+   "method_survivors": 12,
+   "would_all_have_been_method_before": 12,
+   "a_receiver_was_built": 12,
+   "still_refused_for_want_of_a_receiver": 0,
+   "share_with_a_receiver": 1.0,
+   "newly_proven": 0
+  },
+  "blast-radius": {
+   "method_mutants_scored": 0,
+   "outcomes": {},
+   "method_survivors": 0,
+   "would_all_have_been_method_before": 0,
+   "a_receiver_was_built": 0,
+   "still_refused_for_want_of_a_receiver": 0,
+   "share_with_a_receiver": null,
+   "newly_proven": 0
+  },
+  "assay-drift": {
+   "method_mutants_scored": 62,
+   "outcomes": {
+    "killed by the suite": 58,
+    "no_input": 4
+   },
+   "method_survivors": 4,
+   "would_all_have_been_method_before": 4,
+   "a_receiver_was_built": 4,
+   "still_refused_for_want_of_a_receiver": 0,
+   "share_with_a_receiver": 1.0,
+   "newly_proven": 0
+  },
+  "suite-auditor": {
+   "method_mutants_scored": 91,
+   "outcomes": {
+    "killed by the suite": 64,
+    "no_input": 15,
+    "equivalent": 11,
+    "proven": 1
+   },
+   "method_survivors": 27,
+   "would_all_have_been_method_before": 27,
+   "a_receiver_was_built": 27,
+   "still_refused_for_want_of_a_receiver": 0,
+   "share_with_a_receiver": 1.0,
+   "newly_proven": 1
+  }
+ }
+}

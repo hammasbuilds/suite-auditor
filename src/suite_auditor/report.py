@@ -175,7 +175,8 @@ def summary(audit: Audit, repo_name: str) -> str:
 # property of the suite, and reporting one total let "possibly equivalent mutants" stand
 # for all of it. Keyed off each result's own `detail`, so nothing new is computed.
 UNPROVEN_REASONS = (
-    ("method", "a method, which cannot be called without its instance"),
+    ("method", "a method whose class could not be identified"),
+    ("no_receiver", "a method whose class could not be constructed without touching the machine"),
     ("no_input", "no valid input could be built - every argument set raised on both sides"),
     ("both_raised", "disagreed only where both versions raised, so it is not proof"),
     ("old_uncallable", "the unmutated function could not be called either"),
@@ -187,6 +188,14 @@ UNPROVEN_REASONS = (
 def unproven_reason(detail: str) -> str:
     """Which of UNPROVEN_REASONS this survivor's detail describes."""
     text = (detail or "").lower()
+    if "no_receiver" in text:
+        # Distinct from `method`, and the distinction is the measurement. Before
+        # instance construction existed, every method survivor was `method` - 62.7% of
+        # all refusals over the census. What is left after it is the share that was
+        # never recoverable: a class that cannot be imported, cannot be constructed from
+        # its own `__init__`, or cannot be constructed without writing to the machine.
+        # Folding the two together would hide exactly how much the new capability moved.
+        return "no_receiver"
     if "a method cannot be called" in text:
         return "method"
     if "old_uncallable" in text:

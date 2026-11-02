@@ -425,16 +425,51 @@ The last column is the one that matters. Only the `equivalent` row is a fact abo
 *mutant* — a mutant that agrees with the original on every real input may genuinely be the
 same program, and no amount of further work will prove a gap there. Every other row is a
 fact about this prover, and **84.7% of all refusals fall in that group**. So the lower bound
-is not near the limit of the approach; it is dominated by one unimplemented capability.
+is not near the limit of the approach. Which of those rows holds recoverable gaps is a
+separate question from which of them is largest, and the next paragraph is what happened
+when the largest was removed.
 
-**That capability is instance construction.** A method's receiver is not available to the
-prover, and the tool refuses to fake one because a call with a fabricated `self` proves
-nothing in either direction — the refusal is correct. But it accounts for 62.7% of all
-refusals, across 88 of the 112 packages, which makes it the single largest determinant of
-how far below the truth the 45.5% sits. Constructing a real instance from the class's own
-`__init__` and calling the method on it is the next piece of work on this tool, and it is
-the one that would move the bound most. Rebuild the table with
-`python research/unproven_reach.py`.
+**That capability is instance construction**, and building it did not do what this
+section first predicted. A method's receiver is not available to the prover, and the tool
+refused to fake one because a call with a fabricated `self` proves nothing in either
+direction. The refusal was correct, and at 62.7% of all refusals across 88 of the 112
+packages it looked like the single largest determinant of how far below the truth the 45.5%
+sits. So it was implemented: the receiver's class is recorded with the target, candidate
+constructions are generated from the class's own `__init__` — or from its annotated fields,
+for a dataclass whose `__init__` exists only at runtime — using the same argument machinery
+and the same harvested literals the method's own arguments use, and the first candidate that
+constructs under the side-effect guard becomes the instance, rebuilt fresh for each side of
+each call.
+
+It removes the refusal completely and recovers almost no gaps. Over four repositories,
+173 method mutants were scored and 43 survived; **every one of the 43 got a real instance**,
+none was refused for want of a receiver, and the whole category disappeared. What appeared
+underneath it was a different limit:
+
+| what became of the 43 method survivors | survivors | share |
+|---|---:|---:|
+| no valid input — every argument set raised on both sides | 31 | 72.1% |
+| ran on real inputs and agreed — possibly equivalent | 11 | 25.6% |
+| **newly proven gap** | **1** | **2.3%** |
+
+So the 62.7% was not a reservoir of provable gaps. It was concealing the `no_input` row of
+the table above it, and once a receiver exists the binding constraint on a method target is
+the argument pool, not the instance — a method reached through a receiver needs arguments for
+*both*, and the pool that could not supply one function's arguments cannot supply two. The
+honest form of the earlier claim is that instance construction was the largest *refusal*,
+not the largest recoverable gap, and that the two are not the same thing. The capability is
+worth keeping: it is correct, it costs one construction per function, and it moves 43
+survivors from a reason about the prover to a reason that can be stated precisely. It is not
+what would move the bound most.
+
+Two things this measurement is not. It is four repositories, not the 112-package census, so
+the 2.3% is about these classes and not about PyPI; re-running the census is what would put
+it beside the 62.7%, and the census is the population. And the before column is known by
+construction rather than measured twice — every survivor of a method target used to carry
+the reason `method` without exception, because that was the first thing checked after the
+suite failed to kill the mutant, so no second run under the old code is needed and none
+could be made comparable. Rebuild both tables with `python research/unproven_reach.py` and
+`python research/receiver_reach.py --repo ...`.
 
 **One interpreter, one platform, one time budget.** The 300-second budget excluded 60
 packages, and the budget rows together 63 — the largest single recoverable exclusion, and

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import ast
 import os
+import textwrap
 from pathlib import Path
 
 from suite_auditor.types import Target
@@ -366,11 +367,41 @@ def header_for(tree: ast.Module, source: str, needed: set[str], exclude: str = "
     return "\n".join(body for _, (_, body) in sorted(chosen.items()))
 
 
-def _target(ctx: tuple, node, name: str) -> Target:
+def _receiver_of(lines: list[str], cls: ast.ClassDef | None) -> tuple[str, str, tuple[str, ...]]:
+    """(class name, `__init__` source, annotated field names) for a method's class.
+
+    The fields are the fallback for a class whose `__init__` is generated - a dataclass,
+    an attrs class, a NamedTuple - where there is no AST to read parameters from and
+    `Class()` raises on the required ones. Only annotated *class-level* names count.
+
+    Every one of them counts, including those declared after a method. A dataclass's
+    parameter order is its annotation order wherever the annotations sit, which is checked
+    in `tests/test_receiver.py` against a real dataclass rather than assumed: a docstring
+    here first claimed the scan stopped at the first method, and stopping there would have
+    built `Price(amount)` for a class whose second field is also required.
+    """
+    if cls is None:
+        return "", "", ()
+    init = ""
+    fields: list[str] = []
+    for sub_node in cls.body:
+        if isinstance(sub_node, ast.FunctionDef | ast.AsyncFunctionDef):
+            if sub_node.name == "__init__":
+                start = min([sub_node.lineno] + [d.lineno for d in sub_node.decorator_list])
+                end = sub_node.end_lineno or sub_node.lineno
+                init = textwrap.dedent("\n".join(lines[start - 1 : end]))
+            continue
+        if isinstance(sub_node, ast.AnnAssign) and isinstance(sub_node.target, ast.Name):
+            fields.append(sub_node.target.id)
+    return cls.name, init, tuple(fields)
+
+
+def _target(ctx: tuple, node, name: str, cls: ast.ClassDef | None = None) -> Target:
     rel_s, tree, src, lines, sys_path, package = ctx
     start = min([node.lineno] + [d.lineno for d in node.decorator_list])
     end = node.end_lineno or node.lineno
     body = "\n".join(lines[start - 1 : end])
+    receiver_class, receiver_init, receiver_fields = _receiver_of(lines, cls)
     return Target(
         path=rel_s,
         name=name,
@@ -380,6 +411,9 @@ def _target(ctx: tuple, node, name: str) -> Target:
         package=package,
         lineno=start,
         end_lineno=end,
+        receiver_class=receiver_class,
+        receiver_init=receiver_init,
+        receiver_fields=receiver_fields,
     )
 
 
@@ -576,5 +610,5 @@ def find_targets(repo: Path, include_methods: bool = True) -> list[Target]:
             elif include_methods and isinstance(node, ast.ClassDef):
                 for sub in node.body:
                     if isinstance(sub, ast.FunctionDef | ast.AsyncFunctionDef):
-                        out.append(_target(ctx, sub, f"{node.name}.{sub.name}"))
+                        out.append(_target(ctx, sub, f"{node.name}.{sub.name}", node))
     return out

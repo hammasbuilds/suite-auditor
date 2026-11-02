@@ -134,11 +134,39 @@ def test_methods_are_the_largest_single_cause_and_by_a_long_way():
     assert largest["about"] == "the prover's reach"
 
 
-def test_the_tool_still_refuses_to_fake_a_receiver():
-    """The refusal is correct, and the section says so. If it stopped, the count is stale."""
+def test_the_tool_never_fakes_a_receiver():
+    """It still refuses to fabricate `self`; it now builds a real instance instead.
+
+    The distinction is the whole feature. A call with a fabricated receiver proves nothing
+    in either direction, so that refusal has to stay - and this test used to assert the
+    refusal covered *every* method, which stopped being true when instance construction
+    landed. What must remain true is narrower: a method whose class cannot be identified,
+    or cannot be constructed without touching the machine, is still refused.
+    """
     audit = _repo_file(ROOT / "src" / "suite_auditor" / "audit.py")
     assert "a method cannot be called without its instance" in audit
-    assert 'elif "." in target.name:' in audit
+    assert 'elif "." in target.name and receiver is None:' in audit
+    # And construction happens under the side-effect guard, not around it.
+    runner = _repo_file(ROOT / "src" / "suite_auditor" / "differential.py")
+    assert "_receiver_recipe" in runner
+    assert "_SideEffect" in runner
+
+
+def test_the_refusal_table_separates_what_was_recoverable():
+    """`method` and `no_receiver` must stay distinct reasons.
+
+    Before instance construction, `method` was 62.7% of all refusals over the census.
+    What survives the capability is the share that was never recoverable - a class that
+    cannot be imported or constructed safely - and folding the two into one bucket would
+    hide exactly how much the capability moved.
+    """
+    from suite_auditor.report import UNPROVEN_REASONS, unproven_reason
+
+    names = [name for name, _ in UNPROVEN_REASONS]
+    assert "method" in names
+    assert "no_receiver" in names
+    assert unproven_reason("survived; no_receiver: no constructible instance") == "no_receiver"
+    assert unproven_reason("survived; a method cannot be called without its instance") == "method"
 
 
 # ------------------------------------------------------------------------- the prose

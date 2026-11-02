@@ -20,6 +20,7 @@ LF. A copy costs a few seconds and makes both impossible.
 from __future__ import annotations
 
 import ast
+import dataclasses
 import re
 import shutil
 import sys
@@ -36,7 +37,13 @@ from queue import Queue
 from suite_auditor import subsume, tce
 from suite_auditor.coverage import build_map, calls_for, tests_for
 from suite_auditor.differential import compare
-from suite_auditor.inputs import argument_sets, harvest_for, witness_strength
+from suite_auditor.inputs import (
+    GENERATED,
+    ArgSet,
+    argument_sets,
+    harvest_for,
+    witness_strength,
+)
 from suite_auditor.mutate import find_targets, mutants
 from suite_auditor.types import Audit, Result, Target, Verdict
 from suite_auditor.workspace import Scratch, Timeout, child_env, kill_all, package_roots, run
@@ -203,6 +210,68 @@ def _argsets_for(repo: Path, target: Target, observed: list[dict]):
     return None
 
 
+# How many ways to construct a receiver are tried before giving up. The first that
+# constructs wins, so this is a cap on wasted work rather than on thoroughness.
+MAX_RECEIVER_CANDIDATES = 12
+
+
+def _receiver_for(repo: Path, target: Target, observed: list[dict]) -> dict | None:
+    """How to build this method's instance, or None when it is not a method.
+
+    The no-argument call is tried first and always offered, because most classes whose
+    methods matter take no required arguments and `Class()` is the construction a reader
+    would expect. After it come argument sets generated from the class's own `__init__`
+    with the same machinery the method's own arguments use, drawing on literals from the
+    tests that cover this method.
+
+    A class with no `__init__` in its source gets one candidate per annotated field list
+    as well - a dataclass's `__init__` exists only at runtime, so there is no AST to read,
+    and `Class()` raises on one with required fields. Those are the classes whose methods
+    are most often pure and most worth proving.
+    """
+    if not target.receiver_class:
+        return None
+    pool = harvest_for(repo, target.covering_tests)
+    calls: list = ["((), {})"]
+    if target.receiver_init:
+        try:
+            init_tree = ast.parse(target.receiver_init)
+        except SyntaxError:
+            init_tree = None
+        if init_tree is not None:
+            for node in ast.walk(init_tree):
+                if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+                    # `observed` is deliberately not passed: those are recorded calls to
+                    # the *method*, and their arguments have nothing to do with the
+                    # constructor's. Feeding them in produced candidates built from the
+                    # method's own inputs, which construct by coincidence or not at all.
+                    calls.extend(argument_sets(node, pool, is_method=True))
+                    break
+    elif target.receiver_fields:
+        # One candidate: every annotated field filled from the pool, by name. A
+        # dataclass's required fields have to be supplied together, so varying one at a
+        # time - which is what `argument_sets` does, and rightly, for a function - would
+        # offer no candidate that constructs at all.
+        chosen = []
+        for field_name in target.receiver_fields:
+            values = pool.get(field_name) or pool.get("") or ["None"]
+            chosen.append((field_name, values[0]))
+        if chosen:
+            calls.append(ArgSet(pos=(), kw=tuple(chosen), provenance=GENERATED))
+    seen: set[str] = set()
+    unique: list = []
+    for call in calls:
+        text = call if isinstance(call, str) else call.source()
+        if text not in seen:
+            seen.add(text)
+            unique.append(call)
+    return {
+        "module": target.module,
+        "attr": target.receiver_class,
+        "calls": unique[:MAX_RECEIVER_CANDIDATES],
+    }
+
+
 def audit_target(
     repo: Path,
     target: Target,
@@ -221,6 +290,9 @@ def audit_target(
     argsets = _argsets_for(repo, target, observed or [])
     if argsets is None:
         return results
+    # Built once per function, not once per mutant: the candidates depend on the class and
+    # on the covering tests, neither of which a mutation changes.
+    receiver = _receiver_for(repo, target, observed or [])
     if todo is None:
         source = textwrap.dedent(target.source)
         todo = tce.partition(source, mutants(source, cap=per_function))["kept"]
@@ -287,10 +359,9 @@ def audit_target(
                 f"the covering tests did not finish within {per_mutant:.0f}s" if timed_out else ""
             )
             results.append(Result(target.key, mutant, kind, Verdict.KILLED, detail=detail))
-        elif "." in target.name:
-            # A method needs its instance, and calling it with `self` missing or faked
-            # proves nothing either way - so no proof is attempted, and the survivor
-            # stays unproven rather than becoming a gap on a nonsense call.
+        elif "." in target.name and receiver is None:
+            # A method whose class could not be identified at all. Calling it with `self`
+            # missing or faked proves nothing either way, so no proof is attempted.
             results.append(
                 Result(
                     target.key,
@@ -302,7 +373,7 @@ def audit_target(
                 )
             )
         else:
-            results.append(_prove(target, mutant, kind, argsets, python))
+            results.append(_prove(target, mutant, kind, argsets, python, receiver))
         tick()
     _mark_restatements(results)
     return results
@@ -323,7 +394,14 @@ def _mark_restatements(results: list[Result]) -> None:
         result.subsumed_by = part.subsumed.get(result.mutant, "")
 
 
-def _prove(target: Target, mutant: str, kind: str, argsets, python: str) -> Result:
+def _prove(
+    target: Target,
+    mutant: str,
+    kind: str,
+    argsets,
+    python: str,
+    receiver: dict | None = None,
+) -> Result:
     """The survivor's trial: is it a different program on an input that counts?"""
     diff = compare(
         target.header,
@@ -338,6 +416,7 @@ def _prove(target: Target, mutant: str, kind: str, argsets, python: str) -> Resu
         # The real module's path, so an extracted function that reads `__file__` - a
         # cache directory, a data file beside the module - behaves as it would in place.
         str(Path(target.sys_path) / target.path) if target.sys_path else target.path,
+        receiver,
     )
     if diff["status"] == "differs":
         w = diff["witness"]
@@ -648,14 +727,10 @@ def _rerooted(t: Target, old_root: Path, new_root: Path) -> Target:
     sys_path = t.sys_path
     if sys_path.startswith(str(old_root)):
         sys_path = str(new_root) + sys_path[len(str(old_root)) :]
-    return Target(
-        path=t.path,
-        name=t.name,
-        source=t.source,
-        header=t.header,
-        sys_path=sys_path,
-        package=t.package,
-        lineno=t.lineno,
-        end_lineno=t.end_lineno,
-        covering_tests=t.covering_tests,
-    )
+    # `replace`, not a field-by-field rebuild. This listed its nine fields by hand, so
+    # every field added to `Target` afterwards was silently dropped on the way into the
+    # scratch copy - which is where the audit actually runs. The receiver fields were
+    # added, discovery filled them in correctly, and every method still came back
+    # "cannot be called without its instance" because they never survived this function.
+    # Nothing failed; the feature was simply absent.
+    return dataclasses.replace(t, sys_path=sys_path)

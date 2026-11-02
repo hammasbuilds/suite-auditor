@@ -152,10 +152,20 @@ than about the mutant.** The single largest is one capability:
 | the unmutated function could not be called either | 62 | 1.9% | 7 |
 
 A method's receiver is not available to the prover, and faking one would prove nothing in
-either direction, so the refusal is right. But it is 62.7% of all refusals across 88 of the
-112 packages, which makes constructing a real instance from the class's own `__init__` the
-next piece of work on this tool and the one that would move the lower bound most. Rebuild
-with `python research/unproven_reach.py`. The toolz gap, verified independently against installed toolz:
+either direction, so the refusal was right. At 62.7% of all refusals across 88 of the 112
+packages it also looked like the one capability that would move the lower bound most, so it
+was built: the receiver's class travels with the target, candidate constructions come from
+the class's own `__init__` or its annotated fields, and the first that constructs under the
+side-effect guard becomes a fresh instance for each side of each call.
+
+**It removes the refusal completely and recovers almost no gaps.** Across four repositories,
+43 of 173 method mutants survived; all 43 got a real instance and none was refused, but 31
+then had no valid input, 11 agreed on real inputs, and **1 became a proven gap**. The 62.7%
+was concealing the `no_input` row above it rather than holding provable gaps: once a receiver
+exists, a method needs arguments for both the instance and the call, and the pool that could
+not supply one set cannot supply two. Instance construction was the largest refusal, not the
+largest recoverable gap. Rebuild with `python research/unproven_reach.py` and
+`python research/receiver_reach.py --repo .`. The toolz gap, verified independently against installed toolz:
 
 ```
 toolz/functoolz.py::is_arity   `return rv` -> `return None` when the signature is unknown

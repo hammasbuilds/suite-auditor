@@ -289,13 +289,82 @@ def _equal(x, y):
 import copy
 
 ARGSETS = {argsets}
+RECEIVER = {receiver}
+
+
+def _resolve(module, attr):
+    mod = __import__(module, fromlist=["_"])
+    obj = mod
+    for part in attr.split("."):
+        obj = getattr(obj, part)
+    return obj
+
+
+def _receiver_recipe():
+    # A method's first argument is its instance, and the tool used to refuse the whole
+    # question rather than fake one: a call with a fabricated `self` proves nothing in
+    # either direction. A REAL instance is a different matter, so this constructs one
+    # from the class's own `__init__` and hands it over.
+    #
+    # Construction happens with the side-effect guard ON. An `__init__` that opens a
+    # socket or writes a file is not a receiver this tool can build safely, and the
+    # survivor stays unproven with that reason - the same rule the call itself follows.
+    #
+    # The recipe is returned rather than the instance: each side of the comparison, and
+    # each repeat, needs its OWN instance. A method that mutates `self` would otherwise
+    # hand the second version an object the first one had already changed, which is
+    # exactly the false disagreement the argument deepcopy exists to stop.
+    if not RECEIVER:
+        return None, ""
+    try:
+        cls = _resolve(RECEIVER["module"], RECEIVER["attr"])
+    except Exception as exc:
+        return None, "class could not be imported: " + type(exc).__name__ + ": " + str(exc)[:120]
+    tried = []
+    for args, kwargs in RECEIVER["calls"]:
+        _GUARD[0] = True
+        try:
+            cls(*copy.deepcopy(args), **copy.deepcopy(kwargs))
+        except _SideEffect as effect:
+            tried.append("side effect: " + str(effect)[:60])
+            continue
+        except BaseException as exc:
+            tried.append(type(exc).__name__ + ": " + str(exc)[:60])
+            continue
+        finally:
+            _GUARD[0] = False
+        return (args, kwargs), ""
+    why = "no constructible instance; tried " + str(len(RECEIVER["calls"]))
+    return None, why + ": " + "; ".join(tried[:3])
+
+
+RECIPE, RECIPE_WHY = _receiver_recipe()
+if RECEIVER and RECIPE is None:
+    print("__SA_NO_RECEIVER__" + RECIPE_WHY)
+    raise SystemExit(0)
+
+
+def _build():
+    # Fresh every time. Under the guard, because constructing is not the behaviour under
+    # test and must not be allowed to touch the machine either.
+    _GUARD[0] = True
+    try:
+        cls = _resolve(RECEIVER["module"], RECEIVER["attr"])
+        return cls(*copy.deepcopy(RECIPE[0]), **copy.deepcopy(RECIPE[1]))
+    finally:
+        _GUARD[0] = False
+
+
+def _with_receiver(args):
+    return (_build(),) + tuple(args) if RECEIVER else args
+
 
 rows = []
 for args, kwargs in ARGSETS:
     # A copy for each side: a function that mutates its argument would otherwise hand
     # the second version an input the first one already changed.
-    a, va = _call(OLD_FN, copy.deepcopy(args), copy.deepcopy(kwargs))
-    b, vb = _call(NEW_FN, copy.deepcopy(args), copy.deepcopy(kwargs))
+    a, va = _call(OLD_FN, _with_receiver(copy.deepcopy(args)), copy.deepcopy(kwargs))
+    b, vb = _call(NEW_FN, _with_receiver(copy.deepcopy(args)), copy.deepcopy(kwargs))
     same = a == b or _equal(va, vb)
     # A single call cannot tell "the mutant changed behaviour" apart from "this
     # function is not deterministic" - random.randint, uuid4, time.time and similar
@@ -306,8 +375,14 @@ for args, kwargs in ARGSETS:
     # unlikely to coincide on both repeats, so this is not a single coin flip.
     nondeterministic = False
     if not same:
-        old_repeats = [_call(OLD_FN, copy.deepcopy(args), copy.deepcopy(kwargs)) for _ in range(2)]
-        new_repeats = [_call(NEW_FN, copy.deepcopy(args), copy.deepcopy(kwargs)) for _ in range(2)]
+        old_repeats = [
+            _call(OLD_FN, _with_receiver(copy.deepcopy(args)), copy.deepcopy(kwargs))
+            for _ in range(2)
+        ]
+        new_repeats = [
+            _call(NEW_FN, _with_receiver(copy.deepcopy(args)), copy.deepcopy(kwargs))
+            for _ in range(2)
+        ]
         old_stable = all(a == a2 or _equal(va, va2) for a2, va2 in old_repeats)
         new_stable = all(b == b2 or _equal(vb, vb2) for b2, vb2 in new_repeats)
         nondeterministic = not (old_stable and new_stable)
@@ -315,6 +390,20 @@ for args, kwargs in ARGSETS:
 
 print("__SA_JSON__" + json.dumps(rows))
 """
+
+
+def _receiver_source(receiver: dict | None) -> str:
+    """The receiver as a source expression, not a repr.
+
+    Its candidate calls are argument *sources* - `([],)`, `('abc',)` - exactly as
+    `ARGSETS` holds them, so `repr()` on the dict would turn each one into a string
+    literal and the runner would construct the class from the text `"([],)"`. The dict
+    is assembled as source for the same reason the argument sets are.
+    """
+    if not receiver:
+        return "None"
+    calls = ", ".join(c if isinstance(c, str) else c.source() for c in receiver["calls"])
+    return f"{{'module': {receiver['module']!r}, 'attr': {receiver['attr']!r}, 'calls': [{calls}]}}"
 
 
 def compare(
@@ -328,6 +417,7 @@ def compare(
     package: str = "",
     python: str = "",
     target_file: str = "",
+    receiver: dict | None = None,
 ) -> dict:
     """Compare two versions. Returns a verdict dict; never raises.
 
@@ -337,6 +427,13 @@ def compare(
 
     `argsets` may be plain positional-tuple sources such as `"(2,)"`, which are treated
     as observed calls.
+
+    `receiver`, for a method, says how to build its instance:
+    `{{"module": "pkg.mod", "attr": "Class", "calls": [[args, kwargs], ...]}}`. The first
+    candidate that constructs without raising and without touching the machine is used,
+    and a fresh instance is built for every call on every side. When none constructs the
+    status is `no_receiver`, which is a statement about this prover rather than about the
+    mutant - the alternative, faking `self`, proves nothing in either direction.
     """
     sets = [
         a if isinstance(a, ArgSet) else _legacy(a)  # type: ignore[arg-type]
@@ -354,6 +451,7 @@ def compare(
         new=new,
         name=func,
         argsets="[" + ", ".join(a.source() for a in sets) + "]",
+        receiver=_receiver_source(receiver),
     )
 
     with tempfile.TemporaryDirectory() as tmp:
@@ -367,6 +465,10 @@ def compare(
             return {"status": "timeout", "detail": f"no result within {timeout}s"}
         except OSError as exc:
             return {"status": "error", "detail": str(exc)[:300]}
+
+    if "__SA_NO_RECEIVER__" in out:
+        why = out.split("__SA_NO_RECEIVER__", 1)[1].strip().splitlines()[0]
+        return {"status": "no_receiver", "detail": why[:300]}
 
     if "__SA_LOAD_FAIL__" in out:
         which = out.split("__SA_LOAD_FAIL__", 1)[1].strip().splitlines()[0]
