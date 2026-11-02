@@ -1,0 +1,57 @@
+{
+ "packages_audited": 112,
+ "mutants_scored": 16614,
+ "killed": 13216,
+ "proven_gaps": 219,
+ "unproven_survivors": 3179,
+ "unproven_classified": 3179,
+ "unproven_unclassified": 0,
+ "by_reason": {
+  "method": {
+   "survivors": 1993,
+   "share_of_unproven": 0.6269,
+   "packages": 88,
+   "about": "the prover's reach"
+  },
+  "equivalent": {
+   "survivors": 487,
+   "share_of_unproven": 0.1532,
+   "packages": 70,
+   "about": "the mutant"
+  },
+  "no_input": {
+   "survivors": 363,
+   "share_of_unproven": 0.1142,
+   "packages": 50,
+   "about": "the prover's reach"
+  },
+  "other": {
+   "survivors": 164,
+   "share_of_unproven": 0.0516,
+   "packages": 12,
+   "about": "the prover's reach"
+  },
+  "both_raised": {
+   "survivors": 110,
+   "share_of_unproven": 0.0346,
+   "packages": 39,
+   "about": "the prover's reach"
+  },
+  "old_uncallable": {
+   "survivors": 62,
+   "share_of_unproven": 0.0195,
+   "packages": 7,
+   "about": "the prover's reach"
+  }
+ },
+ "within_the_prover_s_reach": 2692,
+ "share_of_unproven_within_reach": 0.8468,
+ "largest_single_cause": {
+  "reason": "method",
+  "survivors": 1993,
+  "share_of_unproven": 0.6269,
+  "share_of_all_scored_mutants": 0.12,
+  "packages_affected": 88,
+  "about": "the prover's reach"
+ }
+}

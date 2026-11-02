@@ -404,9 +404,37 @@ operator set on these packages and is not comparable to a figure from another to
 [0.839, 0.896] around a median of 0.848 and does not resolve it. A census run after the
 filter would resolve it, and has not been run.
 
-**Proven gaps are a lower bound.** The tool refuses what it cannot witness, so the 45.5%
-counts only provable gaps; the true share of packages with a real gap is higher by an
-unknown amount. This is the intended direction of error.
+**Proven gaps are a lower bound, and the amount is not unknown.** The tool refuses what it
+cannot witness, so the 45.5% counts only provable gaps and the true share of packages with a
+real gap is higher. Every refusal is recorded with its reason, so the size and the cause of
+that gap can be read off the census rather than conceded. Over the 112 packages, 16,614
+mutants scored, 13,216 killed, 219 proven gaps and **3,179 unproven survivors** — and the
+three numbers sum to the scored total exactly, with none carrying a reason the classifier
+does not recognise:
+
+| why the survivor was not proven | survivors | share | packages | about |
+|---|---:|---:|---:|---|
+| a method, which cannot be called without its instance | **1,993** | **62.7%** | 88 | the prover's reach |
+| ran on real inputs and agreed — possibly equivalent | 487 | 15.3% | 70 | the mutant |
+| no valid input — every argument set raised on both sides | 363 | 11.4% | 50 | the prover's reach |
+| not classified | 164 | 5.2% | 12 | the prover's reach |
+| disagreed only where both versions raised | 110 | 3.5% | 39 | the prover's reach |
+| the unmutated function could not be called either | 62 | 1.9% | 7 | the prover's reach |
+
+The last column is the one that matters. Only the `equivalent` row is a fact about the
+*mutant* — a mutant that agrees with the original on every real input may genuinely be the
+same program, and no amount of further work will prove a gap there. Every other row is a
+fact about this prover, and **84.7% of all refusals fall in that group**. So the lower bound
+is not near the limit of the approach; it is dominated by one unimplemented capability.
+
+**That capability is instance construction.** A method's receiver is not available to the
+prover, and the tool refuses to fake one because a call with a fabricated `self` proves
+nothing in either direction — the refusal is correct. But it accounts for 62.7% of all
+refusals, across 88 of the 112 packages, which makes it the single largest determinant of
+how far below the truth the 45.5% sits. Constructing a real instance from the class's own
+`__init__` and calling the method on it is the next piece of work on this tool, and it is
+the one that would move the bound most. Rebuild the table with
+`python research/unproven_reach.py`.
 
 **One interpreter, one platform, one time budget.** The 300-second budget excluded 60
 packages, and the budget rows together 63 — the largest single recoverable exclusion, and

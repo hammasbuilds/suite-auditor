@@ -138,7 +138,24 @@ Three real audits (Python 3.12; toolz at `451af60`, repo-surgeon at `d69c12d`; d
 | &nbsp;&nbsp;the unmutated function could not be called either | 0 | 0 | 0 |
 
 Only the first unproven row is about the suite; the others measure how far the tool could
-reach. The toolz gap, verified independently against installed toolz:
+reach - and over the 112-package census that distinction is most of the picture.
+**3,179 survivors went unproven, and 84.7% of them for a reason about this prover rather
+than about the mutant.** The single largest is one capability:
+
+| why the survivor was not proven | survivors | share | packages |
+|---|---:|---:|---:|
+| **a method, which cannot be called without its instance** | **1,993** | **62.7%** | 88 of 112 |
+| ran on real inputs and agreed - possibly equivalent | 487 | 15.3% | 70 |
+| no valid input - every argument set raised on both sides | 363 | 11.4% | 50 |
+| not classified | 164 | 5.2% | 12 |
+| disagreed only where both versions raised | 110 | 3.5% | 39 |
+| the unmutated function could not be called either | 62 | 1.9% | 7 |
+
+A method's receiver is not available to the prover, and faking one would prove nothing in
+either direction, so the refusal is right. But it is 62.7% of all refusals across 88 of the
+112 packages, which makes constructing a real instance from the class's own `__init__` the
+next piece of work on this tool and the one that would move the lower bound most. Rebuild
+with `python research/unproven_reach.py`. The toolz gap, verified independently against installed toolz:
 
 ```
 toolz/functoolz.py::is_arity   `return rv` -> `return None` when the signature is unknown

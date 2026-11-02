@@ -109,7 +109,42 @@ def measure(export: dict) -> dict:
         "distinct": len(placed) - len(restated),
         "collapse_share": (round(len(restated) / len(placed), 4) if placed else None),
         "engine_counts": export.get("subsumption"),
+        # The engine now computes the ceiling too, so that a consumer holding only the
+        # report - the 112-package census, which keeps no per-mutant rows - has it. That
+        # makes three of these figures quantities with two implementations, and the whole
+        # argument of this file is that two implementations of one number drift. So they
+        # are compared here, by name, and the disagreements are listed rather than left to
+        # a reader noticing that two tables differ.
+        "engine_disagrees_about": _disagreements(
+            export.get("subsumption") or {},
+            {
+                "proven": len(gaps),
+                "placed": len(placed),
+                "unplaceable": len(gaps) - len(placed),
+                "distinct": len(placed) - len(restated),
+                "restatements": len(restated),
+                "functions_with_a_gap": len(per_function),
+                "functions_with_two_or_more": sum(1 for c in per_function.values() if c >= 2),
+                "eligible": len(eligible),
+            },
+        ),
     }
+
+
+def _disagreements(engine: dict, here: dict) -> dict:
+    """Fields where the engine's count and this file's differ, with both values.
+
+    Empty when they agree, which is the normal case and the one worth being able to assert.
+    A field the engine does not carry is reported as absent rather than as a disagreement:
+    an export written before the field existed is stale, not wrong.
+    """
+    out = {}
+    for key, value in sorted(here.items()):
+        if key not in engine:
+            out[key] = {"engine": None, "recomputed": value, "why": "absent from the export"}
+        elif engine[key] != value:
+            out[key] = {"engine": engine[key], "recomputed": value}
+    return out
 
 
 def main() -> int:

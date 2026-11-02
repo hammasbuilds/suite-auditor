@@ -604,6 +604,16 @@ def audit(
     # inflation of what it scored rather than of what it planned.
     proven = [r for r in out.results if r.verdict == Verdict.PROVEN_GAP]
     with_signature = [r for r in proven if r.signature]
+    # The ceiling, carried beside the collapse. Kill sets index one function's argument
+    # pool, so only gaps sharing a function can be compared at all and a gap alone in its
+    # function can never be a restatement. Reporting the collapse without the share of
+    # gaps that were eligible to collapse would let a fact about how gaps cluster read as
+    # a fact about kill sets. Computed here rather than only in research/ so that a
+    # consumer holding the report - the census, which keeps no per-mutant rows - has it.
+    per_function: dict[str, int] = {}
+    for result in with_signature:
+        per_function[result.target] = per_function.get(result.target, 0) + 1
+    multi = {k: n for k, n in per_function.items() if n >= 2}
     out.subsumption = {
         "proven": len(proven),
         # A gap found before this landed, or one whose proof came from a path that keeps
@@ -614,12 +624,18 @@ def audit(
         "unplaceable": len(proven) - len(with_signature),
         "distinct": sum(1 for r in with_signature if not r.subsumed_by),
         "restatements": sum(1 for r in with_signature if r.subsumed_by),
+        "functions_with_a_gap": len(per_function),
+        "functions_with_two_or_more": len(multi),
+        "eligible": sum(multi.values()),
     }
     placed = out.subsumption["placed"]
     distinct = out.subsumption["distinct"]
     out.subsumption["inflation"] = round(placed / distinct, 4) if distinct else None
     out.subsumption["restated_share"] = (
         round(out.subsumption["restatements"] / placed, 4) if placed else None
+    )
+    out.subsumption["eligible_share"] = (
+        round(out.subsumption["eligible"] / placed, 4) if placed else None
     )
 
     out.seconds = time.time() - t0

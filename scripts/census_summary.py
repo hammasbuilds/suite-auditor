@@ -107,6 +107,63 @@ def read_census(path: Path) -> list[dict]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _subsumption(audited: list[dict]) -> dict:
+    """How many of the census's proven gaps are restatements of another gap?
+
+    The rate published in section 3.3 of the manuscript rests on 52 gaps from four
+    repositories, because the census predates the kill-set signatures the comparison needs
+    and its rows carry no `subsumption` block at all. This aggregates the block where it is
+    present, so the rate has the census's denominator.
+
+    A row without the block is counted in `packages_without_a_signature` rather than
+    treated as having nothing to collapse. The two are indistinguishable in the arithmetic
+    and opposite in meaning: a package whose gaps were never compared is missing evidence,
+    and a package whose gaps were compared and found distinct is evidence. Summing the
+    first into the second is how a stale census would quietly lower the rate.
+    """
+    keys = (
+        "proven",
+        "placed",
+        "unplaceable",
+        "distinct",
+        "restatements",
+        "functions_with_a_gap",
+        "functions_with_two_or_more",
+        "eligible",
+    )
+    present = [r for r in audited if isinstance((r.get("audit") or {}).get("subsumption"), dict)]
+    if not present:
+        return {}
+    # A row from an older run carries the block without the ceiling fields. Counted
+    # separately, because an eligibility share computed over the rows that happen to have
+    # the field would be a share over a population nobody named.
+    complete = [r for r in present if "eligible" in (r["audit"]["subsumption"] or {})]
+    totals = {
+        key: sum((r["audit"]["subsumption"] or {}).get(key, 0) for r in complete) for key in keys
+    }
+    with_a_gap = [r for r in complete if (r["audit"]["subsumption"] or {}).get("proven")]
+    placed = totals["placed"]
+    out = {
+        "packages_with_a_signature": len(present),
+        "packages_with_the_eligibility_fields": len(complete),
+        "packages_without_a_signature": len(audited) - len(present),
+        "packages_with_a_proven_gap": len(with_a_gap),
+        **totals,
+        "restated_share": round(totals["restatements"] / placed, 4) if placed else None,
+        "eligible_share": round(totals["eligible"] / placed, 4) if placed else None,
+        "inflation": (round(placed / totals["distinct"], 4) if totals["distinct"] else None),
+    }
+    # The ceiling, said first. Only gaps sharing a function can be compared at all, so the
+    # share of gaps in a multi-gap function bounds what subsumption could ever remove;
+    # quoting the collapse without it turns a fact about how gaps cluster into a fact
+    # about kill sets.
+    out["note"] = (
+        f"{out['eligible']} of {placed} placed gaps sat in a function holding two or more, "
+        "so that is the ceiling on what any subsumption relation could collapse."
+    )
+    return out
+
+
 def summarise(rows: list[dict]) -> dict:
     audited, excluded = [], []
     for row in rows:
@@ -136,6 +193,7 @@ def summarise(rows: list[dict]) -> dict:
 
     return {
         "considered": len(rows),
+        **({"subsumption": subsumption} if (subsumption := _subsumption(audited)) else {}),
         "audited": len(audited),
         "excluded": len(excluded),
         "exclusions": dict(collections.Counter(_bucket(e) for e in excluded).most_common()),
