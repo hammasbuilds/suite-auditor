@@ -547,8 +547,8 @@ figure here rebuilds from the repository without the 19 MB raw census.
 
 # References
 
-- [@pytation] *PyTation: fault-driven mutation for Python.* arXiv:2601.19088.
-- [@mindthegap] *Mind the Gap: The Difference Between Coverage and Mutation Score Can Guide Testing Efforts.* arXiv:2309.02395.
+- [@pytation] Alimadadi, S. and Gharachorlu, G. *Hybrid Fault-Driven Mutation Testing for Python.* arXiv:2601.19088. **Verified against the arXiv full text**: seven Python-specific operators, 13 open-source applications, operators derived from the bug/fix patterns of Kamienski et al. (2021) over more than 1,000 projects. The tool is PyTation; the paper is not titled after it, as an earlier draft of this list had it.
+- [@mindthegap] *Mind the Gap: The Difference Between Coverage and Mutation Score Can Guide Testing Efforts.* arXiv:2309.02395. **Verified against the arXiv full text**: Maven (Java) projects, and the intractability §2 cites is its own sentence - "Computing mutation score on all files in every project in our corpus is computationally intractable" - which is why it samples up to 100 mutants per file and up to 100 files per project.
 - *Static and Dynamic Comparison of Mutation Testing Tools for Python.* SBQS.
 - *cosmic-ray* — mutation testing for Python. <https://github.com/sixty-north/cosmic-ray>
 - [@tce2015] Papadakis, M., Jia, Y., Harman, M. and Le Traon, Y. *Trivial Compiler
@@ -583,6 +583,14 @@ figure here rebuilds from the repository without the 19 MB raw census.
 > sentence came from a search summary. The paper's actual statement about other languages
 > - "Additional studies are needed to determine TCE performance on other languages" - is
 > now quoted instead, and is a better citation for what §3.2 does.
+>
+> **@pytation and @mindthegap have now been checked against their arXiv full texts, and
+> both claims §2 makes of them hold.** PyTation's operators really are derived from
+> Kamienski et al.'s study of more than 1,000 projects, and the intractability attributed
+> to @mindthegap is its own sentence. One error: its title is *Hybrid Fault-Driven
+> Mutation Testing for Python*, by Alimadadi and Gharachorlu - PyTation is the tool, not
+> the paper - and this list had invented a title from the tool's name. @teralizer's 632
+> projects and 1.7% are confirmed from its abstract, which is all §1 quotes of it.
 >
 > **@subsumption2014 has not been read.** Its only open-access copy is a University of
 > Sao Paulo repository handle that does not respond, and the publisher's page serves no
