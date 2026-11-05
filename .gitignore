@@ -39,3 +39,9 @@ docs/*-census.json.poisoned
 # The research environment. research/ and paper/ are experiment and manuscript
 # material, in neither the wheel nor the sdist.
 .venv-research/
+
+# The receiver-era re-audit of the 112 audited census packages: the same 20 MB shape as
+# target-census.json above, written so the before/after refusal table can be computed
+# over the same package set. The gzipped rows that the research scripts read are what
+# belongs in git.
+docs/target-census-receiver.json

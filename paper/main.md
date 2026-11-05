@@ -201,10 +201,25 @@ A kill rate is a rate over a mutant set, so the set has to be free of mutants th
 be killed and of mutants counted twice. Papadakis et al. [@tce2015] settle both with the
 compiler rather than with analysis: compile every mutant, and if one compiles to the
 original's binary it is **equivalent**; if two compile to each other's they are
-**duplicates**. On large C programs they discard over 7% as equivalent and over 21% as
-duplicates, and report a detection rate against hand-analysed ground truth of about 30%
-for C against about 54% for Java — a gap they attribute to mutation characteristics being
-language-dependent.
+**duplicates**. Over **362,769 mutants** of six large open-source C programs they
+discard **9,551 as equivalent (7.4%)** and **27,163 as duplicates (21%)**, about 28%
+between them. Against hand-analysed ground truth — a benchmark of 990 manually identified
+equivalent mutants over 18 small and medium subjects — TCE finds **about 30%** of the
+equivalent mutants that are there.
+
+An earlier draft of this paragraph also reported "about 54% for Java" and attributed the
+C-versus-Java gap to language-dependent mutation characteristics. **Neither is in the
+paper**, and this is recorded rather than quietly deleted because it is the fourth
+citation claim in these papers to fail on reading the source. TCE is a C-only study — its
+own row in its related-work table reads *"This paper, 2014, C, 362,769, 9,551"* — the
+string "54%" occurs exactly once in it, inside a per-program results table that has
+nothing to do with Java, and no such attribution appears anywhere in it. The sentence was
+written from a search summary.
+
+What the paper actually says about other languages is the opposite, and it is the better
+citation: *"We studied the mutants of the C language and TCE implemented using gcc.
+Additional studies are needed to determine TCE performance on other languages."* What
+follows is one of those studies.
 
 Python is not in that series, and the reason usually given — CPython has no optimising
 compiler, so nothing collapses two programs into one form — is a hypothesis.
@@ -221,8 +236,9 @@ repositories and **nineteen third-party packages installed from PyPI**.
 
 | | C [@tce2015] | **Python (this work)** |
 |---|---:|---:|
-| equivalent | > 7% | **27 of 43,557 — 0.062%** |
-| duplicate | > 21% | **2,344 of 43,557 — 5.38%** |
+| mutants | 362,769 | 43,557 |
+| equivalent | 9,551 — 7.4% | **27 of 43,557 — 0.062%** |
+| duplicate | 27,163 — 21% | **2,344 of 43,557 — 5.38%** |
 
 Both are smaller than C — the equivalent share by a factor of about a hundred, the
 duplicate share by about four — and neither is zero. The first run of this measurement covered only the five repositories and reported
@@ -537,9 +553,11 @@ figure here rebuilds from the repository without the 19 MB raw census.
 - *cosmic-ray* — mutation testing for Python. <https://github.com/sixty-north/cosmic-ray>
 - [@tce2015] Papadakis, M., Jia, Y., Harman, M. and Le Traon, Y. *Trivial Compiler
   Equivalence: A Large Scale Empirical Study of a Simple, Fast and Effective Equivalent
-  Mutant Detection Technique.* ICSE 2015, pp. 936–946. Over 7% of mutants discarded as
-  equivalent and over 21% as duplicates on large C programs; detection against
-  hand-analysed ground truth about 30% for C and about 54% for Java.
+  Mutant Detection Technique.* ICSE 2015, pp. 936–946. **Read in full** from the authors'
+  copy at orbilu.uni.lu. 362,769 mutants over six large C programs: 9,551 equivalent
+  (7.4%) and 27,163 duplicated (21%). Detection against hand-analysed ground truth - a
+  benchmark of 990 manually identified equivalent mutants over 18 subjects - about 30%.
+  A C-only study, which asks for the same measurement on other languages.
   <https://doi.org/10.1109/ICSE.2015.103>
 - [@teralizer] Glock, Bauer & Pinzger. *Teralizer: Semantics-Based Test Generalization
   from Conventional Unit Tests to Property-Based Tests.* arXiv:2512.14475, December 2025.
@@ -553,7 +571,30 @@ figure here rebuilds from the repository without the 19 MB raw census.
 > projects against both denominators, and §1 now cites it and states a narrower gap. That
 > makes three absence-based claims across these papers that a second search overturned
 > and none that it confirmed, which is a fact about the method rather than about any one
-> claim: an absence found by literature search is not a result here, and the remaining
-> references still need reading in full before submission.
+> claim: an absence found by literature search is not a result here.
+>
+> **@tce2015 has now been read in full**, from the authors' copy at orbilu.uni.lu, and a
+> second claim failed. Its figures are confirmed and sharpened - 362,769 mutants over six
+> large C programs, 9,551 equivalent (7.4%), 27,163 duplicated (21%), about 30% detection
+> against a 990-mutant hand-analysed benchmark over 18 subjects. But §3.2 also reported
+> "about 54% for Java" and attributed a C-versus-Java gap to language-dependent mutation
+> characteristics, and **neither is in the paper**: it is a C-only study, "54%" occurs
+> once in it inside an unrelated per-program table, and the attribution is absent. That
+> sentence came from a search summary. The paper's actual statement about other languages
+> - "Additional studies are needed to determine TCE performance on other languages" - is
+> now quoted instead, and is a better citation for what §3.2 does.
+>
+> **@subsumption2014 has not been read.** Its only open-access copy is a University of
+> Sao Paulo repository handle that does not respond, and the publisher's page serves no
+> text to a fetch. The definition of dynamic subsumption attributed to it here is the one
+> in general circulation and §4 implements it, but "in general circulation" is exactly
+> what the 54% turned out to be, so it is flagged rather than trusted: the definition
+> needs checking against the article before submission, and the implementation checked
+> against the definition.
+>
+> That is four citation claims across these papers overturned by going to the source and
+> none confirmed by a summary, which is now a strong enough pattern to act on rather than
+> to keep recording: the remaining references are quoted from summaries and each still
+> needs reading in full before submission, and until then no argument should rest on one.
 - [@subsumption2014] Ammann, P., Delamaro, M. E. and Offutt, J. *Establishing Theoretical Minimal Sets of Mutants.* ICST 2014. Dynamic subsumption: a mutant set is minimal with respect to a test set exactly when no distinct pair in it has one mutant subsuming the other. <https://doi.org/10.1109/ICST.2014.13>
 - [@subsumption-graphs] Kurtz, B., Ammann, P., Delamaro, M. E., Offutt, J. and Deng, L. *Mutant Subsumption Graphs.* ICSTW 2014. The hierarchy the dominators sit at the top of. <https://doi.org/10.1109/ICSTW.2014.20>
